@@ -32,14 +32,14 @@
     .app {
       width: min(1460px, calc(100% - 28px));
       margin: 0 auto;
-      padding: 28px 0 48px;
+      padding: 22px 0 36px;
     }
     header {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
       gap: 16px;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
     h1 {
       margin: 0;
@@ -80,8 +80,8 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      padding: 13px 15px;
-      margin-bottom: 14px;
+      padding: 10px 13px;
+      margin-bottom: 10px;
       border: 1px solid var(--border);
       background: rgba(17,24,33,.78);
       border-radius: 13px;
@@ -115,12 +115,12 @@
     .summary {
       display: grid;
       grid-template-columns: repeat(6, minmax(0,1fr));
-      gap: 11px;
-      margin-bottom: 15px;
+      gap: 9px;
+      margin-bottom: 11px;
     }
     .card {
       min-width: 0;
-      padding: 17px;
+      padding: 14px 15px;
       border: 1px solid var(--border);
       border-radius: 15px;
       background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), var(--panel);
@@ -129,7 +129,7 @@
     .label {
       color: var(--muted);
       font-size: 12px;
-      margin-bottom: 9px;
+      margin-bottom: 5px;
     }
     .value {
       font-weight: 900;
@@ -140,7 +140,7 @@
     .sub {
       color: var(--muted);
       font-size: 11px;
-      margin-top: 7px;
+      margin-top: 4px;
     }
     .positive { color: var(--green) !important; }
     .negative { color: var(--red) !important; }
@@ -154,7 +154,7 @@
       box-shadow: var(--shadow);
     }
     .panel-head {
-      padding: 15px 16px;
+      padding: 11px 14px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
@@ -172,16 +172,16 @@
     .toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 9px;
-      padding: 12px 14px;
+      gap: 8px;
+      padding: 9px 12px;
       border-bottom: 1px solid var(--border);
     }
     input, select {
-      min-height: 41px;
+      min-height: 36px;
       border: 1px solid var(--border);
       background: #0c121a;
       color: var(--text);
-      padding: 0 11px;
+      padding: 0 10px;
       border-radius: 9px;
       outline: none;
     }
@@ -190,14 +190,15 @@
     .table-wrap { overflow-x: auto; }
     table {
       width: 100%;
-      min-width: 1160px;
+      min-width: 820px;
       border-collapse: collapse;
     }
     th, td {
-      padding: 12px 13px;
+      padding: 7px 11px;
       border-bottom: 1px solid rgba(39,50,67,.72);
       text-align: left;
       font-size: 12px;
+      line-height: 1.3;
       white-space: nowrap;
     }
     th {
@@ -209,13 +210,13 @@
       background: #111821;
     }
     tbody tr:hover { background: rgba(255,255,255,.022); }
-    .symbol { color: #fff; font-weight: 900; font-size: 13px; }
+    .symbol { color: #fff; font-weight: 900; font-size: 12px; }
     .badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 25px;
-      padding: 0 9px;
+      min-height: 21px;
+      padding: 0 7px;
       border-radius: 999px;
       font-size: 11px;
       font-weight: 900;
@@ -227,7 +228,7 @@
     .badge.be { color: var(--blue); background: rgba(120,174,252,.09); }
     .empty {
       display: none;
-      padding: 50px 20px;
+      padding: 32px 20px;
       text-align: center;
       color: var(--muted);
       font-size: 13px;
@@ -235,19 +236,19 @@
     .error-box {
       display: none;
       margin-top: 12px;
-      padding: 13px 15px;
+      padding: 10px 13px;
       border: 1px solid rgba(255,102,116,.3);
       border-radius: 12px;
       background: rgba(255,102,116,.07);
       color: #ffadb5;
       font-size: 12px;
-      line-height: 1.7;
+      line-height: 1.45;
     }
     .hint {
       margin-top: 12px;
       color: var(--muted);
       font-size: 11px;
-      line-height: 1.7;
+      line-height: 1.45;
     }
     code {
       color: #c5d8f6;
@@ -261,7 +262,7 @@
       .summary { grid-template-columns: repeat(3, minmax(0,1fr)); }
     }
     @media (max-width: 680px) {
-      .app { width: min(100% - 18px, 1460px); padding-top: 18px; }
+      .app { width: min(100% - 14px, 1460px); padding-top: 14px; }
       header { flex-direction: column; align-items: stretch; }
       .summary { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .connection { align-items: flex-start; flex-direction: column; }
