@@ -225,11 +225,6 @@
     .badge.short, .badge.loss { color: var(--red); background: rgba(255,102,116,.09); }
     .badge.open { color: var(--yellow); background: rgba(233,189,76,.09); }
     .badge.be { color: var(--blue); background: rgba(120,174,252,.09); }
-    .note {
-      max-width: 270px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
     .empty {
       display: none;
       padding: 50px 20px;
@@ -278,7 +273,7 @@
     <header>
       <div>
         <h1>合約交易 Dashboard</h1>
-        <p>資料來源：Google Sheet｜自動統計總單數、盈虧筆數、勝率、累積盈虧與手續費。</p>
+        <p>資料來源：Google Sheet｜自動統計總單數、盈虧筆數、勝率與累積盈虧。</p>
       </div>
       <div class="actions">
         <button id="refreshBtn" class="primary" type="button">重新讀取 Google Sheet</button>
@@ -326,7 +321,7 @@
       <article class="card">
         <div class="label">勝率</div>
         <div class="value" id="winRate">0.0%</div>
-        <div class="sub" id="feeSummary">手續費 0.00 U</div>
+        <div class="sub">已結束交易勝率</div>
       </article>
     </section>
 
@@ -337,7 +332,7 @@
       </div>
 
       <div class="toolbar">
-        <input id="search" type="search" placeholder="搜尋幣種 / 標的 / 備註" />
+        <input id="search" type="search" placeholder="搜尋幣種 / 標的 / 日期" />
         <select id="statusFilter">
           <option value="">全部狀態</option>
           <option value="已獲利">已獲利</option>
@@ -360,14 +355,9 @@
               <th>標的</th>
               <th>方向</th>
               <th>槓桿</th>
-              <th>進場價</th>
-              <th>平倉價</th>
               <th>狀態</th>
               <th>平倉盈虧</th>
-              <th>手續費</th>
               <th>淨盈虧</th>
-              <th>TP / SL</th>
-              <th>備註</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -379,7 +369,7 @@
     <div class="error-box" id="errorBox"></div>
     <div class="hint">
       Dashboard 會直接讀取該試算表的 <code>gid=0</code> 分頁。試算表需允許「知道連結的使用者可檢視」或已發布到網路，靜態 HTML 才能直接取得 CSV。
-      欄位名稱可使用「日期、標的/幣種、方向、槓桿、進場價、平倉價、狀態、平倉盈虧/盈虧、手續費、淨盈虧、TP/止盈、SL/止損、備註」等常見名稱。
+      Dashboard 目前只帶入「日期、標的/幣種、方向、槓桿、狀態、平倉盈虧/盈虧、淨盈虧」等欄位；進場價、平倉價、TP、SL、手續費、備註不帶入 Dashboard。
     </div>
   </main>
 
@@ -403,15 +393,9 @@
       symbol: ["標的","交易標的","幣種","商品","symbol","ticker","pair","交易對"],
       side: ["方向","多空","side","position","type"],
       leverage: ["槓桿","槓桿倍數","leverage","倍數"],
-      entry: ["進場價","進場價格","開倉價","entry","entryprice","entry price","平均開倉價"],
-      exit: ["平倉價","出場價","平倉價格","exit","exitprice","exit price","平均平倉價"],
       status: ["狀態","交易狀態","status","結果"],
       grossPnl: ["平倉盈虧","盈虧","損益","pnl","profit","profitloss","profit loss","已實現盈虧","已實現損益"],
-      fee: ["手續費","交易手續費","fee","fees","commission"],
       netPnl: ["淨盈虧","淨損益","淨利","netpnl","net pnl","netprofit","net profit"],
-      tp: ["tp","止盈","止盈價","target","targetprice","takeprofit","take profit"],
-      sl: ["sl","止損","停損","止損價","停損價","stoploss","stop loss"],
-      note: ["備註","註記","說明","note","notes","memo"]
     };
 
     function normalizeKey(v) {
@@ -515,9 +499,8 @@
         headers.forEach((h, i) => obj[h] = values[i] ?? "");
 
         const gross = col.grossPnl ? num(obj[col.grossPnl]) : 0;
-        const fee = col.fee ? Math.abs(num(obj[col.fee])) : 0;
         const hasNet = col.netPnl && String(obj[col.netPnl] ?? "").trim() !== "";
-        const net = hasNet ? num(obj[col.netPnl]) : gross - fee;
+        const net = hasNet ? num(obj[col.netPnl]) : gross;
 
         let side = col.side ? String(obj[col.side] ?? "").trim() : "";
         const sideNorm = side.toLowerCase();
@@ -537,15 +520,9 @@
           symbol: col.symbol ? obj[col.symbol] : `ROW-${index + 2}`,
           side,
           leverage: col.leverage ? obj[col.leverage] : "",
-          entry: col.entry ? obj[col.entry] : "",
-          exit: col.exit ? obj[col.exit] : "",
           status,
           grossPnl: gross,
-          fee,
           netPnl: net,
-          tp: col.tp ? obj[col.tp] : "",
-          sl: col.sl ? obj[col.sl] : "",
-          note: col.note ? obj[col.note] : "",
           raw: obj
         };
       }).filter(t =>
@@ -645,7 +622,6 @@
       const losses = trades.filter(t => t.status !== "持倉中" && t.netPnl < 0).length;
       const open = trades.filter(t => t.status === "持倉中").length;
       const net = trades.reduce((s,t) => s + t.netPnl, 0);
-      const fees = trades.reduce((s,t) => s + Math.abs(t.fee), 0);
       const wr = wins + losses ? wins / (wins + losses) * 100 : 0;
 
       $("totalTrades").textContent = trades.length;
@@ -653,7 +629,6 @@
       $("lossTrades").textContent = losses;
       $("openTrades").textContent = open;
       $("winRate").textContent = `${wr.toFixed(1)}%`;
-      $("feeSummary").textContent = `手續費 ${fees.toFixed(2)} U`;
 
       const pnl = $("totalPnl");
       pnl.textContent = `${net >= 0 ? "+" : ""}${net.toFixed(2)} U`;
@@ -666,7 +641,7 @@
       const side = $("sideFilter").value;
 
       return trades.filter(t => {
-        const text = `${t.symbol} ${t.note} ${t.date}`.toLowerCase();
+        const text = `${t.symbol} ${t.date}`.toLowerCase();
         return (!q || text.includes(q))
           && (!status || t.status === status)
           && (!side || t.side === side);
@@ -682,21 +657,15 @@
 
       for (const t of list) {
         const tr = document.createElement("tr");
-        const tpSl = [t.tp ? `TP ${t.tp}` : "", t.sl ? `SL ${t.sl}` : ""].filter(Boolean).join(" / ") || "-";
 
         tr.innerHTML = `
           <td>${escapeHtml(t.date || "-")}</td>
           <td class="symbol">${escapeHtml(t.symbol || "-")}</td>
           <td>${t.side ? `<span class="badge ${t.side === "多" ? "long" : "short"}">${escapeHtml(t.side)}</span>` : "-"}</td>
           <td>${escapeHtml(t.leverage ? `${t.leverage}${String(t.leverage).toLowerCase().includes("x") ? "" : "x"}` : "-")}</td>
-          <td>${escapeHtml(t.entry || "-")}</td>
-          <td>${escapeHtml(t.exit || "-")}</td>
           <td><span class="badge ${statusClass(t.status)}">${escapeHtml(t.status || "-")}</span></td>
           <td class="${t.grossPnl > 0 ? "positive" : t.grossPnl < 0 ? "negative" : ""}">${money(t.grossPnl)}</td>
-          <td>${Math.abs(t.fee).toFixed(4)} U</td>
           <td class="${t.netPnl > 0 ? "positive" : t.netPnl < 0 ? "negative" : ""}">${money(t.netPnl)}</td>
-          <td>${escapeHtml(tpSl)}</td>
-          <td class="note" title="${escapeHtml(t.note)}">${escapeHtml(t.note || "-")}</td>
         `;
         $("rows").appendChild(tr);
       }
@@ -710,8 +679,8 @@
       }
 
       const data = [
-        ["日期","標的","方向","槓桿","進場價","平倉價","狀態","平倉盈虧","手續費","淨盈虧","TP","SL","備註"],
-        ...list.map(t => [t.date,t.symbol,t.side,t.leverage,t.entry,t.exit,t.status,t.grossPnl,t.fee,t.netPnl,t.tp,t.sl,t.note])
+        ["日期","標的","方向","槓桿","狀態","平倉盈虧","淨盈虧"],
+        ...list.map(t => [t.date,t.symbol,t.side,t.leverage,t.status,t.grossPnl,t.netPnl])
       ];
 
       const csv = "\uFEFF" + data.map(row =>
