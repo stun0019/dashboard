@@ -110,6 +110,7 @@
 
     .summary {
       display: grid;
+
       grid-template-columns:
         1.35fr
         repeat(4, minmax(0, 1fr));
@@ -424,14 +425,14 @@
           class="card-value"
           id="balance"
         >
-          59.00 U
+          34.81 U
         </div>
 
         <div
           class="card-sub"
           id="balanceChange"
         >
-          初始 59.00 U
+          今日初始 34.81 U
         </div>
 
       </article>
@@ -503,26 +504,26 @@
       </article>
 
 
-      <!-- 累積盈虧 -->
+      <!-- 今日淨盈虧 -->
 
       <article class="card">
 
         <div class="card-label">
-          累積淨盈虧
+          今日淨盈虧
         </div>
 
         <div
           class="card-value"
-          id="totalPnl"
+          id="todayPnl"
         >
           0.00 U
         </div>
 
         <div
           class="card-sub"
-          id="totalTradesText"
+          id="todayTradesText"
         >
-          共 0 筆
+          今日共 0 筆
         </div>
 
       </article>
@@ -619,10 +620,15 @@
     (() => {
 
       /* ==================================================
-         基本設定
+         8/26 今日初始本金
       ================================================== */
 
-      const INITIAL_BALANCE = 59;
+      const INITIAL_BALANCE = 34.81;
+
+
+      /* ==================================================
+         Google Sheet
+      ================================================== */
 
       const SHEET_ID =
         "1tPLSXTk56Z-ylsDjz5VQ4R_30J4OFpGAVUmtxujqupE";
@@ -1096,7 +1102,7 @@
 
 
       /* ==================================================
-         轉換 Google Sheet
+         Google Sheet 資料轉換
       ================================================== */
 
       function mapSheet(
@@ -1235,14 +1241,7 @@
               }
 
 
-              let status =
-                columns.status
-                  ? String(
-                      row[
-                        columns.status
-                      ] ?? ""
-                    ).trim()
-                  : "";
+              let status;
 
 
               if (
@@ -1323,7 +1322,7 @@
 
 
       /* ==================================================
-         Google Sheet
+         Google Sheet Fetch
       ================================================== */
 
       async function fetchSheet() {
@@ -1539,8 +1538,8 @@
             : 0;
 
 
-        const totalPnl =
-          trades.reduce(
+        const todayPnl =
+          todayTrades.reduce(
 
             (
               total,
@@ -1557,10 +1556,12 @@
 
         const currentBalance =
           INITIAL_BALANCE +
-          totalPnl;
+          todayPnl;
 
 
-        /* 資金水位 */
+        /* =========================
+           資金水位
+        ========================= */
 
         const balanceElement =
           $("balance");
@@ -1601,31 +1602,32 @@
         }
 
 
-        /* 資金變化 */
-
-        const change =
-          currentBalance -
-          INITIAL_BALANCE;
-
+        /* =========================
+           資金變化
+        ========================= */
 
         $("balanceChange")
           .textContent =
 
-            `初始 ${INITIAL_BALANCE.toFixed(2)} U ｜ ` +
+            `今日初始 ${INITIAL_BALANCE.toFixed(2)} U ｜ ` +
 
-            `${change >= 0 ? "+" : ""}` +
+            `${todayPnl >= 0 ? "+" : ""}` +
 
-            `${change.toFixed(2)} U`;
+            `${todayPnl.toFixed(2)} U`;
 
 
-        /* 今日單數 */
+        /* =========================
+           今日單數
+        ========================= */
 
         $("todayTrades")
           .textContent =
             todayTrades.length;
 
 
-        /* 今日勝負 */
+        /* =========================
+           今日勝負
+        ========================= */
 
         $("todayWL")
           .innerHTML =
@@ -1637,7 +1639,9 @@
             `<span class="negative">${todayLosses}</span>`;
 
 
-        /* 勝率 */
+        /* =========================
+           今日勝率
+        ========================= */
 
         const winRateElement =
           $("winRate");
@@ -1686,15 +1690,17 @@
         }
 
 
-        /* 累積盈虧 */
+        /* =========================
+           今日淨盈虧
+        ========================= */
 
         const pnlElement =
-          $("totalPnl");
+          $("todayPnl");
 
 
         pnlElement.textContent =
           formatPnl(
-            totalPnl
+            todayPnl
           );
 
 
@@ -1703,7 +1709,7 @@
 
 
         if (
-          totalPnl > 0
+          todayPnl > 0
         ) {
 
           pnlElement
@@ -1715,7 +1721,7 @@
         }
 
         else if (
-          totalPnl < 0
+          todayPnl < 0
         ) {
 
           pnlElement
@@ -1727,9 +1733,9 @@
         }
 
 
-        $("totalTradesText")
+        $("todayTradesText")
           .textContent =
-            `共 ${trades.length} 筆`;
+            `今日共 ${todayTrades.length} 筆`;
 
       }
 
