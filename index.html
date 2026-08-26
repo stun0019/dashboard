@@ -4,24 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>合約交易 Dashboard</title>
+  <title>交易 Dashboard</title>
 
   <style>
     :root {
       --bg: #090d12;
       --panel: #111821;
-      --panel-2: #151e29;
-      --border: #273243;
+      --panel-hover: #151e29;
+      --border: #26303d;
 
-      --text: #edf3fc;
-      --muted: #8c99ac;
+      --text: #f1f5f9;
+      --muted: #7f8b9d;
 
       --green: #2fd27c;
       --red: #ff6674;
       --yellow: #e9bd4c;
-      --blue: #78aefc;
-
-      --shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
     }
 
     * {
@@ -32,14 +29,7 @@
       margin: 0;
       min-height: 100vh;
 
-      background:
-        radial-gradient(
-          circle at 10% 0%,
-          rgba(62, 98, 157, 0.12),
-          transparent 28%
-        ),
-        var(--bg);
-
+      background: var(--bg);
       color: var(--text);
 
       font-family:
@@ -50,157 +40,83 @@
         sans-serif;
     }
 
-    button,
-    input,
-    select {
+    button {
       font: inherit;
     }
 
-    /* =========================
-       Layout
-    ========================= */
-
     .app {
-      width: min(1460px, calc(100% - 28px));
+      width: min(1280px, calc(100% - 24px));
       margin: 0 auto;
-      padding: 22px 0 36px;
+      padding: 22px 0 40px;
     }
 
-    header {
+    /* =========================
+       HEADER
+    ========================= */
+
+    .header {
       display: flex;
-      align-items: flex-end;
       justify-content: space-between;
+      align-items: center;
+
       gap: 16px;
 
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
-    h1 {
+    .header-title {
+      min-width: 0;
+    }
+
+    .header h1 {
       margin: 0;
 
-      font-size: clamp(25px, 3vw, 38px);
-      letter-spacing: -0.035em;
+      font-size: 26px;
+      letter-spacing: -0.03em;
     }
 
-    header p {
-      margin: 6px 0 0;
-
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      min-height: 40px;
-
-      padding: 0 14px;
-
-      border: 1px solid var(--border);
-      border-radius: 10px;
-
-      background: var(--panel-2);
-      color: var(--text);
-
-      cursor: pointer;
-    }
-
-    button:hover {
-      border-color: #465872;
-    }
-
-    button.primary {
-      background: var(--text);
-      color: #10151c;
-
-      border-color: var(--text);
-
-      font-weight: 800;
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: wait;
-    }
-
-    /* =========================
-       Google Sheet connection
-    ========================= */
-
-    .connection {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      gap: 12px;
-
-      padding: 9px 12px;
-      margin-bottom: 10px;
-
-      border: 1px solid var(--border);
-      border-radius: 12px;
-
-      background: rgba(17, 24, 33, 0.78);
+    .header p {
+      margin: 4px 0 0;
 
       color: var(--muted);
       font-size: 12px;
     }
 
-    .connection-left {
-      display: flex;
-      align-items: center;
+    .refresh-btn {
+      min-height: 38px;
+      padding: 0 14px;
 
-      min-width: 0;
-      gap: 9px;
-    }
+      border: 1px solid var(--border);
+      border-radius: 9px;
 
-    .dot {
-      width: 8px;
-      height: 8px;
-
-      flex: 0 0 auto;
-
-      border-radius: 50%;
-
-      background: var(--yellow);
-    }
-
-    .dot.ok {
-      background: var(--green);
-    }
-
-    .dot.err {
-      background: var(--red);
-    }
-
-    .sheet-name {
-      overflow: hidden;
-
-      white-space: nowrap;
-      text-overflow: ellipsis;
-
+      background: var(--panel);
       color: var(--text);
-      font-weight: 700;
+
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover {
+      background: var(--panel-hover);
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.5;
+      cursor: wait;
     }
 
     /* =========================
-       Summary cards
+       SUMMARY
     ========================= */
 
     .summary {
       display: grid;
-
       grid-template-columns:
-        repeat(6, minmax(0, 1fr));
+        1.35fr
+        repeat(4, minmax(0, 1fr));
 
-      gap: 9px;
+      gap: 8px;
 
-      margin-bottom: 11px;
+      margin-bottom: 10px;
     }
 
     .card {
@@ -209,42 +125,40 @@
       padding: 13px 14px;
 
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
 
-      background:
-        linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.025),
-          transparent
-        ),
-        var(--panel);
-
-      box-shadow: var(--shadow);
+      background: var(--panel);
     }
 
-    .label {
-      margin-bottom: 4px;
+    .card.primary {
+      padding: 14px 16px;
+    }
 
+    .card-label {
       color: var(--muted);
+      font-size: 11px;
 
-      font-size: 12px;
+      margin-bottom: 4px;
     }
 
-    .value {
-      font-size: clamp(23px, 2.7vw, 33px);
+    .card-value {
+      font-size: 27px;
       font-weight: 900;
 
-      letter-spacing: -0.03em;
+      letter-spacing: -0.04em;
 
-      overflow-wrap: anywhere;
+      white-space: nowrap;
     }
 
-    .sub {
+    .card.primary .card-value {
+      font-size: 31px;
+    }
+
+    .card-sub {
       margin-top: 3px;
 
       color: var(--muted);
-
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .positive {
@@ -255,91 +169,48 @@
       color: var(--red) !important;
     }
 
+    .neutral {
+      color: var(--text) !important;
+    }
+
     .yellow {
       color: var(--yellow) !important;
     }
 
     /* =========================
-       Table panel
+       TABLE
     ========================= */
 
-    .panel {
+    .table-panel {
       overflow: hidden;
 
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
 
       background: var(--panel);
-
-      box-shadow: var(--shadow);
     }
 
-    .panel-head {
+    .table-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
 
-      gap: 12px;
-
-      padding: 10px 13px;
+      padding: 10px 12px;
 
       border-bottom: 1px solid var(--border);
     }
 
-    .panel-head h2 {
+    .table-header h2 {
       margin: 0;
 
-      font-size: 15px;
+      font-size: 14px;
+      font-weight: 800;
     }
 
-    .count {
+    .trade-count {
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
     }
-
-    /* =========================
-       Filters
-    ========================= */
-
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-
-      gap: 7px;
-
-      padding: 8px 10px;
-
-      border-bottom: 1px solid var(--border);
-    }
-
-    input,
-    select {
-      min-height: 35px;
-
-      padding: 0 10px;
-
-      border: 1px solid var(--border);
-      border-radius: 8px;
-
-      outline: none;
-
-      background: #0c121a;
-      color: var(--text);
-    }
-
-    input:focus,
-    select:focus {
-      border-color: #536b8c;
-    }
-
-    #search {
-      flex: 1 1 220px;
-      min-width: 180px;
-    }
-
-    /* =========================
-       Table
-    ========================= */
 
     .table-wrap {
       overflow-x: auto;
@@ -347,17 +218,17 @@
 
     table {
       width: 100%;
-      min-width: 760px;
+      min-width: 680px;
 
       border-collapse: collapse;
     }
 
     th,
     td {
-      padding: 7px 10px;
+      padding: 7px 11px;
 
       border-bottom:
-        1px solid rgba(39, 50, 67, 0.72);
+        1px solid rgba(38, 48, 61, 0.72);
 
       text-align: left;
 
@@ -368,172 +239,135 @@
     }
 
     th {
-      position: sticky;
-      top: 0;
-
-      z-index: 1;
-
-      background: #111821;
-
       color: var(--muted);
 
-      font-weight: 800;
+      font-size: 11px;
+      font-weight: 700;
+
+      background: #0e141c;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
     }
 
     tbody tr:hover {
-      background: rgba(255, 255, 255, 0.022);
+      background: rgba(255, 255, 255, 0.018);
     }
 
     .symbol {
       color: #fff;
-
-      font-weight: 900;
+      font-weight: 800;
     }
 
-    /* =========================
-       Badges
-    ========================= */
-
-    .badge {
+    .side {
       display: inline-flex;
-
       align-items: center;
       justify-content: center;
 
-      min-height: 21px;
+      min-width: 35px;
+      min-height: 20px;
 
       padding: 0 7px;
 
       border-radius: 999px;
 
-      font-size: 11px;
-      font-weight: 900;
-
-      background: rgba(255, 255, 255, 0.05);
+      font-size: 10px;
+      font-weight: 800;
     }
 
-    .badge.long,
-    .badge.win {
+    .side.long {
       color: var(--green);
-
-      background:
-        rgba(47, 210, 124, 0.09);
+      background: rgba(47, 210, 124, 0.08);
     }
 
-    .badge.short,
-    .badge.loss {
+    .side.short {
       color: var(--red);
-
-      background:
-        rgba(255, 102, 116, 0.09);
+      background: rgba(255, 102, 116, 0.08);
     }
 
-    .badge.open {
-      color: var(--yellow);
-
-      background:
-        rgba(233, 189, 76, 0.09);
+    .result {
+      font-weight: 800;
     }
-
-    .badge.be {
-      color: var(--blue);
-
-      background:
-        rgba(120, 174, 252, 0.09);
-    }
-
-    /* =========================
-       Messages
-    ========================= */
 
     .empty {
       display: none;
 
-      padding: 30px 20px;
-
-      text-align: center;
+      padding: 36px 20px;
 
       color: var(--muted);
 
-      font-size: 13px;
+      font-size: 12px;
+      text-align: center;
     }
 
-    .error-box {
+    /* =========================
+       MESSAGE
+    ========================= */
+
+    .message {
       display: none;
 
-      margin-top: 10px;
-      padding: 10px 12px;
+      margin-top: 9px;
+      padding: 9px 11px;
+
+      border-radius: 9px;
+
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .message.error {
+      display: block;
 
       border:
-        1px solid rgba(255, 102, 116, 0.3);
-
-      border-radius: 10px;
+        1px solid rgba(255, 102, 116, 0.28);
 
       background:
         rgba(255, 102, 116, 0.07);
 
-      color: #ffadb5;
-
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .hint {
-      margin-top: 10px;
-
-      color: var(--muted);
-
-      font-size: 11px;
-      line-height: 1.45;
-    }
-
-    code {
-      padding: 1px 5px;
-
-      border:
-        1px solid rgba(255, 255, 255, 0.06);
-
-      border-radius: 5px;
-
-      background:
-        rgba(255, 255, 255, 0.04);
-
-      color: #c5d8f6;
+      color: #ff9da6;
     }
 
     /* =========================
-       Responsive
+       MOBILE
     ========================= */
 
-    @media (max-width: 1120px) {
-      .summary {
-        grid-template-columns:
-          repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 680px) {
-      .app {
-        width: min(100% - 14px, 1460px);
-
-        padding-top: 14px;
-      }
-
-      header {
-        flex-direction: column;
-
-        align-items: stretch;
-      }
-
+    @media (max-width: 900px) {
       .summary {
         grid-template-columns:
           repeat(2, minmax(0, 1fr));
       }
 
-      .connection {
-        flex-direction: column;
+      .card.primary {
+        grid-column: 1 / -1;
+      }
+    }
 
-        align-items: flex-start;
+    @media (max-width: 520px) {
+      .app {
+        width: calc(100% - 14px);
+        padding-top: 14px;
+      }
+
+      .header h1 {
+        font-size: 22px;
+      }
+
+      .summary {
+        gap: 6px;
+      }
+
+      .card {
+        padding: 11px 12px;
+      }
+
+      .card-value {
+        font-size: 23px;
+      }
+
+      .card.primary .card-value {
+        font-size: 28px;
       }
     }
   </style>
@@ -543,198 +377,152 @@
 
   <main class="app">
 
-    <!-- Header -->
+    <!-- =========================
+         HEADER
+    ========================== -->
 
-    <header>
+    <header class="header">
 
-      <div>
+      <div class="header-title">
 
         <h1>
-          合約交易 Dashboard
+          交易 Dashboard
         </h1>
 
         <p>
-          資料來源：Google Sheet｜
-          自動統計總單數、盈虧筆數、勝率與累積盈虧。
+          合約交易紀錄與資金狀態
         </p>
 
       </div>
 
-      <div class="actions">
-
-        <button
-          id="refreshBtn"
-          class="primary"
-          type="button"
-        >
-          重新讀取 Google Sheet
-        </button>
-
-        <button
-          id="exportBtn"
-          type="button"
-        >
-          匯出目前資料
-        </button>
-
-      </div>
+      <button
+        id="refreshBtn"
+        class="refresh-btn"
+        type="button"
+      >
+        更新
+      </button>
 
     </header>
 
 
-    <!-- Google Sheet status -->
-
-    <section class="connection">
-
-      <div class="connection-left">
-
-        <span
-          class="dot"
-          id="statusDot"
-        ></span>
-
-        <div>
-
-          <div class="sheet-name">
-            Google Sheet：
-            1tPLSXTk56Z-ylsDjz5VQ4R_30J4OFpGAVUmtxujqupE
-            / gid=0
-          </div>
-
-          <div id="statusText">
-            準備讀取資料…
-          </div>
-
-        </div>
-
-      </div>
-
-      <div id="lastUpdated">
-        尚未更新
-      </div>
-
-    </section>
-
-
-    <!-- Summary -->
+    <!-- =========================
+         SUMMARY
+    ========================== -->
 
     <section class="summary">
 
-      <article class="card">
+      <!-- 資金水位 -->
 
-        <div class="label">
-          總單數
+      <article class="card primary">
+
+        <div class="card-label">
+          資金水位
         </div>
 
         <div
-          class="value"
-          id="totalTrades"
+          class="card-value"
+          id="balance"
+        >
+          59.00 U
+        </div>
+
+        <div
+          class="card-sub"
+          id="balanceChange"
+        >
+          初始 59.00 U
+        </div>
+
+      </article>
+
+
+      <!-- 今日交易 -->
+
+      <article class="card">
+
+        <div class="card-label">
+          今日交易
+        </div>
+
+        <div
+          class="card-value"
+          id="todayTrades"
         >
           0
         </div>
 
-        <div class="sub">
-          Google Sheet 有效交易列
+        <div class="card-sub">
+          今日已記錄
         </div>
 
       </article>
 
 
+      <!-- 今日勝負 -->
+
       <article class="card">
 
-        <div class="label">
-          累積獲利筆數
+        <div class="card-label">
+          今日勝 / 負
         </div>
 
         <div
-          class="value positive"
-          id="winTrades"
+          class="card-value"
+          id="todayWL"
         >
-          0
+          0 / 0
         </div>
 
-        <div class="sub">
-          淨盈虧 &gt; 0
-        </div>
-
-      </article>
-
-
-      <article class="card">
-
-        <div class="label">
-          累積虧損筆數
-        </div>
-
-        <div
-          class="value negative"
-          id="lossTrades"
-        >
-          0
-        </div>
-
-        <div class="sub">
-          淨盈虧 &lt; 0
+        <div class="card-sub">
+          Win / Loss
         </div>
 
       </article>
 
 
-      <article class="card">
-
-        <div class="label">
-          持倉中
-        </div>
-
-        <div
-          class="value yellow"
-          id="openTrades"
-        >
-          0
-        </div>
-
-        <div class="sub">
-          不列入勝率
-        </div>
-
-      </article>
-
+      <!-- 勝率 -->
 
       <article class="card">
 
-        <div class="label">
-          累積淨盈虧
+        <div class="card-label">
+          今日勝率
         </div>
 
         <div
-          class="value"
-          id="totalPnl"
-        >
-          0.00 U
-        </div>
-
-        <div class="sub">
-          優先讀「淨盈虧」欄
-        </div>
-
-      </article>
-
-
-      <article class="card">
-
-        <div class="label">
-          勝率
-        </div>
-
-        <div
-          class="value"
+          class="card-value"
           id="winRate"
         >
           0.0%
         </div>
 
-        <div class="sub">
-          低於 50% 紅色｜高於 50% 綠色
+        <div class="card-sub">
+          50% 為分界
+        </div>
+
+      </article>
+
+
+      <!-- 累積盈虧 -->
+
+      <article class="card">
+
+        <div class="card-label">
+          累積淨盈虧
+        </div>
+
+        <div
+          class="card-value"
+          id="totalPnl"
+        >
+          0.00 U
+        </div>
+
+        <div
+          class="card-sub"
+          id="totalTradesText"
+        >
+          共 0 筆
         </div>
 
       </article>
@@ -742,82 +530,27 @@
     </section>
 
 
-    <!-- Trade table -->
+    <!-- =========================
+         TRADE TABLE
+    ========================== -->
 
-    <section class="panel">
+    <section class="table-panel">
 
-      <div class="panel-head">
+      <div class="table-header">
 
         <h2>
           交易紀錄
         </h2>
 
-        <span
-          class="count"
-          id="visibleCount"
+        <div
+          class="trade-count"
+          id="tradeCount"
         >
-          0 / 0 筆
-        </span>
+          0 筆
+        </div>
 
       </div>
 
-
-      <!-- Filters -->
-
-      <div class="toolbar">
-
-        <input
-          id="search"
-          type="search"
-          placeholder="搜尋幣種 / 標的 / 日期"
-        />
-
-
-        <select id="statusFilter">
-
-          <option value="">
-            全部狀態
-          </option>
-
-          <option value="已獲利">
-            已獲利
-          </option>
-
-          <option value="已虧損">
-            已虧損
-          </option>
-
-          <option value="持倉中">
-            持倉中
-          </option>
-
-          <option value="保本出場">
-            保本出場
-          </option>
-
-        </select>
-
-
-        <select id="sideFilter">
-
-          <option value="">
-            全部方向
-          </option>
-
-          <option value="多">
-            多單
-          </option>
-
-          <option value="空">
-            空單
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <!-- Table -->
 
       <div class="table-wrap">
 
@@ -844,11 +577,7 @@
               </th>
 
               <th>
-                狀態
-              </th>
-
-              <th>
-                平倉盈虧
+                結果
               </th>
 
               <th>
@@ -860,7 +589,7 @@
           </thead>
 
 
-          <tbody id="rows">
+          <tbody id="tradeRows">
           </tbody>
 
         </table>
@@ -868,9 +597,9 @@
 
         <div
           class="empty"
-          id="empty"
+          id="emptyState"
         >
-          沒有符合條件的交易紀錄。
+          尚無交易紀錄
         </div>
 
       </div>
@@ -878,46 +607,22 @@
     </section>
 
 
-    <!-- Error message -->
-
     <div
-      class="error-box"
-      id="errorBox"
+      class="message"
+      id="message"
     ></div>
-
-
-    <!-- Hint -->
-
-    <div class="hint">
-
-      Dashboard 直接讀取 Google Sheet 的
-      <code>gid=0</code>
-      分頁。
-
-      <br />
-
-      Google Sheet 目前需要包含：
-
-      <code>日期</code>、
-      <code>標的</code>、
-      <code>方向</code>、
-      <code>槓桿</code>、
-      <code>狀態</code>、
-      <code>平倉盈虧</code>、
-      <code>淨盈虧</code>。
-
-    </div>
 
   </main>
 
 
   <script>
-
     (() => {
 
-      /* ============================================
-         Google Sheet
-      ============================================ */
+      /* ==================================================
+         基本設定
+      ================================================== */
+
+      const INITIAL_BALANCE = 59;
 
       const SHEET_ID =
         "1tPLSXTk56Z-ylsDjz5VQ4R_30J4OFpGAVUmtxujqupE";
@@ -926,7 +631,7 @@
         "0";
 
 
-      const SOURCE_URLS = [
+      const SHEET_URLS = [
 
         `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`,
 
@@ -935,78 +640,52 @@
       ];
 
 
-      /* ============================================
-         DOM
-      ============================================ */
-
-      const $ = id =>
-        document.getElementById(id);
-
-
       let trades = [];
 
-      let sourceHeaders = [];
+
+      const $ =
+        id =>
+          document.getElementById(id);
 
 
-      /* ============================================
-         Google Sheet column aliases
-      ============================================ */
+      /* ==================================================
+         欄位名稱
+      ================================================== */
 
-      const ALIASES = {
+      const COLUMN_ALIASES = {
 
         date: [
           "日期",
           "日期時間",
-          "時間",
-          "交易時間",
-          "date",
-          "datetime",
-          "time"
+          "交易日期",
+          "date"
         ],
 
         symbol: [
           "標的",
-          "交易標的",
           "幣種",
-          "商品",
+          "交易標的",
           "symbol",
-          "ticker",
-          "pair",
-          "交易對"
+          "pair"
         ],
 
         side: [
           "方向",
           "多空",
-          "side",
-          "position",
-          "type"
+          "side"
         ],
 
         leverage: [
           "槓桿",
           "槓桿倍數",
-          "leverage",
-          "倍數"
+          "leverage"
         ],
 
         status: [
           "狀態",
+          "結果",
           "交易狀態",
-          "status",
-          "結果"
-        ],
-
-        grossPnl: [
-          "平倉盈虧",
-          "盈虧",
-          "損益",
-          "pnl",
-          "profit",
-          "profitloss",
-          "profit loss",
-          "已實現盈虧",
-          "已實現損益"
+          "status"
         ],
 
         netPnl: [
@@ -1014,28 +693,22 @@
           "淨損益",
           "淨利",
           "netpnl",
-          "net pnl",
-          "netprofit",
-          "net profit"
+          "net pnl"
         ]
 
       };
 
 
-      /* ============================================
-         Helpers
-      ============================================ */
+      /* ==================================================
+         Helper
+      ================================================== */
 
       function normalizeKey(value) {
 
         return String(value ?? "")
-
           .trim()
-
           .toLowerCase()
-
           .replace(/\s+/g, "")
-
           .replace(
             /[＿_－\-／/\\:：()（）\[\]]/g,
             ""
@@ -1044,67 +717,73 @@
       }
 
 
-      function findHeader(
+      function number(value) {
+
+        const cleaned =
+          String(value ?? "")
+            .replace(/,/g, "")
+            .replace(
+              /USDT|USDC|USD|U|\$/gi,
+              ""
+            )
+            .trim();
+
+
+        const result =
+          Number(cleaned);
+
+
+        return Number.isFinite(result)
+          ? result
+          : 0;
+
+      }
+
+
+      function escapeHtml(value) {
+
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+
+      }
+
+
+      function findColumn(
         headers,
         aliases
       ) {
 
-        const normalized =
+        const normalizedHeaders =
           headers.map(
             header =>
               normalizeKey(header)
           );
 
 
-        /* exact match */
-
-        for (const alias of aliases) {
+        for (
+          const alias
+          of aliases
+        ) {
 
           const normalizedAlias =
             normalizeKey(alias);
 
-          const exactIndex =
-            normalized.indexOf(
+
+          const index =
+            normalizedHeaders.indexOf(
               normalizedAlias
             );
 
-          if (exactIndex >= 0) {
 
-            return headers[
-              exactIndex
-            ];
-
-          }
-
-        }
-
-
-        /* partial match */
-
-        for (
-          let i = 0;
-          i < normalized.length;
-          i++
-        ) {
-
-          for (
-            const alias
-            of aliases
+          if (
+            index !== -1
           ) {
 
-            const normalizedAlias =
-              normalizeKey(alias);
-
-            if (
-              normalizedAlias &&
-              normalized[i].includes(
-                normalizedAlias
-              )
-            ) {
-
-              return headers[i];
-
-            }
+            return headers[index];
 
           }
 
@@ -1116,101 +795,154 @@
       }
 
 
-      function num(value) {
+      function formatPnl(value) {
 
-        if (
-          value === null ||
-          value === undefined ||
-          value === ""
-        ) {
-
-          return 0;
-
-        }
-
-
-        const cleaned =
-          String(value)
-
-            .replace(/,/g, "")
-
-            .replace(
-              /USDT|USDC|USD|U|\$/gi,
-              ""
-            )
-
-            .replace(/%/g, "")
-
-            .trim();
-
-
-        const number =
-          Number(cleaned);
-
-
-        return Number.isFinite(number)
-          ? number
-          : 0;
-
-      }
-
-
-      function escapeHtml(value) {
-
-        return String(value ?? "")
-
-          .replaceAll(
-            "&",
-            "&amp;"
-          )
-
-          .replaceAll(
-            "<",
-            "&lt;"
-          )
-
-          .replaceAll(
-            ">",
-            "&gt;"
-          )
-
-          .replaceAll(
-            '"',
-            "&quot;"
-          )
-
-          .replaceAll(
-            "'",
-            "&#039;"
-          );
-
-      }
-
-
-      function money(value) {
-
-        const number =
-          num(value);
+        const n =
+          number(value);
 
 
         return (
-          `${number >= 0 ? "+" : ""}` +
-          `${number.toFixed(4)} U`
+          `${n >= 0 ? "+" : ""}` +
+          `${n.toFixed(2)} U`
         );
 
       }
 
 
-      /* ============================================
-         CSV Parser
-      ============================================ */
+      /* ==================================================
+         日期
+      ================================================== */
+
+      function normalizeDate(value) {
+
+        const text =
+          String(value ?? "")
+            .trim();
+
+
+        if (
+          !text
+        ) {
+
+          return "";
+
+        }
+
+
+        const match =
+          text.match(
+            /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/
+          );
+
+
+        if (
+          match
+        ) {
+
+          const year =
+            match[1];
+
+          const month =
+            String(
+              match[2]
+            ).padStart(
+              2,
+              "0"
+            );
+
+          const day =
+            String(
+              match[3]
+            ).padStart(
+              2,
+              "0"
+            );
+
+
+          return (
+            `${year}-${month}-${day}`
+          );
+
+        }
+
+
+        return text;
+
+      }
+
+
+      function displayDate(value) {
+
+        const normalized =
+          normalizeDate(value);
+
+
+        const match =
+          normalized.match(
+            /(\d{4})-(\d{2})-(\d{2})/
+          );
+
+
+        if (
+          !match
+        ) {
+
+          return value || "-";
+
+        }
+
+
+        return (
+          `${match[2]}/${match[3]}`
+        );
+
+      }
+
+
+      function todayString() {
+
+        const now =
+          new Date();
+
+
+        const year =
+          now.getFullYear();
+
+
+        const month =
+          String(
+            now.getMonth() + 1
+          ).padStart(
+            2,
+            "0"
+          );
+
+
+        const day =
+          String(
+            now.getDate()
+          ).padStart(
+            2,
+            "0"
+          );
+
+
+        return (
+          `${year}-${month}-${day}`
+        );
+
+      }
+
+
+      /* ==================================================
+         CSV
+      ================================================== */
 
       function parseCSV(text) {
 
         const rows = [];
 
         let row = [];
-
         let cell = "";
 
         let inQuotes =
@@ -1230,7 +962,9 @@
             text[i + 1];
 
 
-          if (inQuotes) {
+          if (
+            inQuotes
+          ) {
 
             if (
               char === '"' &&
@@ -1280,7 +1014,8 @@
                 cell
               );
 
-              cell = "";
+              cell =
+                "";
 
             }
 
@@ -1295,13 +1030,18 @@
                 )
               );
 
+
               rows.push(
                 row
               );
 
-              row = [];
 
-              cell = "";
+              row =
+                [];
+
+
+              cell =
+                "";
 
             }
 
@@ -1329,6 +1069,7 @@
             )
           );
 
+
           rows.push(
             row
           );
@@ -1339,9 +1080,11 @@
         return rows.filter(
 
           row =>
+
             row.some(
 
               value =>
+
                 String(value)
                   .trim() !== ""
 
@@ -1352,11 +1095,13 @@
       }
 
 
-      /* ============================================
-         Convert Google Sheet rows
-      ============================================ */
+      /* ==================================================
+         轉換 Google Sheet
+      ================================================== */
 
-      function mapRows(matrix) {
+      function mapSheet(
+        matrix
+      ) {
 
         if (
           !matrix.length
@@ -1377,22 +1122,20 @@
           );
 
 
-        sourceHeaders =
-          headers;
-
-
         const columns =
           {};
 
 
         Object
-          .entries(ALIASES)
+          .entries(
+            COLUMN_ALIASES
+          )
           .forEach(
 
             ([key, aliases]) => {
 
               columns[key] =
-                findHeader(
+                findColumn(
                   headers,
                   aliases
                 );
@@ -1407,7 +1150,18 @@
         ) {
 
           throw new Error(
-            "Google Sheet 找不到「標的 / 幣種」欄位。"
+            "找不到標的欄位"
+          );
+
+        }
+
+
+        if (
+          !columns.netPnl
+        ) {
+
+          throw new Error(
+            "找不到淨盈虧欄位"
           );
 
         }
@@ -1426,7 +1180,10 @@
 
               headers.forEach(
 
-                (header, columnIndex) => {
+                (
+                  header,
+                  columnIndex
+                ) => {
 
                   row[header] =
                     values[
@@ -1438,73 +1195,27 @@
               );
 
 
-              /* -------------------------
-                 PNL
-              ------------------------- */
-
-              const grossPnl =
-                columns.grossPnl
-
-                  ? num(
-                      row[
-                        columns.grossPnl
-                      ]
-                    )
-
-                  : 0;
-
-
-              const hasNetPnl =
-                columns.netPnl &&
-
-                String(
+              const netPnl =
+                number(
                   row[
                     columns.netPnl
-                  ] ?? ""
-                ).trim() !== "";
+                  ]
+                );
 
-
-              const netPnl =
-                hasNetPnl
-
-                  ? num(
-                      row[
-                        columns.netPnl
-                      ]
-                    )
-
-                  : grossPnl;
-
-
-              /* -------------------------
-                 Side
-              ------------------------- */
 
               let side =
                 columns.side
-
                   ? String(
                       row[
                         columns.side
                       ] ?? ""
                     ).trim()
-
                   : "";
 
 
-              const sideLower =
-                side.toLowerCase();
-
-
               if (
-                [
-                  "long",
-                  "buy",
-                  "做多",
-                  "多單"
-                ].includes(
-                  sideLower
-                )
+                /long|buy|多單|做多/i
+                  .test(side)
               ) {
 
                 side =
@@ -1514,14 +1225,8 @@
 
 
               if (
-                [
-                  "short",
-                  "sell",
-                  "做空",
-                  "空單"
-                ].includes(
-                  sideLower
-                )
+                /short|sell|空單|做空/i
+                  .test(side)
               ) {
 
                 side =
@@ -1530,77 +1235,38 @@
               }
 
 
-              /* -------------------------
-                 Status
-              ------------------------- */
-
               let status =
                 columns.status
-
                   ? String(
                       row[
                         columns.status
                       ] ?? ""
                     ).trim()
-
                   : "";
 
 
               if (
-                !status
+                netPnl > 0
               ) {
 
                 status =
-                  netPnl > 0
-
-                    ? "已獲利"
-
-                    : netPnl < 0
-
-                      ? "已虧損"
-
-                      : "保本出場";
-
-              }
-
-
-              if (
-                /持倉|open|進行中/i
-                  .test(status)
-              ) {
-
-                status =
-                  "持倉中";
+                  "WIN";
 
               }
 
               else if (
-                /獲利|win|profit/i
-                  .test(status)
+                netPnl < 0
               ) {
 
                 status =
-                  "已獲利";
+                  "LOSS";
 
               }
 
-              else if (
-                /虧損|loss/i
-                  .test(status)
-              ) {
+              else {
 
                 status =
-                  "已虧損";
-
-              }
-
-              else if (
-                /保本|break.?even|be$/i
-                  .test(status)
-              ) {
-
-                status =
-                  "保本出場";
+                  "BE";
 
               }
 
@@ -1608,7 +1274,7 @@
               return {
 
                 id:
-                  index + 1,
+                  index,
 
                 date:
                   columns.date
@@ -1618,24 +1284,24 @@
                     : "",
 
                 symbol:
-                  columns.symbol
-                    ? row[
-                        columns.symbol
-                      ]
-                    : "",
+                  String(
+                    row[
+                      columns.symbol
+                    ] ?? ""
+                  ).trim(),
 
                 side,
 
                 leverage:
                   columns.leverage
-                    ? row[
-                        columns.leverage
-                      ]
+                    ? String(
+                        row[
+                          columns.leverage
+                        ] ?? ""
+                      ).trim()
                     : "",
 
                 status,
-
-                grossPnl,
 
                 netPnl
 
@@ -1649,40 +1315,41 @@
 
             trade =>
 
-              String(
-                trade.symbol
-              ).trim() !== "" ||
-
-              trade.grossPnl !== 0 ||
-
-              trade.netPnl !== 0
+              trade.symbol !== ""
 
           );
 
       }
 
 
-      /* ============================================
-         Google Sheet Fetch
-      ============================================ */
+      /* ==================================================
+         Google Sheet
+      ================================================== */
 
       async function fetchSheet() {
 
-        setLoading(
-          true
-        );
+        const button =
+          $("refreshBtn");
 
 
-        setStatus(
-          "loading",
-          "正在讀取 Google Sheet…"
-        );
+        const message =
+          $("message");
 
 
-        $("errorBox")
-          .style
-          .display =
-            "none";
+        button.disabled =
+          true;
+
+
+        button.textContent =
+          "更新中";
+
+
+        message.className =
+          "message";
+
+
+        message.style.display =
+          "none";
 
 
         let lastError =
@@ -1691,7 +1358,7 @@
 
         for (
           const baseUrl
-          of SOURCE_URLS
+          of SHEET_URLS
         ) {
 
           try {
@@ -1708,9 +1375,6 @@
                 url,
 
                 {
-                  method:
-                    "GET",
-
                   cache:
                     "no-store",
 
@@ -1737,8 +1401,6 @@
 
 
             if (
-              !text ||
-
               /<!doctype html|<html/i
                 .test(
                   text.slice(
@@ -1749,7 +1411,7 @@
             ) {
 
               throw new Error(
-                "Google 回傳登入頁面，請確認試算表已開放連結檢視。"
+                "Google Sheet 尚未開放讀取"
               );
 
             }
@@ -1766,63 +1428,30 @@
               );
 
 
-            if (
-              !matrix.length
-            ) {
-
-              throw new Error(
-                "試算表沒有可讀資料。"
-              );
-
-            }
-
-
             trades =
-              mapRows(
+              mapSheet(
                 matrix
               );
-
-
-            setStatus(
-
-              "ok",
-
-              `讀取成功，共 ${trades.length} 筆交易`
-
-            );
-
-
-            $("lastUpdated")
-              .textContent =
-
-                "最後更新：" +
-
-                new Date()
-                  .toLocaleString(
-
-                    "zh-TW",
-
-                    {
-                      hour12:
-                        false
-                    }
-
-                  );
 
 
             render();
 
 
-            setLoading(
-              false
-            );
+            button.disabled =
+              false;
+
+
+            button.textContent =
+              "更新";
 
 
             return;
 
           }
 
-          catch (error) {
+          catch (
+            error
+          ) {
 
             lastError =
               error;
@@ -1832,184 +1461,92 @@
         }
 
 
-        trades =
-          [];
-
-
-        render();
-
-
-        setStatus(
-          "error",
-          "Google Sheet 讀取失敗"
-        );
-
-
-        $("errorBox")
-          .innerHTML =
-
-            "<strong>無法讀取 Google Sheet</strong><br>" +
-
-            `原因：${escapeHtml(
-              lastError?.message ||
-              "未知錯誤"
-            )}` +
-
-            "<br>" +
-
-            "請確認分享權限為「知道連結的使用者可檢視」。";
-
-
-        $("errorBox")
-          .style
-          .display =
-            "block";
-
-
-        setLoading(
-          false
-        );
-
-      }
-
-
-      /* ============================================
-         Loading / Status
-      ============================================ */
-
-      function setLoading(
-        loading
-      ) {
-
-        const button =
-          $("refreshBtn");
-
-
         button.disabled =
-          loading;
+          false;
 
 
         button.textContent =
-          loading
-
-            ? "讀取中…"
-
-            : "重新讀取 Google Sheet";
-
-      }
+          "更新";
 
 
-      function setStatus(
-        type,
-        text
-      ) {
-
-        const dot =
-          $("statusDot");
-
-
-        dot.className =
-          "dot" +
-
+        message.textContent =
+          "讀取失敗：" +
           (
-            type === "ok"
-
-              ? " ok"
-
-              : type === "error"
-
-                ? " err"
-
-                : ""
+            lastError?.message ||
+            "未知錯誤"
           );
 
 
-        $("statusText")
-          .textContent =
-            text;
+        message.className =
+          "message error";
 
       }
 
 
-      /* ============================================
-         Trade status badge
-      ============================================ */
-
-      function statusClass(
-        status
-      ) {
-
-        if (
-          status === "已獲利"
-        ) {
-
-          return "win";
-
-        }
-
-
-        if (
-          status === "已虧損"
-        ) {
-
-          return "loss";
-
-        }
-
-
-        if (
-          status === "持倉中"
-        ) {
-
-          return "open";
-
-        }
-
-
-        return "be";
-
-      }
-
-
-      /* ============================================
+      /* ==================================================
          Summary
-      ============================================ */
+      ================================================== */
 
-      function summary() {
+      function renderSummary() {
 
-        const wins =
+        const today =
+          todayString();
+
+
+        const todayTrades =
           trades.filter(
 
             trade =>
-              trade.status !== "持倉中" &&
+
+              normalizeDate(
+                trade.date
+              ) === today
+
+          );
+
+
+        const todayWins =
+          todayTrades.filter(
+
+            trade =>
               trade.netPnl > 0
 
           ).length;
 
 
-        const losses =
-          trades.filter(
+        const todayLosses =
+          todayTrades.filter(
 
             trade =>
-              trade.status !== "持倉中" &&
               trade.netPnl < 0
 
           ).length;
 
 
-        const open =
-          trades.filter(
-
-            trade =>
-              trade.status === "持倉中"
-
-          ).length;
+        const closedToday =
+          todayWins +
+          todayLosses;
 
 
-        const net =
+        const winRate =
+          closedToday > 0
+
+            ? (
+                todayWins /
+                closedToday
+              ) * 100
+
+            : 0;
+
+
+        const totalPnl =
           trades.reduce(
 
-            (total, trade) =>
+            (
+              total,
+              trade
+            ) =>
+
               total +
               trade.netPnl,
 
@@ -2018,64 +1555,89 @@
           );
 
 
-        const closedTrades =
-          wins + losses;
+        const currentBalance =
+          INITIAL_BALANCE +
+          totalPnl;
 
 
-        const winRate =
-          closedTrades > 0
+        /* 資金水位 */
 
-            ? (
-                wins /
-                closedTrades
-              ) * 100
-
-            : 0;
+        const balanceElement =
+          $("balance");
 
 
-        /* -------------------------
-           Total trades
-        ------------------------- */
+        balanceElement.textContent =
+          `${currentBalance.toFixed(2)} U`;
 
-        $("totalTrades")
+
+        balanceElement.className =
+          "card-value";
+
+
+        if (
+          currentBalance >
+          INITIAL_BALANCE
+        ) {
+
+          balanceElement
+            .classList
+            .add(
+              "positive"
+            );
+
+        }
+
+        else if (
+          currentBalance <
+          INITIAL_BALANCE
+        ) {
+
+          balanceElement
+            .classList
+            .add(
+              "negative"
+            );
+
+        }
+
+
+        /* 資金變化 */
+
+        const change =
+          currentBalance -
+          INITIAL_BALANCE;
+
+
+        $("balanceChange")
           .textContent =
-            trades.length;
+
+            `初始 ${INITIAL_BALANCE.toFixed(2)} U ｜ ` +
+
+            `${change >= 0 ? "+" : ""}` +
+
+            `${change.toFixed(2)} U`;
 
 
-        /* -------------------------
-           Wins
-        ------------------------- */
+        /* 今日單數 */
 
-        $("winTrades")
+        $("todayTrades")
           .textContent =
-            wins;
+            todayTrades.length;
 
 
-        /* -------------------------
-           Losses
-        ------------------------- */
+        /* 今日勝負 */
 
-        $("lossTrades")
-          .textContent =
-            losses;
+        $("todayWL")
+          .innerHTML =
 
+            `<span class="positive">${todayWins}</span>` +
 
-        /* -------------------------
-           Open
-        ------------------------- */
+            ` / ` +
 
-        $("openTrades")
-          .textContent =
-            open;
+            `<span class="negative">${todayLosses}</span>`;
 
 
-        /* =========================
-           WIN RATE COLOR
-
-           < 50% = RED
-           > 50% = GREEN
-           = 50% = YELLOW
-        ========================= */
+        /* 勝率 */
 
         const winRateElement =
           $("winRate");
@@ -2086,7 +1648,7 @@
 
 
         winRateElement.className =
-          "value";
+          "card-value";
 
 
         if (
@@ -2124,25 +1686,24 @@
         }
 
 
-        /* -------------------------
-           Total PNL
-        ------------------------- */
+        /* 累積盈虧 */
 
         const pnlElement =
           $("totalPnl");
 
 
         pnlElement.textContent =
-          `${net >= 0 ? "+" : ""}` +
-          `${net.toFixed(2)} U`;
+          formatPnl(
+            totalPnl
+          );
 
 
         pnlElement.className =
-          "value";
+          "card-value";
 
 
         if (
-          net > 0
+          totalPnl > 0
         ) {
 
           pnlElement
@@ -2154,7 +1715,7 @@
         }
 
         else if (
-          net < 0
+          totalPnl < 0
         ) {
 
           pnlElement
@@ -2165,116 +1726,51 @@
 
         }
 
-      }
 
-
-      /* ============================================
-         Filters
-      ============================================ */
-
-      function getFilteredTrades() {
-
-        const query =
-          $("search")
-            .value
-            .trim()
-            .toLowerCase();
-
-
-        const status =
-          $("statusFilter")
-            .value;
-
-
-        const side =
-          $("sideFilter")
-            .value;
-
-
-        return trades.filter(
-
-          trade => {
-
-            const searchableText =
-              `${trade.symbol} ${trade.date}`
-                .toLowerCase();
-
-
-            const matchSearch =
-              !query ||
-
-              searchableText.includes(
-                query
-              );
-
-
-            const matchStatus =
-              !status ||
-
-              trade.status ===
-                status;
-
-
-            const matchSide =
-              !side ||
-
-              trade.side ===
-                side;
-
-
-            return (
-              matchSearch &&
-              matchStatus &&
-              matchSide
-            );
-
-          }
-
-        );
-
-      }
-
-
-      /* ============================================
-         Render table
-      ============================================ */
-
-      function render() {
-
-        summary();
-
-
-        const list =
-          getFilteredTrades();
-
-
-        $("visibleCount")
+        $("totalTradesText")
           .textContent =
+            `共 ${trades.length} 筆`;
 
-            `${list.length} / ` +
-            `${trades.length} 筆`;
+      }
 
+
+      /* ==================================================
+         Table
+      ================================================== */
+
+      function renderTable() {
 
         const tbody =
-          $("rows");
+          $("tradeRows");
+
+
+        const empty =
+          $("emptyState");
 
 
         tbody.innerHTML =
           "";
 
 
-        $("empty")
-          .style
-          .display =
+        const sortedTrades =
+          [...trades]
+            .reverse();
 
-            list.length
-              ? "none"
-              : "block";
+
+        $("tradeCount")
+          .textContent =
+            `${trades.length} 筆`;
+
+
+        empty.style.display =
+          sortedTrades.length
+            ? "none"
+            : "block";
 
 
         for (
           const trade
-          of list
+          of sortedTrades
         ) {
 
           const row =
@@ -2283,35 +1779,53 @@
             );
 
 
-          const leverage =
-            trade.leverage
+          let leverage =
+            trade.leverage ||
+            "-";
 
-              ? (
-                  String(
-                    trade.leverage
-                  )
-                    .toLowerCase()
-                    .includes("x")
 
-                    ? trade.leverage
+          if (
+            leverage !== "-" &&
+            !String(leverage)
+              .toLowerCase()
+              .includes("x")
+          ) {
 
-                    : `${trade.leverage}x`
-                )
+            leverage +=
+              "x";
 
-              : "-";
+          }
+
+
+          const pnlClass =
+            trade.netPnl > 0
+              ? "positive"
+              : trade.netPnl < 0
+                ? "negative"
+                : "";
+
+
+          const resultClass =
+            trade.status === "WIN"
+              ? "positive"
+              : trade.status === "LOSS"
+                ? "negative"
+                : "yellow";
 
 
           row.innerHTML = `
 
             <td>
               ${escapeHtml(
-                trade.date || "-"
+                displayDate(
+                  trade.date
+                )
               )}
             </td>
 
             <td class="symbol">
               ${escapeHtml(
-                trade.symbol || "-"
+                trade.symbol
               )}
             </td>
 
@@ -2322,7 +1836,7 @@
 
                   ? `
                     <span
-                      class="badge ${
+                      class="side ${
                         trade.side === "多"
                           ? "long"
                           : "short"
@@ -2345,62 +1859,20 @@
               )}
             </td>
 
-            <td>
-
-              <span
-                class="badge ${
-                  statusClass(
-                    trade.status
-                  )
-                }"
-              >
-
-                ${escapeHtml(
-                  trade.status || "-"
-                )}
-
-              </span>
-
-            </td>
-
             <td
-              class="${
-                trade.grossPnl > 0
-
-                  ? "positive"
-
-                  : trade.grossPnl < 0
-
-                    ? "negative"
-
-                    : ""
-              }"
+              class="result ${resultClass}"
             >
-
-              ${money(
-                trade.grossPnl
+              ${escapeHtml(
+                trade.status
               )}
-
             </td>
 
             <td
-              class="${
-                trade.netPnl > 0
-
-                  ? "positive"
-
-                  : trade.netPnl < 0
-
-                    ? "negative"
-
-                    : ""
-              }"
+              class="${pnlClass}"
             >
-
-              ${money(
+              ${formatPnl(
                 trade.netPnl
               )}
-
             </td>
 
           `;
@@ -2415,158 +1887,22 @@
       }
 
 
-      /* ============================================
-         Export CSV
-      ============================================ */
+      /* ==================================================
+         Render
+      ================================================== */
 
-      function exportCurrent() {
+      function render() {
 
-        const list =
-          getFilteredTrades();
+        renderSummary();
 
-
-        if (
-          !list.length
-        ) {
-
-          alert(
-            "目前沒有可匯出的資料。"
-          );
-
-          return;
-
-        }
-
-
-        const data = [
-
-          [
-            "日期",
-            "標的",
-            "方向",
-            "槓桿",
-            "狀態",
-            "平倉盈虧",
-            "淨盈虧"
-          ],
-
-          ...list.map(
-
-            trade => [
-
-              trade.date,
-
-              trade.symbol,
-
-              trade.side,
-
-              trade.leverage,
-
-              trade.status,
-
-              trade.grossPnl,
-
-              trade.netPnl
-
-            ]
-
-          )
-
-        ];
-
-
-        const csv =
-
-          "\uFEFF" +
-
-          data
-            .map(
-
-              row =>
-
-                row
-                  .map(
-
-                    value =>
-
-                      `"${String(
-                        value ?? ""
-                      ).replaceAll(
-                        '"',
-                        '""'
-                      )}"`
-
-                  )
-
-                  .join(",")
-
-            )
-
-            .join("\n");
-
-
-        const blob =
-          new Blob(
-
-            [csv],
-
-            {
-              type:
-                "text/csv;charset=utf-8"
-            }
-
-          );
-
-
-        const url =
-          URL.createObjectURL(
-            blob
-          );
-
-
-        const link =
-          document.createElement(
-            "a"
-          );
-
-
-        link.href =
-          url;
-
-
-        link.download =
-          `crypto-trades-${
-            new Date()
-              .toISOString()
-              .slice(
-                0,
-                10
-              )
-          }.csv`;
-
-
-        document.body
-          .appendChild(
-            link
-          );
-
-
-        link.click();
-
-
-        link.remove();
-
-
-        URL.revokeObjectURL(
-          url
-        );
+        renderTable();
 
       }
 
 
-      /* ============================================
+      /* ==================================================
          Events
-      ============================================ */
+      ================================================== */
 
       $("refreshBtn")
         .addEventListener(
@@ -2575,44 +1911,15 @@
         );
 
 
-      $("exportBtn")
-        .addEventListener(
-          "click",
-          exportCurrent
-        );
-
-
-      $("search")
-        .addEventListener(
-          "input",
-          render
-        );
-
-
-      $("statusFilter")
-        .addEventListener(
-          "change",
-          render
-        );
-
-
-      $("sideFilter")
-        .addEventListener(
-          "change",
-          render
-        );
-
-
-      /* ============================================
+      /* ==================================================
          Init
-      ============================================ */
+      ================================================== */
 
       render();
 
       fetchSheet();
 
     })();
-
   </script>
 
 </body>
