@@ -19,6 +19,7 @@
       --green: #2fd27c;
       --red: #ff6674;
       --yellow: #e9bd4c;
+      --blue: #78aefc;
     }
 
     * {
@@ -60,7 +61,6 @@
       align-items: center;
 
       gap: 16px;
-
       margin-bottom: 14px;
     }
 
@@ -116,7 +116,6 @@
         repeat(4, minmax(0, 1fr));
 
       gap: 8px;
-
       margin-bottom: 10px;
     }
 
@@ -136,10 +135,10 @@
     }
 
     .card-label {
+      margin-bottom: 4px;
+
       color: var(--muted);
       font-size: 11px;
-
-      margin-bottom: 4px;
     }
 
     .card-value {
@@ -178,8 +177,12 @@
       color: var(--yellow) !important;
     }
 
+    .blue {
+      color: var(--blue) !important;
+    }
+
     /* =========================
-       TABLE
+       TRADE PANEL
     ========================= */
 
     .table-panel {
@@ -192,57 +195,76 @@
     }
 
     .table-header {
+      position: relative;
+
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
 
-      padding: 10px 12px;
+      min-height: 38px;
+      padding: 8px 10px;
 
       border-bottom: 1px solid var(--border);
     }
 
     .table-header h2 {
+      width: 100%;
       margin: 0;
+
+      text-align: center;
 
       font-size: 14px;
       font-weight: 800;
     }
 
     .trade-count {
+      position: absolute;
+
+      right: 10px;
+
       color: var(--muted);
-      font-size: 11px;
+
+      font-size: 10px;
     }
 
+    /* =========================
+       TABLE
+    ========================= */
+
     .table-wrap {
-      overflow-x: auto;
+      width: 100%;
+      overflow-x: hidden;
     }
 
     table {
       width: 100%;
-      min-width: 680px;
 
       border-collapse: collapse;
+      table-layout: fixed;
     }
 
     th,
     td {
-      padding: 7px 11px;
+      padding: 6px 4px;
 
       border-bottom:
         1px solid rgba(38, 48, 61, 0.72);
 
-      text-align: left;
+      text-align: center;
 
-      font-size: 12px;
-      line-height: 1.25;
+      font-size: 11px;
+      line-height: 1.2;
 
       white-space: nowrap;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     th {
       color: var(--muted);
 
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
 
       background: #0e141c;
@@ -256,24 +278,72 @@
       background: rgba(255, 255, 255, 0.018);
     }
 
+    /* 日期 */
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 12%;
+    }
+
+    /* 標的 */
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 24%;
+    }
+
+    /* 方向 */
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 10%;
+    }
+
+    /* 槓桿 */
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 13%;
+    }
+
+    /* 結果 */
+
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 15%;
+    }
+
+    /* 淨盈虧 */
+
+    th:nth-child(6),
+    td:nth-child(6) {
+      width: 26%;
+    }
+
     .symbol {
       color: #fff;
+
       font-weight: 800;
+      text-align: center;
     }
+
+    /* =========================
+       SIDE BADGE
+    ========================= */
 
     .side {
       display: inline-flex;
       align-items: center;
       justify-content: center;
 
-      min-width: 35px;
-      min-height: 20px;
+      min-width: 30px;
+      min-height: 19px;
 
-      padding: 0 7px;
+      padding: 0 5px;
 
       border-radius: 999px;
 
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 800;
     }
 
@@ -287,14 +357,26 @@
       background: rgba(255, 102, 116, 0.08);
     }
 
+    /* =========================
+       RESULT
+    ========================= */
+
     .result {
       font-weight: 800;
     }
 
+    .result.open {
+      color: var(--blue);
+    }
+
+    /* =========================
+       EMPTY
+    ========================= */
+
     .empty {
       display: none;
 
-      padding: 36px 20px;
+      padding: 30px 20px;
 
       color: var(--muted);
 
@@ -351,8 +433,23 @@
         padding-top: 14px;
       }
 
+      .header {
+        gap: 8px;
+      }
+
       .header h1 {
-        font-size: 22px;
+        font-size: 21px;
+      }
+
+      .header p {
+        font-size: 10px;
+      }
+
+      .refresh-btn {
+        min-height: 34px;
+        padding: 0 11px;
+
+        font-size: 11px;
       }
 
       .summary {
@@ -369,6 +466,46 @@
 
       .card.primary .card-value {
         font-size: 28px;
+      }
+
+      .table-header {
+        min-height: 36px;
+
+        padding: 7px 8px;
+      }
+
+      .table-header h2 {
+        font-size: 13px;
+      }
+
+      .trade-count {
+        right: 8px;
+
+        font-size: 9px;
+      }
+
+      th,
+      td {
+        padding: 5px 2px;
+
+        font-size: 10px;
+      }
+
+      th {
+        font-size: 9px;
+      }
+
+      .symbol {
+        font-size: 10px;
+      }
+
+      .side {
+        min-width: 26px;
+        min-height: 17px;
+
+        padding: 0 3px;
+
+        font-size: 8px;
       }
     }
   </style>
@@ -453,8 +590,11 @@
           0
         </div>
 
-        <div class="card-sub">
-          今日已記錄
+        <div
+          class="card-sub"
+          id="openTradeText"
+        >
+          持倉 0 筆
         </div>
 
       </article>
@@ -482,7 +622,7 @@
       </article>
 
 
-      <!-- 勝率 -->
+      <!-- 今日勝率 -->
 
       <article class="card">
 
@@ -523,7 +663,7 @@
           class="card-sub"
           id="todayTradesText"
         >
-          今日共 0 筆
+          已平倉 0 筆
         </div>
 
       </article>
@@ -655,7 +795,18 @@
 
 
       /* ==================================================
-         欄位名稱
+         Google Sheet 欄位
+
+         A 日期
+         B 標的
+         C 方向
+         D 槓桿
+         E 淨盈虧
+
+         E 空白 = 持倉中
+         E > 0 = WIN
+         E < 0 = LOSS
+         E = 0 = BE
       ================================================== */
 
       const COLUMN_ALIASES = {
@@ -685,13 +836,6 @@
           "槓桿",
           "槓桿倍數",
           "leverage"
-        ],
-
-        status: [
-          "狀態",
-          "結果",
-          "交易狀態",
-          "status"
         ],
 
         netPnl: [
@@ -816,7 +960,7 @@
 
 
       /* ==================================================
-         日期
+         日期處理
       ================================================== */
 
       function normalizeDate(value) {
@@ -941,7 +1085,7 @@
 
 
       /* ==================================================
-         CSV
+         CSV Parser
       ================================================== */
 
       function parseCSV(text) {
@@ -1102,7 +1246,7 @@
 
 
       /* ==================================================
-         Google Sheet 資料轉換
+         Google Sheet 轉換
       ================================================== */
 
       function mapSheet(
@@ -1156,7 +1300,7 @@
         ) {
 
           throw new Error(
-            "找不到標的欄位"
+            "找不到「標的」欄位"
           );
 
         }
@@ -1167,7 +1311,7 @@
         ) {
 
           throw new Error(
-            "找不到淨盈虧欄位"
+            "找不到「淨盈虧」欄位"
           );
 
         }
@@ -1201,13 +1345,33 @@
               );
 
 
-              const netPnl =
-                number(
-                  row[
-                    columns.netPnl
-                  ]
-                );
+              /* =========================
+                 淨盈虧
 
+                 空白 = 持倉中
+              ========================= */
+
+              const rawPnl =
+                row[
+                  columns.netPnl
+                ] ?? "";
+
+
+              const hasPnl =
+                String(
+                  rawPnl
+                ).trim() !== "";
+
+
+              const netPnl =
+                hasPnl
+                  ? number(rawPnl)
+                  : 0;
+
+
+              /* =========================
+                 方向
+              ========================= */
 
               let side =
                 columns.side
@@ -1241,31 +1405,42 @@
               }
 
 
-              let status;
+              /* =========================
+                 狀態
+              ========================= */
+
+              let status =
+                "OPEN";
 
 
               if (
-                netPnl > 0
+                hasPnl
               ) {
 
-                status =
-                  "WIN";
+                if (
+                  netPnl > 0
+                ) {
 
-              }
+                  status =
+                    "WIN";
 
-              else if (
-                netPnl < 0
-              ) {
+                }
 
-                status =
-                  "LOSS";
+                else if (
+                  netPnl < 0
+                ) {
 
-              }
+                  status =
+                    "LOSS";
 
-              else {
+                }
 
-                status =
-                  "BE";
+                else {
+
+                  status =
+                    "BE";
+
+                }
 
               }
 
@@ -1301,6 +1476,8 @@
                     : "",
 
                 status,
+
+                hasPnl,
 
                 netPnl
 
@@ -1504,8 +1681,26 @@
           );
 
 
-        const todayWins =
+        const todayOpenTrades =
           todayTrades.filter(
+
+            trade =>
+              trade.status === "OPEN"
+
+          );
+
+
+        const todayClosedTrades =
+          todayTrades.filter(
+
+            trade =>
+              trade.status !== "OPEN"
+
+          );
+
+
+        const todayWins =
+          todayClosedTrades.filter(
 
             trade =>
               trade.netPnl > 0
@@ -1514,7 +1709,7 @@
 
 
         const todayLosses =
-          todayTrades.filter(
+          todayClosedTrades.filter(
 
             trade =>
               trade.netPnl < 0
@@ -1539,7 +1734,7 @@
 
 
         const todayPnl =
-          todayTrades.reduce(
+          todayClosedTrades.reduce(
 
             (
               total,
@@ -1617,7 +1812,7 @@
 
 
         /* =========================
-           今日單數
+           今日交易
         ========================= */
 
         $("todayTrades")
@@ -1625,8 +1820,13 @@
             todayTrades.length;
 
 
+        $("openTradeText")
+          .textContent =
+            `持倉 ${todayOpenTrades.length} 筆`;
+
+
         /* =========================
-           今日勝負
+           今日勝 / 負
         ========================= */
 
         $("todayWL")
@@ -1641,6 +1841,10 @@
 
         /* =========================
            今日勝率
+
+           < 50 = 紅
+           > 50 = 綠
+           = 50 = 黃
         ========================= */
 
         const winRateElement =
@@ -1656,6 +1860,18 @@
 
 
         if (
+          closedToday === 0
+        ) {
+
+          winRateElement
+            .classList
+            .add(
+              "neutral"
+            );
+
+        }
+
+        else if (
           winRate < 50
         ) {
 
@@ -1735,7 +1951,7 @@
 
         $("todayTradesText")
           .textContent =
-            `今日共 ${todayTrades.length} 筆`;
+            `已平倉 ${todayClosedTrades.length} 筆`;
 
       }
 
@@ -1785,6 +2001,8 @@
             );
 
 
+          /* 槓桿 */
+
           let leverage =
             trade.leverage ||
             "-";
@@ -1803,20 +2021,52 @@
           }
 
 
-          const pnlClass =
-            trade.netPnl > 0
-              ? "positive"
-              : trade.netPnl < 0
-                ? "negative"
-                : "";
+          /* PNL 顏色 */
 
+          const pnlClass =
+            trade.status === "OPEN"
+
+              ? "blue"
+
+              : trade.netPnl > 0
+
+                ? "positive"
+
+                : trade.netPnl < 0
+
+                  ? "negative"
+
+                  : "yellow";
+
+
+          /* Result 顏色 */
 
           const resultClass =
             trade.status === "WIN"
+
               ? "positive"
+
               : trade.status === "LOSS"
+
                 ? "negative"
-                : "yellow";
+
+                : trade.status === "OPEN"
+
+                  ? "open"
+
+                  : "yellow";
+
+
+          /* PNL 顯示 */
+
+          const pnlText =
+            trade.status === "OPEN"
+
+              ? "-"
+
+              : formatPnl(
+                  trade.netPnl
+                );
 
 
           row.innerHTML = `
@@ -1876,8 +2126,8 @@
             <td
               class="${pnlClass}"
             >
-              ${formatPnl(
-                trade.netPnl
+              ${escapeHtml(
+                pnlText
               )}
             </td>
 
