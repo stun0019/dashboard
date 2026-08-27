@@ -219,7 +219,6 @@
 
     .trade-count {
       position: absolute;
-
       right: 10px;
 
       color: var(--muted);
@@ -562,14 +561,14 @@
           class="card-value"
           id="balance"
         >
-          34.81 U
+          79.30 U
         </div>
 
         <div
           class="card-sub"
           id="balanceChange"
         >
-          今日初始 34.81 U
+          起始 79.30 U ｜ 累積 +0.00 U
         </div>
 
       </article>
@@ -760,10 +759,22 @@
     (() => {
 
       /* ==================================================
-         8/27 今日初始本金
+         資金基準
+
+         2026/08/26
+         起始本金 79.30 U
+
+         之後不需要每天修改本金。
+
+         當前資金 =
+         79.30
+         +
+         2026/08/26 起所有已平倉交易淨盈虧
       ================================================== */
 
-      const INITIAL_BALANCE = 68.17;
+      const STARTING_BALANCE = 68.17;
+
+      const CAPITAL_START_DATE = "2026-08-27";
 
 
       /* ==================================================
@@ -803,7 +814,7 @@
          D 槓桿
          E 淨盈虧
 
-         E 空白 = 持倉中
+         E 空白 = OPEN
          E > 0 = WIN
          E < 0 = LOSS
          E = 0 = BE
@@ -979,7 +990,12 @@
         }
 
 
-        const match =
+        /*
+          YYYY/MM/DD
+          YYYY-MM-DD
+        */
+
+        let match =
           text.match(
             /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/
           );
@@ -1007,6 +1023,51 @@
               2,
               "0"
             );
+
+
+          return (
+            `${year}-${month}-${day}`
+          );
+
+        }
+
+
+        /*
+          MM/DD/YYYY
+          MM-DD-YYYY
+
+          Google Sheet 某些 Locale
+          可能會輸出這種格式
+        */
+
+        match =
+          text.match(
+            /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/
+          );
+
+
+        if (
+          match
+        ) {
+
+          const month =
+            String(
+              match[1]
+            ).padStart(
+              2,
+              "0"
+            );
+
+          const day =
+            String(
+              match[2]
+            ).padStart(
+              2,
+              "0"
+            );
+
+          const year =
+            match[3];
 
 
           return (
@@ -1296,6 +1357,17 @@
 
 
         if (
+          !columns.date
+        ) {
+
+          throw new Error(
+            "找不到「日期」欄位"
+          );
+
+        }
+
+
+        if (
           !columns.symbol
         ) {
 
@@ -1367,6 +1439,18 @@
                 hasPnl
                   ? number(rawPnl)
                   : 0;
+
+
+              /* =========================
+                 日期
+              ========================= */
+
+              const date =
+                normalizeDate(
+                  row[
+                    columns.date
+                  ] ?? ""
+                );
 
 
               /* =========================
@@ -1450,12 +1534,7 @@
                 id:
                   index,
 
-                date:
-                  columns.date
-                    ? row[
-                        columns.date
-                      ]
-                    : "",
+                date,
 
                 symbol:
                   String(
@@ -1669,14 +1748,17 @@
           todayString();
 
 
+        /* ==================================================
+           今日交易
+        ================================================== */
+
         const todayTrades =
           trades.filter(
 
             trade =>
 
-              normalizeDate(
-                trade.date
-              ) === today
+              trade.date ===
+              today
 
           );
 
@@ -1749,9 +1831,47 @@
           );
 
 
+        /* ==================================================
+           累積資金
+
+           只計算：
+           1. 2026/08/26 起
+           2. 已平倉
+        ================================================== */
+
+        const capitalTrades =
+          trades.filter(
+
+            trade =>
+
+              trade.date >=
+                CAPITAL_START_DATE &&
+
+              trade.status !==
+                "OPEN"
+
+          );
+
+
+        const cumulativePnl =
+          capitalTrades.reduce(
+
+            (
+              total,
+              trade
+            ) =>
+
+              total +
+              trade.netPnl,
+
+            0
+
+          );
+
+
         const currentBalance =
-          INITIAL_BALANCE +
-          todayPnl;
+          STARTING_BALANCE +
+          cumulativePnl;
 
 
         /* =========================
@@ -1772,7 +1892,7 @@
 
         if (
           currentBalance >
-          INITIAL_BALANCE
+          STARTING_BALANCE
         ) {
 
           balanceElement
@@ -1785,7 +1905,7 @@
 
         else if (
           currentBalance <
-          INITIAL_BALANCE
+          STARTING_BALANCE
         ) {
 
           balanceElement
@@ -1796,19 +1916,29 @@
 
         }
 
+        else {
+
+          balanceElement
+            .classList
+            .add(
+              "neutral"
+            );
+
+        }
+
 
         /* =========================
-           資金變化
+           累積資金變化
         ========================= */
 
         $("balanceChange")
           .textContent =
 
-            `今日初始 ${INITIAL_BALANCE.toFixed(2)} U ｜ ` +
+            `起始 ${STARTING_BALANCE.toFixed(2)} U ｜ ` +
 
-            `${todayPnl >= 0 ? "+" : ""}` +
+            `累積 ${cumulativePnl >= 0 ? "+" : ""}` +
 
-            `${todayPnl.toFixed(2)} U`;
+            `${cumulativePnl.toFixed(2)} U`;
 
 
         /* =========================
@@ -1948,6 +2078,16 @@
 
         }
 
+        else {
+
+          pnlElement
+            .classList
+            .add(
+              "neutral"
+            );
+
+        }
+
 
         $("todayTradesText")
           .textContent =
@@ -2001,7 +2141,9 @@
             );
 
 
-          /* 槓桿 */
+          /* =========================
+             槓桿
+          ========================= */
 
           let leverage =
             trade.leverage ||
@@ -2021,7 +2163,9 @@
           }
 
 
-          /* PNL 顏色 */
+          /* =========================
+             PNL 顏色
+          ========================= */
 
           const pnlClass =
             trade.status === "OPEN"
@@ -2039,7 +2183,9 @@
                   : "yellow";
 
 
-          /* Result 顏色 */
+          /* =========================
+             Result 顏色
+          ========================= */
 
           const resultClass =
             trade.status === "WIN"
@@ -2057,7 +2203,9 @@
                   : "yellow";
 
 
-          /* PNL 顯示 */
+          /* =========================
+             PNL 顯示
+          ========================= */
 
           const pnlText =
             trade.status === "OPEN"
