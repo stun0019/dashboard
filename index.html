@@ -20,6 +20,9 @@
       --red: #ff6674;
       --yellow: #e9bd4c;
       --blue: #78aefc;
+
+      --risk-bg: rgba(255, 102, 116, 0.18);
+      --risk-border: rgba(255, 102, 116, 0.42);
     }
 
     * {
@@ -244,7 +247,7 @@
 
     th,
     td {
-      padding: 6px 4px;
+      padding: 6px 3px;
 
       border-bottom:
         1px solid rgba(38, 48, 61, 0.72);
@@ -288,35 +291,42 @@
 
     th:nth-child(2),
     td:nth-child(2) {
-      width: 24%;
+      width: 21%;
     }
 
     /* 方向 */
 
     th:nth-child(3),
     td:nth-child(3) {
-      width: 10%;
+      width: 9%;
     }
 
     /* 槓桿 */
 
     th:nth-child(4),
     td:nth-child(4) {
-      width: 13%;
+      width: 11%;
     }
 
     /* 結果 */
 
     th:nth-child(5),
     td:nth-child(5) {
-      width: 15%;
+      width: 12%;
     }
 
     /* 淨盈虧 */
 
     th:nth-child(6),
     td:nth-child(6) {
-      width: 26%;
+      width: 19%;
+    }
+
+    /* 盈虧% */
+
+    th:nth-child(7),
+    td:nth-child(7) {
+      width: 16%;
     }
 
     .symbol {
@@ -366,6 +376,54 @@
 
     .result.open {
       color: var(--blue);
+    }
+
+    /* =========================
+       盈虧 %
+    ========================= */
+
+    .percent-value {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      min-width: 43px;
+
+      padding: 2px 4px;
+
+      border: 1px solid transparent;
+      border-radius: 6px;
+
+      font-weight: 800;
+    }
+
+    .percent-profit {
+      color: var(--green);
+    }
+
+    .percent-loss {
+      color: var(--red);
+    }
+
+    .percent-zero {
+      color: var(--yellow);
+    }
+
+    /*
+      單筆虧損超過總資金 10%
+      才視為超出風控。
+
+      -10.0% 仍屬正常範圍。
+      -10.1% 開始警示。
+    */
+
+    .risk-breach {
+      color: #fff;
+
+      background: var(--risk-bg);
+      border-color: var(--risk-border);
+
+      font-weight: 900;
     }
 
     /* =========================
@@ -485,24 +543,32 @@
 
       th,
       td {
-        padding: 5px 2px;
+        padding: 5px 1px;
 
-        font-size: 10px;
-      }
-
-      th {
         font-size: 9px;
       }
 
+      th {
+        font-size: 8px;
+      }
+
       .symbol {
-        font-size: 10px;
+        font-size: 9px;
       }
 
       .side {
-        min-width: 26px;
+        min-width: 24px;
         min-height: 17px;
 
-        padding: 0 3px;
+        padding: 0 2px;
+
+        font-size: 8px;
+      }
+
+      .percent-value {
+        min-width: 36px;
+
+        padding: 2px 2px;
 
         font-size: 8px;
       }
@@ -561,24 +627,27 @@
           class="card-value"
           id="balance"
         >
-          79.30 U
+          91.23 U
         </div>
 
         <div
           class="card-sub"
           id="balanceChange"
         >
-          起始 79.30 U ｜ 累積 +0.00 U
+          起始 91.23 U ｜ 累積 +0.00 U
         </div>
 
       </article>
 
 
-      <!-- 今日交易 -->
+      <!-- 交易數 -->
 
       <article class="card">
 
-        <div class="card-label">
+        <div
+          class="card-label"
+          id="tradeDayLabel"
+        >
           今日交易
         </div>
 
@@ -599,11 +668,14 @@
       </article>
 
 
-      <!-- 今日勝負 -->
+      <!-- 勝負 -->
 
       <article class="card">
 
-        <div class="card-label">
+        <div
+          class="card-label"
+          id="winLossLabel"
+        >
           今日勝 / 負
         </div>
 
@@ -621,11 +693,14 @@
       </article>
 
 
-      <!-- 今日勝率 -->
+      <!-- 勝率 -->
 
       <article class="card">
 
-        <div class="card-label">
+        <div
+          class="card-label"
+          id="winRateLabel"
+        >
           今日勝率
         </div>
 
@@ -633,7 +708,7 @@
           class="card-value"
           id="winRate"
         >
-          0.0%
+          --
         </div>
 
         <div class="card-sub">
@@ -643,11 +718,14 @@
       </article>
 
 
-      <!-- 今日淨盈虧 -->
+      <!-- 淨盈虧 -->
 
       <article class="card">
 
-        <div class="card-label">
+        <div
+          class="card-label"
+          id="pnlLabel"
+        >
           今日淨盈虧
         </div>
 
@@ -655,7 +733,7 @@
           class="card-value"
           id="todayPnl"
         >
-          0.00 U
+          +0.00 U
         </div>
 
         <div
@@ -724,6 +802,10 @@
                 淨盈虧
               </th>
 
+              <th>
+                盈虧%
+              </th>
+
             </tr>
 
           </thead>
@@ -761,20 +843,29 @@
       /* ==================================================
          資金基準
 
-         2026/08/26
-         起始本金 79.30 U
-
-         之後不需要每天修改本金。
+         2026/08/31
+         起始本金 91.23 U
 
          當前資金 =
-         79.30
+         91.23
          +
-         2026/08/26 起所有已平倉交易淨盈虧
+         2026/08/31 起所有已平倉交易淨盈虧
       ================================================== */
 
-      const STARTING_BALANCE = 68.17;
+      const STARTING_BALANCE = 91.23;
 
-      const CAPITAL_START_DATE = "2026-08-27";
+      const CAPITAL_START_DATE = "2026-08-31";
+
+
+      /* ==================================================
+         風控
+
+         單筆虧損占總資金：
+         0 ~ -10% = 正常
+         < -10% = 超出風控
+      ================================================== */
+
+      const MAX_NORMAL_LOSS_PERCENT = 10;
 
 
       /* ==================================================
@@ -813,11 +904,17 @@
          C 方向
          D 槓桿
          E 淨盈虧
+         F 盈虧%
 
          E 空白 = OPEN
          E > 0 = WIN
          E < 0 = LOSS
          E = 0 = BE
+
+         F 建議格式：
+         +5.2%
+         -8.5%
+         -40.3%
       ================================================== */
 
       const COLUMN_ALIASES = {
@@ -855,6 +952,18 @@
           "淨利",
           "netpnl",
           "net pnl"
+        ],
+
+        pnlPercent: [
+          "盈虧%",
+          "盈虧％",
+          "損益%",
+          "損益％",
+          "止盈/止損%",
+          "止盈止損%",
+          "pnl%",
+          "pnlpercent",
+          "pnl percent"
         ]
 
       };
@@ -897,6 +1006,41 @@
         return Number.isFinite(result)
           ? result
           : 0;
+
+      }
+
+
+      function percentNumber(value) {
+
+        const text =
+          String(value ?? "")
+            .trim();
+
+
+        if (
+          text === ""
+        ) {
+
+          return null;
+
+        }
+
+
+        const cleaned =
+          text
+            .replace(/,/g, "")
+            .replace(/％/g, "%")
+            .replace(/%/g, "")
+            .trim();
+
+
+        const result =
+          Number(cleaned);
+
+
+        return Number.isFinite(result)
+          ? result
+          : null;
 
       }
 
@@ -970,6 +1114,27 @@
       }
 
 
+      function formatPercent(value) {
+
+        if (
+          value === null ||
+          value === undefined ||
+          !Number.isFinite(value)
+        ) {
+
+          return "-";
+
+        }
+
+
+        return (
+          `${value > 0 ? "+" : ""}` +
+          `${value.toFixed(1)}%`
+        );
+
+      }
+
+
       /* ==================================================
          日期處理
       ================================================== */
@@ -1035,9 +1200,6 @@
         /*
           MM/DD/YYYY
           MM-DD-YYYY
-
-          Google Sheet 某些 Locale
-          可能會輸出這種格式
         */
 
         match =
@@ -1141,6 +1303,79 @@
         return (
           `${year}-${month}-${day}`
         );
+
+      }
+
+
+      /* ==================================================
+         交易日
+
+         如果今天已有交易：
+         → 顯示今天
+
+         如果已過 00:00，
+         但今天尚未新增交易：
+         → 繼續顯示 Sheet 最新交易日
+
+         這樣跨午夜平倉，
+         不會讓上方 Panel 突然歸零。
+      ================================================== */
+
+      function getActiveTradeDate() {
+
+        if (
+          trades.length === 0
+        ) {
+
+          return todayString();
+
+        }
+
+
+        const today =
+          todayString();
+
+
+        const hasTodayTrade =
+          trades.some(
+
+            trade =>
+              trade.date === today
+
+          );
+
+
+        if (
+          hasTodayTrade
+        ) {
+
+          return today;
+
+        }
+
+
+        const validDates =
+          trades
+            .map(
+              trade =>
+                trade.date
+            )
+            .filter(
+              date =>
+                /^\d{4}-\d{2}-\d{2}$/.test(date)
+            );
+
+
+        if (
+          validDates.length === 0
+        ) {
+
+          return today;
+
+        }
+
+
+        return validDates.sort().at(-1);
 
       }
 
@@ -1419,8 +1654,6 @@
 
               /* =========================
                  淨盈虧
-
-                 空白 = 持倉中
               ========================= */
 
               const rawPnl =
@@ -1439,6 +1672,24 @@
                 hasPnl
                   ? number(rawPnl)
                   : 0;
+
+
+              /* =========================
+                 盈虧%
+              ========================= */
+
+              const rawPnlPercent =
+                columns.pnlPercent
+                  ? row[
+                      columns.pnlPercent
+                    ] ?? ""
+                  : "";
+
+
+              const pnlPercent =
+                percentNumber(
+                  rawPnlPercent
+                );
 
 
               /* =========================
@@ -1558,7 +1809,9 @@
 
                 hasPnl,
 
-                netPnl
+                netPnl,
+
+                pnlPercent
 
               };
 
@@ -1748,23 +2001,63 @@
           todayString();
 
 
+        const activeTradeDate =
+          getActiveTradeDate();
+
+
+        /*
+          如果交易日就是今天，
+          Panel 顯示「今日」。
+
+          如果是跨午夜且沒有新交易，
+          顯示例如「08/31」。
+        */
+
+        const dayLabel =
+          activeTradeDate === today
+            ? "今日"
+            : displayDate(
+                activeTradeDate
+              );
+
+
+        $("tradeDayLabel")
+          .textContent =
+            `${dayLabel}交易`;
+
+
+        $("winLossLabel")
+          .textContent =
+            `${dayLabel}勝 / 負`;
+
+
+        $("winRateLabel")
+          .textContent =
+            `${dayLabel}勝率`;
+
+
+        $("pnlLabel")
+          .textContent =
+            `${dayLabel}淨盈虧`;
+
+
         /* ==================================================
-           今日交易
+           當前交易日
         ================================================== */
 
-        const todayTrades =
+        const activeTrades =
           trades.filter(
 
             trade =>
 
               trade.date ===
-              today
+              activeTradeDate
 
           );
 
 
-        const todayOpenTrades =
-          todayTrades.filter(
+        const activeOpenTrades =
+          activeTrades.filter(
 
             trade =>
               trade.status === "OPEN"
@@ -1772,8 +2065,8 @@
           );
 
 
-        const todayClosedTrades =
-          todayTrades.filter(
+        const activeClosedTrades =
+          activeTrades.filter(
 
             trade =>
               trade.status !== "OPEN"
@@ -1781,8 +2074,8 @@
           );
 
 
-        const todayWins =
-          todayClosedTrades.filter(
+        const activeWins =
+          activeClosedTrades.filter(
 
             trade =>
               trade.netPnl > 0
@@ -1790,8 +2083,8 @@
           ).length;
 
 
-        const todayLosses =
-          todayClosedTrades.filter(
+        const activeLosses =
+          activeClosedTrades.filter(
 
             trade =>
               trade.netPnl < 0
@@ -1799,24 +2092,24 @@
           ).length;
 
 
-        const closedToday =
-          todayWins +
-          todayLosses;
+        const closedCount =
+          activeWins +
+          activeLosses;
 
 
         const winRate =
-          closedToday > 0
+          closedCount > 0
 
             ? (
-                todayWins /
-                closedToday
+                activeWins /
+                closedCount
               ) * 100
 
             : 0;
 
 
-        const todayPnl =
-          todayClosedTrades.reduce(
+        const activePnl =
+          activeClosedTrades.reduce(
 
             (
               total,
@@ -1835,7 +2128,7 @@
            累積資金
 
            只計算：
-           1. 2026/08/26 起
+           1. 2026/08/31 起
            2. 已平倉
         ================================================== */
 
@@ -1942,47 +2235,39 @@
 
 
         /* =========================
-           今日交易
+           交易數
         ========================= */
 
         $("todayTrades")
           .textContent =
-            todayTrades.length;
+            activeTrades.length;
 
 
         $("openTradeText")
           .textContent =
-            `持倉 ${todayOpenTrades.length} 筆`;
+            `持倉 ${activeOpenTrades.length} 筆`;
 
 
         /* =========================
-           今日勝 / 負
+           勝 / 負
         ========================= */
 
         $("todayWL")
           .innerHTML =
 
-            `<span class="positive">${todayWins}</span>` +
+            `<span class="positive">${activeWins}</span>` +
 
             ` / ` +
 
-            `<span class="negative">${todayLosses}</span>`;
+            `<span class="negative">${activeLosses}</span>`;
 
 
         /* =========================
-           今日勝率
-
-           < 50 = 紅
-           > 50 = 綠
-           = 50 = 黃
+           勝率
         ========================= */
 
         const winRateElement =
           $("winRate");
-
-
-        winRateElement.textContent =
-          `${winRate.toFixed(1)}%`;
 
 
         winRateElement.className =
@@ -1990,8 +2275,12 @@
 
 
         if (
-          closedToday === 0
+          closedCount === 0
         ) {
+
+          winRateElement.textContent =
+            "--";
+
 
           winRateElement
             .classList
@@ -2001,43 +2290,51 @@
 
         }
 
-        else if (
-          winRate < 50
-        ) {
-
-          winRateElement
-            .classList
-            .add(
-              "negative"
-            );
-
-        }
-
-        else if (
-          winRate > 50
-        ) {
-
-          winRateElement
-            .classList
-            .add(
-              "positive"
-            );
-
-        }
-
         else {
 
-          winRateElement
-            .classList
-            .add(
-              "yellow"
-            );
+          winRateElement.textContent =
+            `${winRate.toFixed(1)}%`;
+
+
+          if (
+            winRate < 50
+          ) {
+
+            winRateElement
+              .classList
+              .add(
+                "negative"
+              );
+
+          }
+
+          else if (
+            winRate > 50
+          ) {
+
+            winRateElement
+              .classList
+              .add(
+                "positive"
+              );
+
+          }
+
+          else {
+
+            winRateElement
+              .classList
+              .add(
+                "yellow"
+              );
+
+          }
 
         }
 
 
         /* =========================
-           今日淨盈虧
+           淨盈虧
         ========================= */
 
         const pnlElement =
@@ -2046,7 +2343,7 @@
 
         pnlElement.textContent =
           formatPnl(
-            todayPnl
+            activePnl
           );
 
 
@@ -2055,7 +2352,7 @@
 
 
         if (
-          todayPnl > 0
+          activePnl > 0
         ) {
 
           pnlElement
@@ -2067,7 +2364,7 @@
         }
 
         else if (
-          todayPnl < 0
+          activePnl < 0
         ) {
 
           pnlElement
@@ -2091,7 +2388,101 @@
 
         $("todayTradesText")
           .textContent =
-            `已平倉 ${todayClosedTrades.length} 筆`;
+            `已平倉 ${activeClosedTrades.length} 筆`;
+
+      }
+
+
+      /* ==================================================
+         盈虧 % 樣式
+      ================================================== */
+
+      function getPercentClass(
+        pnlPercent
+      ) {
+
+        if (
+          pnlPercent === null ||
+          pnlPercent === undefined
+        ) {
+
+          return "";
+
+        }
+
+
+        /*
+          虧損超過 -10%
+          例如 -10.1%、-20%、-40%
+        */
+
+        if (
+          pnlPercent <
+          -MAX_NORMAL_LOSS_PERCENT
+        ) {
+
+          return "risk-breach";
+
+        }
+
+
+        if (
+          pnlPercent < 0
+        ) {
+
+          return "percent-loss";
+
+        }
+
+
+        if (
+          pnlPercent > 0
+        ) {
+
+          return "percent-profit";
+
+        }
+
+
+        return "percent-zero";
+
+      }
+
+
+      function getPercentTitle(
+        pnlPercent
+      ) {
+
+        if (
+          pnlPercent === null ||
+          pnlPercent === undefined
+        ) {
+
+          return "";
+
+        }
+
+
+        if (
+          pnlPercent <
+          -MAX_NORMAL_LOSS_PERCENT
+        ) {
+
+          return "超出單筆 10% 風控";
+
+        }
+
+
+        if (
+          pnlPercent < 0
+        ) {
+
+          return "正常風控範圍";
+
+        }
+
+
+        return "";
 
       }
 
@@ -2164,7 +2555,7 @@
 
 
           /* =========================
-             PNL 顏色
+             淨盈虧
           ========================= */
 
           const pnlClass =
@@ -2183,8 +2574,18 @@
                   : "yellow";
 
 
+          const pnlText =
+            trade.status === "OPEN"
+
+              ? "-"
+
+              : formatPnl(
+                  trade.netPnl
+                );
+
+
           /* =========================
-             Result 顏色
+             Result
           ========================= */
 
           const resultClass =
@@ -2204,16 +2605,36 @@
 
 
           /* =========================
-             PNL 顯示
+             盈虧 %
           ========================= */
 
-          const pnlText =
+          const percentText =
             trade.status === "OPEN"
 
               ? "-"
 
-              : formatPnl(
-                  trade.netPnl
+              : formatPercent(
+                  trade.pnlPercent
+                );
+
+
+          const percentClass =
+            trade.status === "OPEN"
+
+              ? ""
+
+              : getPercentClass(
+                  trade.pnlPercent
+                );
+
+
+          const percentTitle =
+            trade.status === "OPEN"
+
+              ? ""
+
+              : getPercentTitle(
+                  trade.pnlPercent
                 );
 
 
@@ -2277,6 +2698,21 @@
               ${escapeHtml(
                 pnlText
               )}
+            </td>
+
+            <td>
+
+              <span
+                class="percent-value ${percentClass}"
+                title="${escapeHtml(
+                  percentTitle
+                )}"
+              >
+                ${escapeHtml(
+                  percentText
+                )}
+              </span>
+
             </td>
 
           `;
