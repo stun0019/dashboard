@@ -7,10 +7,14 @@ from "./config.js";
 import {
 
     getState,
+
     subscribe,
-    patchState,
+
+    setExchange,
+
     updateMarket,
-    pushMarketPrice
+
+    updateTicker
 
 }
 from "./core/store.js";
@@ -31,6 +35,7 @@ from "./exchanges/bingx.js";
 import {
 
     initRenderer,
+
     renderApp
 
 }
@@ -40,6 +45,7 @@ from "./ui/render.js";
 import {
 
     initTradeModal,
+
     openTradeModal
 
 }
@@ -49,6 +55,7 @@ from "./ui/trade-modal.js";
 import {
 
     initAIPanel,
+
     askAI
 
 }
@@ -64,8 +71,11 @@ let activeClient =
 const commonCallbacks = {
 
     onStatus({
+
         connected,
+
         status
+
     }) {
 
         updateMarket({
@@ -83,21 +93,38 @@ const commonCallbacks = {
     onTicker({
 
         price,
+
         change24h,
+
         timestamp
 
     }) {
 
-        pushMarketPrice(
-            price
-        );
+        /*
+        v0.2.1
 
+        原本：
+        pushMarketPrice()
+        +
+        updateMarket()
 
-        updateMarket({
+        一次 ticker 會 emit 兩次。
+
+        現在改成 updateTicker()
+        一次完成：
+        price
+        change24h
+        timestamp
+        priceHistory
+        */
+
+        updateTicker({
+
+            price,
 
             change24h,
 
-            lastUpdate:
+            timestamp:
                 timestamp ||
                 Date.now()
 
@@ -112,17 +139,38 @@ const commonCallbacks = {
 const clients = {
 
     OKX:
+
         new OKXMarketClient({
 
             ...commonCallbacks,
 
+
             onOpenInterest({
-                oiUsd
+
+                oiUsd,
+
+                timestamp
+
             }) {
 
                 updateMarket({
 
-                    oiUsd
+                    oiUsd,
+
+
+                    lastUpdate:
+
+                        timestamp
+
+                        ||
+
+                        getState()
+                            .market
+                            .lastUpdate
+
+                        ||
+
+                        Date.now()
 
                 });
 
@@ -132,6 +180,7 @@ const clients = {
 
 
     BINGX:
+
         new BingXMarketClient({
 
             ...commonCallbacks
@@ -146,41 +195,45 @@ function connectExchange(
     exchange
 ) {
 
-    activeClient?.disconnect();
+    const nextExchange =
+        String(
+            exchange || ""
+        )
+        .toUpperCase();
 
 
-    patchState({
+    const nextClient =
+        clients[
+            nextExchange
+        ];
 
-        exchange
 
-    });
+    if(!nextClient) {
+
+        console.error(
+            `Unsupported exchange: ${exchange}`
+        );
+
+        return;
+
+    }
 
 
-    updateMarket({
+    activeClient
+        ?.disconnect();
 
-        price:
-            null,
 
-        change24h:
-            null,
+    /*
+    一次重置交易所與 Market State。
+    */
 
-        oiUsd:
-            null,
-
-        connected:
-            false,
-
-        connectionStatus:
-            "CONNECTING",
-
-        priceHistory:
-            []
-
-    });
+    setExchange(
+        nextExchange
+    );
 
 
     activeClient =
-        clients[exchange];
+        nextClient;
 
 
     activeClient.connect();
@@ -195,6 +248,13 @@ function initExchangeSelector() {
         document.getElementById(
             "exchangeSelect"
         );
+
+
+    if(!select) {
+
+        return;
+
+    }
 
 
     select.value =
@@ -218,6 +278,10 @@ function initExchangeSelector() {
 
 function init() {
 
+    /*
+    UI Renderer
+    */
+
     initRenderer({
 
         onTrade(
@@ -228,7 +292,8 @@ function init() {
 
                 signal,
 
-                getState().exchange
+                getState()
+                    .exchange
 
             );
 
@@ -250,38 +315,91 @@ function init() {
     });
 
 
+    /*
+    Trade Modal
+    */
+
     initTradeModal();
 
+
+    /*
+    AI Copilot
+    */
 
     initAIPanel(
         getState
     );
 
 
+    /*
+    Exchange selector
+    */
+
     initExchangeSelector();
 
 
+    /*
+    Store subscription
+
+    scope:
+    market
+    recommendations
+    signals
+    anomalies
+    all
+    */
+
     subscribe(
-        state => {
+        (
+            state,
+            scope
+        ) => {
 
             renderApp(
-                state
+                state,
+                scope
             );
 
         }
     );
 
 
+    /*
+    Initial render
+    */
+
     renderApp(
-        getState()
+        getState(),
+        "all"
     );
 
+
+    /*
+    Initial WebSocket
+    */
 
     connectExchange(
         APP_CONFIG.defaultExchange
     );
 
 }
+
+
+
+/*
+離開頁面時，
+主動關閉 WebSocket。
+*/
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        activeClient
+            ?.disconnect();
+
+    }
+);
 
 
 
