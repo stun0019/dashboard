@@ -1,18 +1,24 @@
 import {
+
     longRecommendations,
     shortRecommendations,
+
     activeSignals,
     closedSignals,
+
     bullishAnomalies,
     bearishAnomalies
+
 }
 from "../data/mock-data.js";
+
 
 
 let state = {
 
     exchange:
         "OKX",
+
 
     market: {
 
@@ -42,6 +48,7 @@ let state = {
 
     },
 
+
     recommendations: {
 
         long:
@@ -52,6 +59,7 @@ let state = {
 
     },
 
+
     signals: {
 
         active:
@@ -61,6 +69,7 @@ let state = {
             closedSignals
 
     },
+
 
     anomalies: {
 
@@ -75,8 +84,10 @@ let state = {
 };
 
 
+
 const listeners =
     new Set();
+
 
 
 export function getState() {
@@ -86,27 +97,35 @@ export function getState() {
 }
 
 
-export function subscribe(listener) {
 
-    listeners.add(listener);
+export function subscribe(
+    listener
+) {
 
-    return () =>
-        listeners.delete(listener);
-
-}
-
-
-function emit() {
-
-    listeners.forEach(
-        listener =>
-            listener(state)
+    listeners.add(
+        listener
     );
 
+
+    return () => {
+
+        listeners.delete(
+            listener
+        );
+
+    };
+
 }
 
 
-export function patchState(patch) {
+
+export function patchState(
+
+    patch,
+
+    scope = "all"
+
+) {
 
     state = {
 
@@ -116,16 +135,73 @@ export function patchState(patch) {
 
     };
 
-    emit();
+
+    emit(
+        scope
+    );
 
 }
 
 
-export function updateMarket(patch) {
+
+export function setExchange(
+    exchange
+) {
 
     state = {
 
         ...state,
+
+
+        exchange,
+
+
+        market: {
+
+            ...state.market,
+
+            price:
+                null,
+
+            change24h:
+                null,
+
+            oiUsd:
+                null,
+
+            connected:
+                false,
+
+            connectionStatus:
+                "CONNECTING",
+
+            lastUpdate:
+                null,
+
+            priceHistory:
+                []
+
+        }
+
+    };
+
+
+    emit(
+        "market"
+    );
+
+}
+
+
+
+export function updateMarket(
+    patch
+) {
+
+    state = {
+
+        ...state,
+
 
         market: {
 
@@ -137,18 +213,49 @@ export function updateMarket(patch) {
 
     };
 
-    emit();
+
+    emit(
+        "market"
+    );
 
 }
 
 
-export function pushMarketPrice(price) {
+
+export function updateTicker({
+
+    price,
+
+    change24h = null,
+
+    timestamp = Date.now()
+
+}) {
+
+    const numericPrice =
+        Number(
+            price
+        );
+
+
+    if(
+        !Number.isFinite(
+            numericPrice
+        )
+        ||
+        numericPrice <= 0
+    ) {
+
+        return;
+
+    }
+
 
     const history = [
 
         ...state.market.priceHistory,
 
-        Number(price)
+        numericPrice
 
     ];
 
@@ -162,17 +269,165 @@ export function pushMarketPrice(price) {
     }
 
 
-    updateMarket({
+    const numericChange =
+        Number(
+            change24h
+        );
 
-        price:
-            Number(price),
 
-        priceHistory:
-            history,
+    state = {
 
-        lastUpdate:
-            Date.now()
+        ...state,
 
-    });
+
+        market: {
+
+            ...state.market,
+
+
+            price:
+                numericPrice,
+
+
+            change24h:
+
+                Number.isFinite(
+                    numericChange
+                )
+
+                    ?
+
+                    numericChange
+
+                    :
+
+                    state.market.change24h,
+
+
+            lastUpdate:
+
+                Number(
+                    timestamp
+                )
+
+                ||
+
+                Date.now(),
+
+
+            priceHistory:
+                history
+
+        }
+
+    };
+
+
+    emit(
+        "market"
+    );
+
+}
+
+
+
+export function updateRecommendations(
+    patch
+) {
+
+    state = {
+
+        ...state,
+
+
+        recommendations: {
+
+            ...state.recommendations,
+
+            ...patch
+
+        }
+
+    };
+
+
+    emit(
+        "recommendations"
+    );
+
+}
+
+
+
+export function updateSignals(
+    patch
+) {
+
+    state = {
+
+        ...state,
+
+
+        signals: {
+
+            ...state.signals,
+
+            ...patch
+
+        }
+
+    };
+
+
+    emit(
+        "signals"
+    );
+
+}
+
+
+
+export function updateAnomalies(
+    patch
+) {
+
+    state = {
+
+        ...state,
+
+
+        anomalies: {
+
+            ...state.anomalies,
+
+            ...patch
+
+        }
+
+    };
+
+
+    emit(
+        "anomalies"
+    );
+
+}
+
+
+
+function emit(
+    scope = "all"
+) {
+
+    listeners.forEach(
+        listener => {
+
+            listener(
+                state,
+                scope
+            );
+
+        }
+    );
 
 }
