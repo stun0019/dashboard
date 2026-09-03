@@ -1,0 +1,205 @@
+.scanner-section-header {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+
+.scanner-coverage {
+  max-width: 58%;
+
+  color:
+    var(--text-dim);
+
+  font-size: 9px;
+
+  text-align: right;
+}
+
+
+.scanner-panel {
+  overflow: hidden;
+}
+
+
+.scanner-table-wrap {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+
+.scanner-table {
+  width: 100%;
+
+  min-width: 860px;
+
+  border-collapse: collapse;
+}
+
+
+.scanner-table th {
+  padding:
+    9px
+    12px;
+
+  color:
+    var(--text-dim);
+
+  font-size: 8px;
+
+  font-weight: 800;
+
+  letter-spacing: .45px;
+
+  text-align: right;
+
+  border-bottom:
+    1px solid
+    var(--border);
+}
+
+
+.scanner-table th:first-child,
+.scanner-table td:first-child {
+  text-align: left;
+}
+
+
+.scanner-table td {
+  padding:
+    11px
+    12px;
+
+  color:
+    var(--text-soft);
+
+  font-size: 9px;
+
+  text-align: right;
+
+  white-space: nowrap;
+
+  border-bottom:
+    1px solid
+    #171f2a;
+}
+
+
+.scanner-table tr:last-child td {
+  border-bottom: 0;
+}
+
+
+.scanner-table tbody tr:hover {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      .018
+    );
+}
+
+
+.scanner-table strong {
+  color:
+    var(--text);
+}
+
+
+.scanner-bias {
+  display: inline-flex;
+
+  min-width: 52px;
+
+  justify-content: center;
+
+  padding:
+    4px
+    7px;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius: 5px;
+
+  font-size: 8px;
+
+  font-weight: 900;
+}
+
+
+.scanner-bias.positive {
+  background:
+    var(--green-bg);
+
+  border-color:
+    rgba(
+      38,
+      215,
+      152,
+      .18
+    );
+}
+
+
+.scanner-bias.negative {
+  background:
+    var(--red-bg);
+
+  border-color:
+    rgba(
+      255,
+      98,
+      108,
+      .18
+    );
+}
+
+
+.scanner-neutral {
+  color:
+    var(--text-dim)
+    !important;
+}
+
+
+.scanner-empty {
+  padding:
+    22px
+    14px;
+
+  color:
+    var(--text-dim);
+
+  font-size: 9px;
+}
+
+
+@media(
+  max-width: 650px
+) {
+
+  .scanner-section-header {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+
+  .scanner-coverage {
+    max-width:
+      100%;
+
+    text-align:
+      left;
+  }
+
+}
