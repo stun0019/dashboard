@@ -1,326 +1,685 @@
 import {
-    APP_CONFIG
+
+  APP_CONFIG,
+
+  toOKXInstrument,
+
+  fromOKXInstrument
+
 }
 from "../config.js";
 
 
+
 export class OKXMarketClient {
 
-    constructor({
+  constructor({
 
-        onStatus,
-        onTicker,
-        onOpenInterest
+    symbols =
+      APP_CONFIG
+        .scanner
+        .symbols,
 
-    }) {
+    onStatus,
 
-        this.ws =
-            null;
+    onTicker,
 
-        this.reconnectTimer =
-            null;
+    onOpenInterest,
 
-        this.intentionalClose =
-            false;
+    onFunding
 
-        this.onStatus =
-            onStatus;
+  }) {
 
-        this.onTicker =
-            onTicker;
-
-        this.onOpenInterest =
-            onOpenInterest;
-
-    }
+    this.symbols =
+      symbols;
 
 
-    connect() {
+    this.onStatus =
+      onStatus;
 
-        this.disconnect();
+
+    this.onTicker =
+      onTicker;
 
 
-        this.intentionalClose =
-            false;
+    this.onOpenInterest =
+      onOpenInterest;
 
+
+    this.onFunding =
+      onFunding;
+
+
+    this.ws =
+      null;
+
+
+    this.reconnectTimer =
+      null;
+
+
+    this.heartbeatTimer =
+      null;
+
+
+    this.intentionalClose =
+      false;
+
+  }
+
+
+
+  connect() {
+
+    this.disconnect();
+
+
+    this.intentionalClose =
+      false;
+
+
+    this.onStatus?.({
+
+      connected:
+        false,
+
+      status:
+        "CONNECTING"
+
+    });
+
+
+    this.ws =
+      new WebSocket(
+        APP_CONFIG
+          .okx
+          .wsUrl
+      );
+
+
+    this.ws.onopen =
+      () => {
 
         this.onStatus?.({
 
-            connected:
-                false,
+          connected:
+            true,
 
-            status:
-                "CONNECTING"
+          status:
+            "CONNECTED"
 
         });
 
 
-        this.ws =
-            new WebSocket(
-                APP_CONFIG.okx.wsUrl
+        this.subscribe();
+
+
+        this.startHeartbeat();
+
+      };
+
+
+    this.ws.onmessage =
+      event => {
+
+        this.handleMessage(
+          event.data
+        );
+
+      };
+
+
+    this.ws.onerror =
+      () => {
+
+        this.onStatus?.({
+
+          connected:
+            false,
+
+          status:
+            "WS ERROR"
+
+        });
+
+      };
+
+
+    this.ws.onclose =
+      () => {
+
+        this.stopHeartbeat();
+
+
+        this.onStatus?.({
+
+          connected:
+            false,
+
+          status:
+
+            this.intentionalClose
+
+              ?
+
+              "DISCONNECTED"
+
+              :
+
+              "RECONNECTING"
+
+        });
+
+
+        if(
+          !this.intentionalClose
+        ) {
+
+          this.reconnectTimer =
+
+            setTimeout(
+
+              () =>
+                this.connect(),
+
+              3000
+
             );
 
+        }
 
-        this.ws.onopen =
-            () => {
+      };
 
-                this.onStatus?.({
-
-                    connected:
-                        true,
-
-                    status:
-                        "CONNECTED"
-
-                });
+  }
 
 
-                this.subscribe();
 
-            };
+  subscribe() {
 
+    if(
+      !this.ws
+      ||
+      this.ws.readyState !==
+        WebSocket.OPEN
+    ) {
 
-        this.ws.onmessage =
-            event => {
-
-                this.handleMessage(
-                    event.data
-                );
-
-            };
-
-
-        this.ws.onerror =
-            () => {
-
-                this.onStatus?.({
-
-                    connected:
-                        false,
-
-                    status:
-                        "WS ERROR"
-
-                });
-
-            };
-
-
-        this.ws.onclose =
-            () => {
-
-                this.onStatus?.({
-
-                    connected:
-                        false,
-
-                    status:
-                        this.intentionalClose
-                            ? "DISCONNECTED"
-                            : "RECONNECTING"
-
-                });
-
-
-                if(
-                    !this.intentionalClose
-                ) {
-
-                    this.reconnectTimer =
-                        setTimeout(
-                            () =>
-                                this.connect(),
-                            3000
-                        );
-
-                }
-
-            };
+      return;
 
     }
 
 
-    subscribe() {
-
-        if(
-            !this.ws ||
-            this.ws.readyState !==
-                WebSocket.OPEN
-        ) {
-
-            return;
-
-        }
+    const args = [];
 
 
-        const instrument =
-            APP_CONFIG.okx.instrument;
+    /*
+    每個 Symbol 同時訂閱：
 
+    ticker
+    OI
+    funding
+    */
 
-        this.ws.send(
+    for(
+      const symbol
+      of this.symbols
+    ) {
 
-            JSON.stringify({
-
-                op:
-                    "subscribe",
-
-                args: [
-
-                    {
-                        channel:
-                            "tickers",
-
-                        instId:
-                            instrument
-                    },
-
-                    {
-                        channel:
-                            "open-interest",
-
-                        instId:
-                            instrument
-                    }
-
-                ]
-
-            })
-
-        );
-
-    }
-
-
-    handleMessage(raw) {
-
-        let payload;
-
-
-        try {
-
-            payload =
-                JSON.parse(raw);
-
-        }
-        catch {
-
-            return;
-
-        }
-
-
-        if(
-            !payload.data ||
-            !payload.data.length
-        ) {
-
-            return;
-
-        }
-
-
-        const channel =
-            payload.arg?.channel;
-
-
-        const data =
-            payload.data[0];
-
-
-        if(
-            channel ===
-            "tickers"
-        ) {
-
-            const price =
-                Number(data.last);
-
-
-            const open24h =
-                Number(
-                    data.open24h
-                );
-
-
-            const change24h =
-                open24h
-                    ?
-                    (
-                        (
-                            price -
-                            open24h
-                        )
-                        /
-                        open24h
-                    )
-                    * 100
-                    :
-                    null;
-
-
-            this.onTicker?.({
-
-                price,
-
-                change24h,
-
-                timestamp:
-                    Number(
-                        data.ts
-                    )
-
-            });
-
-        }
-
-
-        if(
-            channel ===
-            "open-interest"
-        ) {
-
-            this.onOpenInterest?.({
-
-                oiUsd:
-                    Number(
-                        data.oiUsd
-                    ),
-
-                timestamp:
-                    Number(
-                        data.ts
-                    )
-
-            });
-
-        }
-
-    }
-
-
-    disconnect() {
-
-        this.intentionalClose =
-            true;
-
-
-        clearTimeout(
-            this.reconnectTimer
+      const instId =
+        toOKXInstrument(
+          symbol
         );
 
 
-        if(this.ws) {
+      args.push(
 
-            this.ws.onclose =
-                null;
+        {
+          channel:
+            "tickers",
 
-            this.ws.close();
+          instId
+        },
 
-            this.ws =
-                null;
 
+        {
+          channel:
+            "open-interest",
+
+          instId
+        },
+
+
+        {
+          channel:
+            "funding-rate",
+
+          instId
         }
 
+      );
+
     }
+
+
+    this.ws.send(
+
+      JSON.stringify({
+
+        id:
+          String(
+            Date.now()
+          ),
+
+        op:
+          "subscribe",
+
+        args
+
+      })
+
+    );
+
+  }
+
+
+
+  handleMessage(
+    raw
+  ) {
+
+    /*
+    OKX heartbeat response
+    */
+
+    if(
+      raw === "pong"
+    ) {
+
+      return;
+
+    }
+
+
+    let payload;
+
+
+    try {
+
+      payload =
+        JSON.parse(
+          raw
+        );
+
+    }
+    catch {
+
+      return;
+
+    }
+
+
+    /*
+    某單一 Symbol 不存在，
+    不應讓整個 Scanner crash。
+    */
+
+    if(
+      payload.event ===
+      "error"
+    ) {
+
+      console.warn(
+
+        "OKX subscription error:",
+
+        payload.code,
+
+        payload.msg
+
+      );
+
+
+      return;
+
+    }
+
+
+    if(
+      !payload.data
+      ||
+      !payload.data.length
+    ) {
+
+      return;
+
+    }
+
+
+    const channel =
+      payload
+        .arg
+        ?.channel;
+
+
+    const data =
+      payload.data[0];
+
+
+    const symbol =
+
+      fromOKXInstrument(
+
+        data.instId
+
+        ||
+
+        payload
+          .arg
+          ?.instId
+
+      );
+
+
+    if(!symbol) {
+
+      return;
+
+    }
+
+
+    /* ===================================================
+    TICKER
+    =================================================== */
+
+    if(
+      channel ===
+      "tickers"
+    ) {
+
+      const price =
+        Number(
+          data.last
+        );
+
+
+      const open24h =
+        Number(
+          data.open24h
+        );
+
+
+      const change24h =
+
+        open24h > 0
+
+          ?
+
+          (
+            (
+              price -
+              open24h
+            )
+
+            /
+
+            open24h
+
+          )
+
+          *
+
+          100
+
+          :
+
+          null;
+
+
+      this.onTicker?.({
+
+        symbol,
+
+        price,
+
+        change24h,
+
+        volume24h:
+
+          toFiniteNumber(
+
+            data.volCcy24h
+
+            ??
+
+            data.vol24h
+
+          ),
+
+        timestamp:
+
+          Number(
+            data.ts
+          )
+
+          ||
+
+          Date.now(),
+
+        source:
+          "OKX"
+
+      });
+
+
+      return;
+
+    }
+
+
+    /* ===================================================
+    OPEN INTEREST
+    =================================================== */
+
+    if(
+      channel ===
+      "open-interest"
+    ) {
+
+      this.onOpenInterest?.({
+
+        symbol,
+
+        oiUsd:
+
+          toFiniteNumber(
+            data.oiUsd
+          ),
+
+        oiCcy:
+
+          toFiniteNumber(
+            data.oiCcy
+          ),
+
+        timestamp:
+
+          Number(
+            data.ts
+          )
+
+          ||
+
+          Date.now(),
+
+        source:
+          "OKX"
+
+      });
+
+
+      return;
+
+    }
+
+
+    /* ===================================================
+    FUNDING
+    =================================================== */
+
+    if(
+      channel ===
+      "funding-rate"
+    ) {
+
+      this.onFunding?.({
+
+        symbol,
+
+        fundingRate:
+
+          toFiniteNumber(
+            data.fundingRate
+          ),
+
+        nextFundingTime:
+
+          Number(
+            data.nextFundingTime
+          )
+
+          ||
+
+          null,
+
+        timestamp:
+
+          Number(
+            data.ts
+          )
+
+          ||
+
+          Date.now(),
+
+        source:
+          "OKX"
+
+      });
+
+    }
+
+  }
+
+
+
+  startHeartbeat() {
+
+    this.stopHeartbeat();
+
+
+    this.heartbeatTimer =
+
+      setInterval(
+
+        () => {
+
+          if(
+            this.ws
+            ?.readyState ===
+            WebSocket.OPEN
+          ) {
+
+            this.ws.send(
+              "ping"
+            );
+
+          }
+
+        },
+
+        20000
+
+      );
+
+  }
+
+
+
+  stopHeartbeat() {
+
+    clearInterval(
+      this.heartbeatTimer
+    );
+
+
+    this.heartbeatTimer =
+      null;
+
+  }
+
+
+
+  disconnect() {
+
+    this.intentionalClose =
+      true;
+
+
+    clearTimeout(
+      this.reconnectTimer
+    );
+
+
+    this.stopHeartbeat();
+
+
+    if(this.ws) {
+
+      this.ws.onclose =
+        null;
+
+
+      this.ws.close();
+
+
+      this.ws =
+        null;
+
+    }
+
+  }
+
+}
+
+
+
+/* =====================================================
+HELPERS
+===================================================== */
+
+function toFiniteNumber(
+  value
+) {
+
+  const number =
+    Number(
+      value
+    );
+
+
+  return (
+
+    Number.isFinite(
+      number
+    )
+
+      ?
+
+      number
+
+      :
+
+      null
+
+  );
 
 }
