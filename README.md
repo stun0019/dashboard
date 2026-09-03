@@ -4,7 +4,7 @@ Crypto Market Intelligence Dashboard.
 
 ## Current Version
 
-v0.3.1 Full Market Scanner
+v0.3.2 Scanner Final Stabilization
 
 ## Run
 
@@ -26,6 +26,9 @@ node scripts/check.mjs
 
 `npm run check` is also available when using npm.
 
+The suite covers OKX direct `oiUsd` precedence, the BingX single-loop lock,
+independent ticker/OI/funding staleness, and the scanner table's 50-row limit.
+
 ## Full Symbol Universe
 
 The scanner no longer contains a fixed symbol list.
@@ -44,12 +47,14 @@ The scanner no longer contains a fixed symbol list.
 - Public WebSocket ticker, open interest and funding channels.
 - Connections and subscription requests are split into batches for a full-market universe.
 - `oiUsd` uses the exchange value when available and falls back to `oiCcy × latest price` when needed.
+- Official OKX `oiUsd` is retained across later ticker updates and is never replaced by a derived value.
 
 ### BingX
 
 - Public WebSocket ticker channels, sharded across connections.
 - Public REST funding snapshot.
-- Round-robin public REST open-interest polling.
+- Round-robin public REST open-interest enrichment. BingX OI is not presented as realtime full-market coverage.
+- A dedicated running lock guarantees only one REST enrichment loop across all WebSocket shards.
 - The local server proxies only the three allow-listed BingX public market routes used by this app.
 
 No API key, passphrase, API Secret, account endpoint, or authenticated trading endpoint is used or stored by the frontend.
@@ -61,8 +66,8 @@ No API key, passphrase, API Secret, account endpoint, or authenticated trading e
 3. Open sharded public WebSocket connections for that universe.
 4. Merge incoming ticker, OI and funding changes into an in-memory patch queue.
 5. Flush the queue every 200 ms and calculate rankings once per batch.
-6. Throttle UI rendering to at most once every 250 ms.
-7. Mark rows stale after 15 seconds without a ticker update and remove stale rows from rankings and counts.
+6. Throttle UI rendering to at most once every 250 ms; the store remains full-market while the table renders at most 50 searchable rows per page.
+7. Track ticker, OI, and funding timestamps independently. Stale ticker rows leave rankings; missing OI/funding is marked partial without stopping price-based ranking.
 
 The score remains a deterministic market heuristic based on 24-hour momentum, session OI change, and funding crowding. It is not an AI or predictive model.
 
@@ -70,7 +75,7 @@ The score remains a deterministic market heuristic based on 24-hour momentum, se
 
 Quick Trade calculates entry, stop loss, take-profit targets, position value, estimated maximum loss, and risk/reward validation. Real exchange order submission remains disabled.
 
-`src/js/services/risk-engine.js` is unchanged in v0.3.1.
+`src/js/services/risk-engine.js` is unchanged in v0.3.2.
 
 ## Prototype Areas
 

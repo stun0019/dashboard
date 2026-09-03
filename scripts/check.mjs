@@ -5,11 +5,13 @@ import { dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { APP_CONFIG } from "../src/js/config.js";
+import { BingXMarketClient } from "../src/js/exchanges/bingx.js";
 import {
   analyzeScannerRows,
   createEmptyScannerRows,
   mergeScannerRow
 } from "../src/js/services/market-scanner.js";
+import { selectScannerTablePage } from "../src/js/ui/scanner.js";
 import { buildTradePlan, calculateRisk } from "../src/js/services/risk-engine.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,7 +28,7 @@ for (const file of javascriptFiles) {
   }
 }
 
-assert.equal(APP_CONFIG.version, "0.3.1");
+assert.equal(APP_CONFIG.version, "0.3.2");
 assert.equal("symbols" in APP_CONFIG.scanner, false);
 
 let rows = createEmptyScannerRows(["BTC", "ETH"]);
@@ -39,6 +41,25 @@ rows.BTC = mergeScannerRow(rows.BTC, {
 });
 assert.equal(rows.BTC.oiUsd, 1_000, "OI currency fallback should use price");
 
+let directOiRow = mergeScannerRow(null, {
+  symbol: "BTC",
+  price: 100,
+  oiCcy: 10,
+  oiUsd: 5_000,
+  oiUsdSource: "direct",
+  tickerUpdatedAt: 1_000,
+  oiUpdatedAt: 1_000
+});
+directOiRow = mergeScannerRow(directOiRow, {
+  price: 200,
+  tickerUpdatedAt: 2_000
+});
+assert.equal(
+  directOiRow.oiUsd,
+  5_000,
+  "Direct OKX oiUsd must take precedence over oiCcy multiplied by price"
+);
+
 const fresh = analyzeScannerRows(rows, 5, 15_000, 10_000);
 assert.equal(fresh.rows.BTC.isStale, false);
 assert.equal(fresh.scannedCount, 1);
@@ -48,6 +69,52 @@ assert.equal(stale.rows.BTC.isStale, true);
 assert.equal(stale.rows.BTC.bias, "STALE");
 assert.equal(stale.scannedCount, 0);
 assert.equal(stale.staleCount, 1);
+
+const independentlyStaleRows = createEmptyScannerRows(["BTC"]);
+independentlyStaleRows.BTC = mergeScannerRow(independentlyStaleRows.BTC, {
+  price: 100,
+  change24h: 1,
+  oiUsd: 2_000,
+  oiUsdSource: "direct",
+  fundingRate: 0.0001,
+  tickerUpdatedAt: 19_000,
+  oiUpdatedAt: 1_000,
+  fundingUpdatedAt: 1_000
+});
+const independentlyStale = analyzeScannerRows(independentlyStaleRows, 5, 15_000, 20_000);
+assert.equal(independentlyStale.rows.BTC.tickerStale, false);
+assert.equal(independentlyStale.rows.BTC.oiStale, true, "Fresh ticker must not refresh stale OI");
+assert.equal(independentlyStale.rows.BTC.fundingStale, true, "Fresh ticker must not refresh stale funding");
+assert.equal(independentlyStale.scannedCount, 1, "Ranking must still work when enrichment is stale");
+
+let releaseRestRequest;
+let restCalls = 0;
+const pendingRestRequest = new Promise(resolvePromise => {
+  releaseRestRequest = resolvePromise;
+});
+const bingxClient = new BingXMarketClient({ instruments: [{ symbol: "BTC", instrumentId: "BTC-USDT" }] });
+bingxClient.hasOpenSocket = () => true;
+bingxClient.fetchFundingSnapshot = async () => {
+  restCalls += 1;
+  await pendingRestRequest;
+};
+bingxClient.startRestEnrichment();
+bingxClient.startRestEnrichment();
+assert.equal(restCalls, 1, "Multiple socket opens must start only one BingX REST loop");
+assert.equal(bingxClient.restRunning, true);
+bingxClient.stopRestEnrichment();
+releaseRestRequest();
+await Promise.resolve();
+await Promise.resolve();
+assert.equal(bingxClient.restRunning, false);
+assert.equal(bingxClient.restTimer, null);
+
+const tableRows = Array.from({ length: 125 }, (_, index) => ({ symbol: `COIN${index}` }));
+const firstTablePage = selectScannerTablePage(tableRows, { pageSize: 50 });
+const lastTablePage = selectScannerTablePage(tableRows, { page: 3, pageSize: 50 });
+assert.equal(firstTablePage.rows.length, 50, "Scanner table must render at most 50 rows by default");
+assert.equal(lastTablePage.rows.length, 25);
+assert.equal(selectScannerTablePage(tableRows, { query: "COIN12", pageSize: 50 }).total, 6);
 
 const plan = buildTradePlan({ side: "LONG", trigger: 100, timeframe: "15m" });
 const risk = calculateRisk({
@@ -70,7 +137,8 @@ for (const file of javascriptFiles.filter(file => file.includes("src\\js"))) {
 
 console.log(`OK: ${javascriptFiles.length} JavaScript files parsed`);
 console.log("OK: all relative imports resolve");
-console.log("OK: dynamic scanner, OI fallback, stale detection and risk smoke tests passed");
+console.log("OK: direct OI precedence, single BingX REST loop and independent freshness tests passed");
+console.log("OK: scanner table search and 50-row pagination tests passed");
 console.log("OK: frontend source does not use browser storage");
 
 async function collectJavaScriptFiles(directory) {

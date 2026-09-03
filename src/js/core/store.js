@@ -58,6 +58,15 @@ function createScannerState(
     staleCount:
       0,
 
+    oiStaleCount:
+      0,
+
+    fundingStaleCount:
+      0,
+
+    incompleteCount:
+      symbols.length,
+
     updatedAt:
       null
 

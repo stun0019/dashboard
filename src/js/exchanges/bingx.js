@@ -11,6 +11,8 @@ export class BingXMarketClient {
     this.reconnectTimers = new Set();
     this.subscriptionTimers = new Set();
     this.restTimer = null;
+    this.restRunning = false;
+    this.restGeneration = 0;
     this.restCursor = 0;
     this.restTick = 0;
     this.intentionalClose = false;
@@ -132,11 +134,18 @@ export class BingXMarketClient {
   }
 
   startRestEnrichment() {
-    if (this.restTimer !== null || this.intentionalClose) return;
+    if (this.restRunning || this.intentionalClose) return;
+
+    this.restRunning = true;
+    const generation = ++this.restGeneration;
 
     const loop = async () => {
-      if (this.intentionalClose || !this.hasOpenSocket()) {
-        this.restTimer = null;
+      if (
+        generation !== this.restGeneration ||
+        this.intentionalClose ||
+        !this.hasOpenSocket()
+      ) {
+        if (generation === this.restGeneration) this.restRunning = false;
         return;
       }
 
@@ -153,15 +162,25 @@ export class BingXMarketClient {
       }
 
       this.restTick += 1;
+      if (
+        generation !== this.restGeneration ||
+        this.intentionalClose ||
+        !this.hasOpenSocket()
+      ) {
+        if (generation === this.restGeneration) this.restRunning = false;
+        return;
+      }
       this.restTimer = setTimeout(loop, APP_CONFIG.bingx.restPollMs);
     };
 
-    loop();
+    void loop();
   }
 
   stopRestEnrichment() {
+    this.restGeneration += 1;
     clearTimeout(this.restTimer);
     this.restTimer = null;
+    this.restRunning = false;
   }
 
   async fetchFundingSnapshot() {
@@ -214,6 +233,8 @@ export class BingXMarketClient {
     for (const timer of this.subscriptionTimers) clearTimeout(timer);
     this.reconnectTimers.clear();
     this.subscriptionTimers.clear();
+    this.restCursor = 0;
+    this.restTick = 0;
 
     for (const socket of this.sockets) {
       socket.onclose = null;

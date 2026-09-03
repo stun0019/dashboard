@@ -8,6 +8,10 @@ from "../config.js";
 let mounted =
   false;
 
+let latestScannerState = null;
+let scannerQuery = "";
+let scannerPage = 1;
+
 
 
 export function initScannerUI() {
@@ -31,6 +35,8 @@ export function initScannerUI() {
 
   relabelSummaryCards();
 
+  bindScannerControls();
+
 }
 
 
@@ -45,16 +51,28 @@ export function renderScanner(
   const scanner =
     state.scanner;
 
+  latestScannerState = state;
+
 
   const rows =
     Object.values(
       scanner.rows
     );
 
+  const tablePage = selectScannerTablePage(rows, {
+    query: scannerQuery,
+    page: scannerPage,
+    pageSize: APP_CONFIG.ui.scannerPageSize
+  });
+
+  scannerPage = tablePage.page;
+
 
   renderScannerTable(
-    rows
+    tablePage.rows
   );
+
+  renderScannerTableControls(tablePage);
 
 
   renderScannerSummary(
@@ -223,6 +241,23 @@ function ensureScannerSection() {
 
       <div class="scanner-table-wrap">
 
+        <div class="scanner-toolbar">
+          <input
+            id="scannerSearch"
+            class="scanner-search"
+            type="search"
+            placeholder="Search symbol"
+            autocomplete="off"
+            aria-label="Search scanner symbols"
+          >
+
+          <div class="scanner-pagination">
+            <button id="scannerPrevPage" type="button">PREV</button>
+            <span id="scannerPageInfo">0 / 0</span>
+            <button id="scannerNextPage" type="button">NEXT</button>
+          </div>
+        </div>
+
         <table class="scanner-table">
 
           <thead>
@@ -290,6 +325,60 @@ function ensureScannerSection() {
       section
     );
 
+}
+
+function bindScannerControls() {
+  const search = document.getElementById("scannerSearch");
+  const previous = document.getElementById("scannerPrevPage");
+  const next = document.getElementById("scannerNextPage");
+
+  search?.addEventListener("input", event => {
+    scannerQuery = event.target.value;
+    scannerPage = 1;
+    if (latestScannerState) renderScanner(latestScannerState);
+  });
+
+  previous?.addEventListener("click", () => {
+    scannerPage = Math.max(1, scannerPage - 1);
+    if (latestScannerState) renderScanner(latestScannerState);
+  });
+
+  next?.addEventListener("click", () => {
+    scannerPage += 1;
+    if (latestScannerState) renderScanner(latestScannerState);
+  });
+}
+
+export function selectScannerTablePage(
+  rows,
+  { query = "", page = 1, pageSize = 50 } = {}
+) {
+  const normalizedQuery = String(query).trim().toUpperCase();
+  const safePageSize = Math.max(1, Math.floor(Number(pageSize) || 50));
+  const filteredRows = rows.filter(row =>
+    !normalizedQuery || String(row.symbol || "").toUpperCase().includes(normalizedQuery)
+  );
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / safePageSize));
+  const safePage = Math.min(pageCount, Math.max(1, Math.floor(Number(page) || 1)));
+  const start = (safePage - 1) * safePageSize;
+
+  return {
+    rows: filteredRows.slice(start, start + safePageSize),
+    page: safePage,
+    pageCount,
+    total: filteredRows.length,
+    pageSize: safePageSize
+  };
+}
+
+function renderScannerTableControls(tablePage) {
+  const info = document.getElementById("scannerPageInfo");
+  const previous = document.getElementById("scannerPrevPage");
+  const next = document.getElementById("scannerNextPage");
+
+  if (info) info.textContent = `${tablePage.page} / ${tablePage.pageCount} · ${tablePage.total}`;
+  if (previous) previous.disabled = tablePage.page <= 1;
+  if (next) next.disabled = tablePage.page >= tablePage.pageCount;
 }
 
 
@@ -410,7 +499,7 @@ function renderScannerTable(
 
           return `
 
-            <tr class="${row.isStale ? "scanner-row-stale" : ""}">
+            <tr class="${row.tickerStale ? "scanner-row-stale" : ""}">
 
 
               <td>
@@ -423,6 +512,10 @@ function renderScannerTable(
                   }
                 </strong>
 
+                <span class="scanner-freshness ${row.dataComplete ? "fresh" : "missing"}">
+                  ${row.dataComplete ? "COMPLETE" : "PARTIAL"}
+                </span>
+
               </td>
 
 
@@ -433,6 +526,8 @@ function renderScannerTable(
                     row.price
                   )
                 }
+
+                ${freshnessBadge("TICK", row.tickerState)}
 
               </td>
 
@@ -474,6 +569,8 @@ function renderScannerTable(
                   )
                 }
 
+                ${freshnessBadge(row.source === "BINGX" ? "OI RR" : "OI", row.oiState)}
+
               </td>
 
 
@@ -508,6 +605,8 @@ function renderScannerTable(
                     row.fundingRate
                   )
                 }
+
+                ${freshnessBadge("FUND", row.fundingState)}
 
               </td>
 
@@ -646,14 +745,17 @@ function renderScannerCoverage(
   const exchange = state.exchange;
   const total = Object.keys(state.scanner.rows).length;
   const stale = state.scanner.staleCount || 0;
+  const oiStale = state.scanner.oiStaleCount || 0;
+  const fundingStale = state.scanner.fundingStaleCount || 0;
+  const incomplete = state.scanner.incompleteCount || 0;
   const error = state.universe.errors[exchange];
   const source = exchange === "OKX"
     ? "Price / Volume / OI / Funding = WebSocket"
-    : "Price / Volume = WebSocket · OI / Funding = same-origin REST proxy";
+    : "Price / Volume = WebSocket · OI = round-robin REST enrichment · Funding = REST snapshot";
 
   element.textContent = error
     ? `${exchange} · Universe 載入失敗：${error}`
-    : `${exchange} · ${total} USDT 永續 · stale ${stale} · ${source}`;
+    : `${exchange} · ${total} USDT 永續 · ticker stale ${stale} · OI stale ${oiStale} · funding stale ${fundingStale} · incomplete ${incomplete} · ${source}`;
 
 }
 
@@ -995,6 +1097,17 @@ function renderHeroScannerMetrics(
 FORMAT
 ===================================================== */
 
+function freshnessBadge(label, state) {
+  const normalized = ["fresh", "stale", "missing"].includes(state)
+    ? state
+    : "missing";
+  const text = normalized === "fresh"
+    ? "LIVE"
+    : normalized.toUpperCase();
+
+  return `<span class="scanner-freshness ${normalized}">${escapeHTML(label)} ${text}</span>`;
+}
+
 function formatPrice(
   value
 ) {
@@ -1082,6 +1195,10 @@ function formatPrice(
 function formatCompact(
   value
 ) {
+
+  if (value === "" || value === null || value === undefined) {
+    return "--";
+  }
 
   const number =
     Number(
@@ -1178,6 +1295,10 @@ function formatSignedPercent(
   digits
 ) {
 
+  if (value === "" || value === null || value === undefined) {
+    return "--";
+  }
+
   const number =
     Number(
       value
@@ -1224,6 +1345,10 @@ function formatSignedPercent(
 function formatFunding(
   value
 ) {
+
+  if (value === "" || value === null || value === undefined) {
+    return "--";
+  }
 
   const number =
     Number(

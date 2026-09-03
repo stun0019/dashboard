@@ -99,10 +99,11 @@ const commonCallbacks = {
     }
   },
 
-  onOpenInterest({ symbol, oiUsd, oiCcy, timestamp, source }) {
+  onOpenInterest({ symbol, oiUsd, oiUsdSource, oiCcy, timestamp, source }) {
     if (getState().exchange !== source) return;
     queueScannerPatch(symbol, {
       oiUsd,
+      oiUsdSource,
       oiCcy,
       oiUpdatedAt: Number(timestamp) || Date.now(),
       source

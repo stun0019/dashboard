@@ -37,7 +37,7 @@ createServer(async (request, response) => {
     sendJson(response, 500, { code: -1, msg: "Internal server error" });
   }
 }).listen(port, "127.0.0.1", () => {
-  console.log(`TICK v0.3.1 running at http://127.0.0.1:${port}`);
+  console.log(`TICK v0.3.2 running at http://127.0.0.1:${port}`);
 });
 
 async function proxyBingX(request, response, requestUrl) {

@@ -104,6 +104,48 @@
     );
 }
 
+.scanner-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scanner-search {
+  width: min(260px, 55%);
+  padding: 7px 9px;
+  color: var(--text);
+  background: #0d131b;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font: inherit;
+}
+
+.scanner-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 8px;
+}
+
+.scanner-pagination button {
+  padding: 6px 8px;
+  color: var(--text-soft);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.scanner-pagination button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
 
 .scanner-table tbody tr.scanner-row-stale {
   opacity: .5;
@@ -118,6 +160,27 @@
 .scanner-table strong {
   color:
     var(--text);
+}
+
+.scanner-freshness {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-dim);
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+
+.scanner-freshness.fresh {
+  color: var(--green);
+}
+
+.scanner-freshness.stale {
+  color: var(--red);
+}
+
+.scanner-freshness.missing {
+  color: var(--text-dim);
 }
 
 

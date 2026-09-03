@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  version: "0.3.1",
+  version: "0.3.2",
   defaultExchange: "OKX",
 
   market: {
@@ -15,7 +15,8 @@ export const APP_CONFIG = {
   },
 
   ui: {
-    renderThrottleMs: 250
+    renderThrottleMs: 250,
+    scannerPageSize: 50
   },
 
   okx: {

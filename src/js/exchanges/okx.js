@@ -136,6 +136,7 @@ export class OKXMarketClient {
         this.onOpenInterest?.({
           symbol,
           oiUsd: directOiUsd !== null && directOiUsd > 0 ? directOiUsd : fallbackOiUsd,
+          oiUsdSource: directOiUsd !== null && directOiUsd > 0 ? "direct" : "derived",
           oiCcy,
           timestamp: toFiniteNumber(data.ts) ?? Date.now(),
           source: "OKX"

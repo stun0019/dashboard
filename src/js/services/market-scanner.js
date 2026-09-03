@@ -43,26 +43,32 @@ export function mergeScannerRow(
   };
 
 
-  /*
-  BingX OI 為 base asset 數量。
+  const patchHasDirectOiUsd =
+    Object.prototype.hasOwnProperty.call(patch || {}, "oiUsd") &&
+    isPositive(patch.oiUsd) &&
+    patch.oiUsdSource !== "derived";
 
-  如果有：
-  OI coin quantity
-  +
-  current price
-
-  就換算 OI USD。
-  */
-
-  if(
+  if (patchHasDirectOiUsd) {
+    next.oiUsd = Number(patch.oiUsd);
+    next.oiUsdSource = "direct";
+  }
+  else if (
+    next.oiUsdSource !== "direct" &&
     isPositive(next.oiCcy) &&
     isPositive(next.price)
   ) {
-
-    next.oiUsd =
-      Number(next.oiCcy) *
-      Number(next.price);
-
+    // BingX only supplies base-asset OI. Revalue that derived amount
+    // when a newer ticker arrives, but never overwrite official oiUsd.
+    next.oiUsd = Number(next.oiCcy) * Number(next.price);
+    next.oiUsdSource = "derived";
+  }
+  else if (
+    next.oiUsdSource !== "direct" &&
+    patch?.oiUsdSource === "derived" &&
+    isPositive(patch.oiUsd)
+  ) {
+    next.oiUsd = Number(patch.oiUsd);
+    next.oiUsdSource = "derived";
   }
 
 
@@ -140,16 +146,31 @@ export function analyzeScannerRows(
     of Object.entries(rows)
   ) {
 
-    const tickerUpdatedAt = Number(row.tickerUpdatedAt);
-    const isStale = (
-      Number.isFinite(tickerUpdatedAt) &&
-      tickerUpdatedAt > 0 &&
-      now - tickerUpdatedAt > staleAfterMs
+    const tickerState = getFreshness(row.tickerUpdatedAt, isPositive(row.price), staleAfterMs, now);
+    const oiState = getFreshness(
+      row.oiUpdatedAt,
+      isPositive(row.oiUsd) || isPositive(row.oiCcy),
+      staleAfterMs,
+      now
     );
+    const fundingState = getFreshness(
+      row.fundingUpdatedAt,
+      hasFiniteValue(row.fundingRate),
+      staleAfterMs,
+      now
+    );
+    const isStale = tickerState === "stale";
 
     const score = scoreRow(row);
     const scored = {
       ...score,
+      tickerState,
+      oiState,
+      fundingState,
+      tickerStale: tickerState === "stale",
+      oiStale: oiState === "stale",
+      fundingStale: fundingState === "stale",
+      dataComplete: tickerState !== "missing" && oiState !== "missing" && fundingState !== "missing",
       isStale,
       bias: isStale ? "STALE" : score.bias
     };
@@ -289,6 +310,21 @@ export function analyzeScannerRows(
         .filter(row => row.isStale)
         .length,
 
+    oiStaleCount:
+      Object.values(enrichedRows)
+        .filter(row => row.oiStale)
+        .length,
+
+    fundingStaleCount:
+      Object.values(enrichedRows)
+        .filter(row => row.fundingStale)
+        .length,
+
+    incompleteCount:
+      Object.values(enrichedRows)
+        .filter(row => !row.dataComplete)
+        .length,
+
     updatedAt:
       Date.now()
 
@@ -333,6 +369,9 @@ function createEmptyRow(
     oiUsd:
       null,
 
+    oiUsdSource:
+      null,
+
     oiBaselineUsd:
       null,
 
@@ -355,6 +394,27 @@ function createEmptyRow(
       null,
 
     isStale:
+      false,
+
+    tickerState:
+      "missing",
+
+    oiState:
+      "missing",
+
+    fundingState:
+      "missing",
+
+    tickerStale:
+      false,
+
+    oiStale:
+      false,
+
+    fundingStale:
+      false,
+
+    dataComplete:
       false,
 
     longScore:
@@ -779,6 +839,17 @@ function isPositive(
 
   );
 
+}
+
+function hasFiniteValue(value) {
+  return value !== "" && value !== null && value !== undefined && Number.isFinite(Number(value));
+}
+
+function getFreshness(updatedAt, hasValue, staleAfterMs, now) {
+  if (!hasValue) return "missing";
+  const timestamp = Number(updatedAt);
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return "stale";
+  return now - timestamp > staleAfterMs ? "stale" : "fresh";
 }
 
 
