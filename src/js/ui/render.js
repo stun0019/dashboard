@@ -23,7 +23,7 @@ let callbacks = {
 
 
 export function initRenderer(
-    options
+    options = {}
 ) {
 
     callbacks = {
@@ -44,35 +44,81 @@ export function initRenderer(
 
 
 export function renderApp(
-    state
+
+    state,
+
+    scope = "all"
+
 ) {
 
     lastState =
         state;
 
 
-    renderMarket(
-        state
-    );
+    /*
+    不再每次 Market Ticker 更新
+    都重畫整個 Dashboard。
+    */
 
 
-    renderRankings(
-        state
-    );
+    if(
+        scope === "all"
+        ||
+        scope === "market"
+    ) {
+
+        renderMarket(
+            state
+        );
+
+    }
 
 
-    renderSignals(
-        state
-    );
+    if(
+        scope === "all"
+        ||
+        scope === "recommendations"
+    ) {
+
+        renderRankings(
+            state
+        );
+
+    }
 
 
-    renderAnomalies(
-        state
-    );
+    if(
+        scope === "all"
+        ||
+        scope === "signals"
+    ) {
+
+        renderSignals(
+            state
+        );
+
+    }
+
+
+    if(
+        scope === "all"
+        ||
+        scope === "anomalies"
+    ) {
+
+        renderAnomalies(
+            state
+        );
+
+    }
 
 }
 
 
+
+/* =====================================================
+MARKET
+===================================================== */
 
 function renderMarket(
     state
@@ -83,52 +129,100 @@ function renderMarket(
 
 
     setText(
+
         "marketExchange",
+
         state.exchange
+
     );
 
 
     setText(
+
         "connectionSource",
+
         state.exchange
+
     );
 
 
     setText(
+
         "connectionStatus",
+
         market.connectionStatus
+
     );
 
 
-    const dot =
+    /*
+    Connection Dot
+    */
+
+    const connectionDot =
         document.getElementById(
             "connectionDot"
         );
 
 
-    if(dot) {
+    if(
+        connectionDot
+    ) {
 
-        dot.style.background =
+        connectionDot.style.background =
+
             market.connected
+
                 ?
+
                 "var(--green)"
+
                 :
+
                 "var(--red)";
+
+
+        connectionDot.style.boxShadow =
+
+            market.connected
+
+                ?
+
+                "0 0 10px rgba(38, 215, 152, 0.55)"
+
+                :
+
+                "0 0 10px rgba(255, 98, 108, 0.35)";
 
     }
 
 
+    /*
+    Price
+    */
+
     setText(
+
         "marketPrice",
+
         market.price
+
             ?
+
             formatUSD(
                 market.price
             )
+
             :
+
             "--"
+
     );
 
+
+    /*
+    24H
+    */
 
     const changeElement =
         document.getElementById(
@@ -137,60 +231,103 @@ function renderMarket(
 
 
     if(
-        changeElement &&
-        market.change24h !== null
+        changeElement
     ) {
 
-        const value =
-            market.change24h;
+        if(
+            market.change24h === null
+        ) {
+
+            changeElement.textContent =
+                "--";
 
 
-        changeElement.textContent =
-            `${
-                value >= 0
-                    ?
-                    "▲"
-                    :
-                    "▼"
-            } ${
-                Math.abs(value)
-                .toFixed(2)
-            }% · 24H`;
+            changeElement.className =
+                "market-change";
+
+        }
+        else {
+
+            const value =
+                Number(
+                    market.change24h
+                );
 
 
-        changeElement.className =
-            "market-change " +
-            (
-                value >= 0
-                    ?
-                    "positive"
-                    :
-                    "negative"
-            );
+            changeElement.textContent =
+
+                `${
+                    value >= 0
+                        ?
+                        "▲"
+                        :
+                        "▼"
+                } `
+
+                +
+
+                `${Math.abs(
+                    value
+                ).toFixed(2)}% · 24H`;
+
+
+            changeElement.className =
+
+                "market-change "
+
+                +
+
+                (
+                    value >= 0
+
+                        ?
+
+                        "positive"
+
+                        :
+
+                        "negative"
+                );
+
+        }
 
     }
 
 
+    /*
+    OI
+    */
+
     setText(
+
         "marketOI",
 
         market.oiUsd
+
             ?
+
             formatCompactUSD(
                 market.oiUsd
             )
+
             :
+
             "--"
+
     );
 
 
-    if(
+    /*
+    Last Update
+    */
+
+    setText(
+
+        "marketUpdate",
+
         market.lastUpdate
-    ) {
 
-        setText(
-
-            "marketUpdate",
+            ?
 
             `${state.exchange} · ${
                 new Date(
@@ -199,10 +336,16 @@ function renderMarket(
                 .toLocaleTimeString()
             }`
 
-        );
+            :
 
-    }
+            "等待即時資料..."
 
+    );
+
+
+    /*
+    Sparkline
+    */
 
     renderSparkline(
         market.priceHistory
@@ -212,6 +355,10 @@ function renderMarket(
 
 
 
+/* =====================================================
+RANKING
+===================================================== */
+
 function renderRankings(
     state
 ) {
@@ -220,7 +367,9 @@ function renderRankings(
 
         "longRanking",
 
-        state.recommendations.long,
+        state
+            .recommendations
+            .long,
 
         "LONG"
 
@@ -231,7 +380,9 @@ function renderRankings(
 
         "shortRanking",
 
-        state.recommendations.short,
+        state
+            .recommendations
+            .short,
 
         "SHORT"
 
@@ -242,9 +393,13 @@ function renderRankings(
 
 
 function renderRanking(
+
     id,
+
     data,
+
     side
+
 ) {
 
     const container =
@@ -261,7 +416,9 @@ function renderRanking(
 
 
     container.innerHTML =
+
         data
+
         .map(
             (
                 item,
@@ -276,19 +433,35 @@ function renderRanking(
 
                     <div class="ranking-row">
 
+
                         <div class="rank-number">
+
                             ${index + 1}
+
                         </div>
 
 
                         <div>
 
                             <div class="rank-symbol">
-                                ${item.symbol}
+
+                                ${
+                                    escapeHTML(
+                                        item.symbol
+                                    )
+                                }
+
                             </div>
 
+
                             <div class="rank-price">
-                                ${formatUSD(item.price)}
+
+                                ${
+                                    formatUSD(
+                                        item.price
+                                    )
+                                }
+
                             </div>
 
                         </div>
@@ -299,6 +472,7 @@ function renderRanking(
                             <div class="strength-bar">
 
                                 <div
+
                                     class="
                                         strength-progress
                                         ${
@@ -312,15 +486,26 @@ function renderRanking(
 
                                     style="
                                         width:
-                                        ${item.strength}%
+                                        ${
+                                            clamp(
+                                                item.strength,
+                                                0,
+                                                100
+                                            )
+                                        }%
                                     "
+
                                 >
                                 </div>
 
                             </div>
 
+
                             <div class="strength-text">
-                                Score ${item.strength}
+
+                                Score
+                                ${item.strength}
+
                             </div>
 
                         </div>
@@ -348,10 +533,14 @@ function renderRanking(
                             }
 
                             ${
-                                item.change.toFixed(2)
+                                Number(
+                                    item.change
+                                )
+                                .toFixed(2)
                             }%
 
                         </div>
+
 
                     </div>
 
@@ -359,31 +548,45 @@ function renderRanking(
 
             }
         )
+
         .join("");
 
 }
 
 
 
+/* =====================================================
+SIGNALS
+===================================================== */
+
 function renderSignals(
     state
 ) {
 
     const source =
+
         signalStatus === "active"
+
             ?
-            state.signals.active
+
+            state
+                .signals
+                .active
+
             :
-            state.signals.closed;
+
+            state
+                .signals
+                .closed;
 
 
     const filtered =
+
         source.filter(
             signal => {
 
                 if(
-                    signalFilter ===
-                    "ALL"
+                    signalFilter === "ALL"
                 ) {
 
                     return true;
@@ -392,20 +595,25 @@ function renderSignals(
 
 
                 if(
-                    signalFilter ===
-                    "LONG" ||
-                    signalFilter ===
-                    "SHORT"
+                    signalFilter === "LONG"
+                    ||
+                    signalFilter === "SHORT"
                 ) {
 
-                    return signal.side ===
-                        signalFilter;
+                    return (
+                        signal.side ===
+                        signalFilter
+                    );
 
                 }
 
 
-                return signal.timeframe ===
-                    signalFilter;
+                return (
+
+                    signal.timeframe ===
+                    signalFilter
+
+                );
 
             }
         );
@@ -424,21 +632,59 @@ function renderSignals(
     }
 
 
+    /*
+    Empty
+    */
+
+    if(
+        !filtered.length
+    ) {
+
+        grid.innerHTML = `
+
+            <div
+                style="
+                    padding:24px;
+                    color:var(--text-dim);
+                "
+            >
+
+                無符合條件訊號
+
+            </div>
+
+        `;
+
+
+        return;
+
+    }
+
+
     grid.innerHTML =
+
         filtered
+
         .map(
             signal =>
                 createSignalHTML(
                     signal
                 )
         )
+
         .join("");
 
 
+    /*
+    Quick Trade
+    */
+
     grid
+
         .querySelectorAll(
             "[data-trade]"
         )
+
         .forEach(
             button => {
 
@@ -447,7 +693,9 @@ function renderSignals(
                     () => {
 
                         const id =
-                            button.dataset.trade;
+                            button
+                                .dataset
+                                .trade;
 
 
                         const signal =
@@ -459,9 +707,11 @@ function renderSignals(
 
                         if(signal) {
 
-                            callbacks.onTrade?.(
-                                signal
-                            );
+                            callbacks
+                                .onTrade
+                                ?.(
+                                    signal
+                                );
 
                         }
 
@@ -472,10 +722,16 @@ function renderSignals(
         );
 
 
+    /*
+    AI Signal
+    */
+
     grid
+
         .querySelectorAll(
             "[data-ai-signal]"
         )
+
         .forEach(
             button => {
 
@@ -483,9 +739,13 @@ function renderSignals(
                     "click",
                     () => {
 
-                        callbacks.onAI?.(
-                            button.dataset.aiSignal
-                        );
+                        callbacks
+                            .onAI
+                            ?.(
+                                button
+                                    .dataset
+                                    .aiSignal
+                            );
 
                     }
                 );
@@ -506,18 +766,46 @@ function createSignalHTML(
         "LONG";
 
 
+    const performance =
+        Number(
+            signal.performance || 0
+        );
+
+
     const result =
+
         signal.result
+
             ?
+
             signal.result
+
             :
+
             `${
-                signal.performance >= 0
+                performance >= 0
                     ?
                     "+"
                     :
                     ""
-            }${signal.performance.toFixed(2)}%`;
+            }${
+                performance
+                    .toFixed(2)
+            }%`;
+
+
+    const resultPositive =
+
+        signal.result
+
+            ?
+
+            signal.result !==
+                "SL"
+
+            :
+
+            performance >= 0;
 
 
     return `
@@ -527,14 +815,28 @@ function createSignalHTML(
 
             <div class="signal-card-header">
 
+
                 <div>
 
                     <div class="signal-symbol">
-                        ${signal.symbol}
+
+                        ${
+                            escapeHTML(
+                                signal.symbol
+                            )
+                        }
+
                     </div>
 
+
                     <div class="signal-time">
-                        ${signal.time}
+
+                        ${
+                            escapeHTML(
+                                signal.time
+                            )
+                        }
+
                     </div>
 
                 </div>
@@ -553,9 +855,14 @@ function createSignalHTML(
                     "
                 >
 
-                    ${signal.side}
+                    ${
+                        escapeHTML(
+                            signal.side
+                        )
+                    }
 
                 </span>
+
 
             </div>
 
@@ -570,7 +877,13 @@ function createSignalHTML(
                     </span>
 
                     <strong>
-                        ${signal.timeframe}
+
+                        ${
+                            escapeHTML(
+                                signal.timeframe
+                            )
+                        }
+
                     </strong>
 
                 </div>
@@ -583,7 +896,13 @@ function createSignalHTML(
                     </span>
 
                     <strong>
-                        ${formatUSD(signal.trigger)}
+
+                        ${
+                            formatUSD(
+                                signal.trigger
+                            )
+                        }
+
                     </strong>
 
                 </div>
@@ -598,7 +917,7 @@ function createSignalHTML(
                     <strong
                         class="
                             ${
-                                signal.performance >= 0
+                                resultPositive
                                     ?
                                     "positive"
                                     :
@@ -607,7 +926,11 @@ function createSignalHTML(
                         "
                     >
 
-                        ${result}
+                        ${
+                            escapeHTML(
+                                result
+                            )
+                        }
 
                     </strong>
 
@@ -619,29 +942,49 @@ function createSignalHTML(
 
             <div class="signal-actions">
 
+
                 <button
                     class="card-button"
-                    data-ai-signal="${signal.symbol}"
+
+                    data-ai-signal="${
+                        escapeAttribute(
+                            signal.symbol
+                        )
+                    }"
                 >
+
                     AI聊
+
                 </button>
 
 
                 <button
                     class="card-button"
-                    data-trade="${signal.id}"
+
+                    data-trade="${
+                        escapeAttribute(
+                            signal.id
+                        )
+                    }"
 
                     ${
                         signalStatus ===
                         "closed"
+
                             ?
+
                             "disabled"
+
                             :
+
                             ""
                     }
                 >
+
                     快速下單
+
                 </button>
+
 
             </div>
 
@@ -654,6 +997,10 @@ function createSignalHTML(
 
 
 
+/* =====================================================
+ANOMALY
+===================================================== */
+
 function renderAnomalies(
     state
 ) {
@@ -662,7 +1009,9 @@ function renderAnomalies(
 
         "bullishAnomaly",
 
-        state.anomalies.bullish,
+        state
+            .anomalies
+            .bullish,
 
         true
 
@@ -673,7 +1022,9 @@ function renderAnomalies(
 
         "bearishAnomaly",
 
-        state.anomalies.bearish,
+        state
+            .anomalies
+            .bearish,
 
         false
 
@@ -684,9 +1035,13 @@ function renderAnomalies(
 
 
 function renderAnomaly(
+
     id,
+
     data,
+
     bullish
+
 ) {
 
     const container =
@@ -703,31 +1058,59 @@ function renderAnomaly(
 
 
     container.innerHTML =
+
         data
+
         .map(
             item => `
 
                 <div class="anomaly-card">
 
+
                     <div class="anomaly-top">
 
+
                         <div class="anomaly-symbol">
-                            ⚡ ${item.symbol}
+
+                            ⚡
+                            ${
+                                escapeHTML(
+                                    item.symbol
+                                )
+                            }
+
                         </div>
 
+
                         <div class="anomaly-meta">
-                            ${item.count} alerts · ${item.ago}
+
+                            ${item.count}
+                            alerts ·
+                            ${
+                                escapeHTML(
+                                    item.ago
+                                )
+                            }
+
                         </div>
+
 
                     </div>
 
 
                     <div class="anomaly-description">
-                        ${item.description}
+
+                        ${
+                            escapeHTML(
+                                item.description
+                            )
+                        }
+
                     </div>
 
 
                     <div class="anomaly-stats">
+
 
                         <div class="anomaly-stat">
 
@@ -736,7 +1119,13 @@ function renderAnomaly(
                             </span>
 
                             <strong>
-                                ${formatUSD(item.first)}
+
+                                ${
+                                    formatUSD(
+                                        item.first
+                                    )
+                                }
+
                             </strong>
 
                         </div>
@@ -749,7 +1138,13 @@ function renderAnomaly(
                             </span>
 
                             <strong>
-                                ${formatUSD(item.current)}
+
+                                ${
+                                    formatUSD(
+                                        item.current
+                                    )
+                                }
+
                             </strong>
 
                         </div>
@@ -782,24 +1177,34 @@ function renderAnomaly(
                                 }
 
                                 ${
-                                    item.performance.toFixed(2)
+                                    Number(
+                                        item.performance
+                                    )
+                                    .toFixed(2)
                                 }%
 
                             </strong>
 
                         </div>
 
+
                     </div>
+
 
                 </div>
 
             `
         )
+
         .join("");
 
 }
 
 
+
+/* =====================================================
+SPARKLINE
+===================================================== */
 
 function renderSparkline(
     prices
@@ -811,10 +1216,23 @@ function renderSparkline(
         );
 
 
+    if(!container) {
+
+        return;
+
+    }
+
+
     if(
-        !container ||
+        !Array.isArray(
+            prices
+        )
+        ||
         prices.length < 2
     ) {
+
+        container.innerHTML =
+            "";
 
         return;
 
@@ -835,12 +1253,15 @@ function renderSparkline(
 
     const range =
         max -
-        min ||
+        min
+        ||
         1;
 
 
     const points =
+
         prices
+
         .map(
             (
                 value,
@@ -848,40 +1269,62 @@ function renderSparkline(
             ) => {
 
                 const x =
+
                     (
-                        index /
+                        index
+                        /
                         (
                             prices.length -
                             1
                         )
                     )
-                    * 180;
+
+                    *
+
+                    180;
 
 
                 const y =
-                    34 -
+
+                    34
+
+                    -
+
                     (
                         (
                             value -
                             min
                         )
+
                         /
+
                         range
                     )
-                    * 30;
+
+                    *
+
+                    30;
 
 
-                return `${x},${y}`;
+                return (
+                    `${x},${y}`
+                );
 
             }
         )
+
         .join(" ");
 
 
     const rising =
+
         prices[
             prices.length - 1
-        ] >= prices[0];
+        ]
+
+        >=
+
+        prices[0];
 
 
     container.innerHTML = `
@@ -917,12 +1360,18 @@ function renderSparkline(
 
 
 
+/* =====================================================
+NAVIGATION
+===================================================== */
+
 function bindNavigation() {
 
     document
+
         .querySelectorAll(
             "[data-target]"
         )
+
         .forEach(
             button => {
 
@@ -931,26 +1380,35 @@ function bindNavigation() {
                     () => {
 
                         document
+
                             .querySelectorAll(
                                 "[data-target]"
                             )
+
                             .forEach(
-                                item =>
-                                    item.classList.remove(
-                                        "active"
-                                    )
+                                item => {
+
+                                    item.classList
+                                        .remove(
+                                            "active"
+                                        );
+
+                                }
                             );
 
 
-                        button.classList.add(
-                            "active"
-                        );
+                        button.classList
+                            .add(
+                                "active"
+                            );
 
 
                         document
+
                             .getElementById(
                                 button.dataset.target
                             )
+
                             ?.scrollIntoView({
 
                                 behavior:
@@ -968,12 +1426,18 @@ function bindNavigation() {
 
 
 
+/* =====================================================
+SIGNAL FILTER
+===================================================== */
+
 function bindSignalFilters() {
 
     document
+
         .querySelectorAll(
             "[data-signal-filter]"
         )
+
         .forEach(
             button => {
 
@@ -982,27 +1446,38 @@ function bindSignalFilters() {
                     () => {
 
                         signalFilter =
-                            button.dataset.signalFilter;
+                            button
+                                .dataset
+                                .signalFilter;
 
 
                         document
+
                             .querySelectorAll(
                                 "[data-signal-filter]"
                             )
+
                             .forEach(
-                                item =>
-                                    item.classList.remove(
-                                        "active"
-                                    )
+                                item => {
+
+                                    item.classList
+                                        .remove(
+                                            "active"
+                                        );
+
+                                }
                             );
 
 
-                        button.classList.add(
-                            "active"
-                        );
+                        button.classList
+                            .add(
+                                "active"
+                            );
 
 
-                        if(lastState) {
+                        if(
+                            lastState
+                        ) {
 
                             renderSignals(
                                 lastState
@@ -1018,9 +1493,11 @@ function bindSignalFilters() {
 
 
     document
+
         .querySelectorAll(
             "[data-signal-status]"
         )
+
         .forEach(
             button => {
 
@@ -1029,27 +1506,38 @@ function bindSignalFilters() {
                     () => {
 
                         signalStatus =
-                            button.dataset.signalStatus;
+                            button
+                                .dataset
+                                .signalStatus;
 
 
                         document
+
                             .querySelectorAll(
                                 "[data-signal-status]"
                             )
+
                             .forEach(
-                                item =>
-                                    item.classList.remove(
-                                        "active"
-                                    )
+                                item => {
+
+                                    item.classList
+                                        .remove(
+                                            "active"
+                                        );
+
+                                }
                             );
 
 
-                        button.classList.add(
-                            "active"
-                        );
+                        button.classList
+                            .add(
+                                "active"
+                            );
 
 
-                        if(lastState) {
+                        if(
+                            lastState
+                        ) {
 
                             renderSignals(
                                 lastState
@@ -1067,9 +1555,16 @@ function bindSignalFilters() {
 
 
 
+/* =====================================================
+HELPERS
+===================================================== */
+
 function setText(
+
     id,
+
     value
+
 ) {
 
     const element =
@@ -1094,21 +1589,44 @@ function formatUSD(
 ) {
 
     const number =
-        Number(value);
+        Number(
+            value
+        );
+
+
+    if(
+        !Number.isFinite(
+            number
+        )
+    ) {
+
+        return "--";
+
+    }
 
 
     if(
         number >= 1000
     ) {
 
-        return "$" +
+        return (
+
+            "$"
+
+            +
+
             number.toLocaleString(
+
                 undefined,
+
                 {
                     maximumFractionDigits:
                         2
                 }
-            );
+
+            )
+
+        );
 
     }
 
@@ -1117,14 +1635,32 @@ function formatUSD(
         number >= 1
     ) {
 
-        return "$" +
-            number.toFixed(3);
+        return (
+
+            "$"
+
+            +
+
+            number.toFixed(
+                3
+            )
+
+        );
 
     }
 
 
-    return "$" +
-        number.toFixed(6);
+    return (
+
+        "$"
+
+        +
+
+        number.toFixed(
+            6
+        )
+
+    );
 
 }
 
@@ -1134,31 +1670,137 @@ function formatCompactUSD(
     value
 ) {
 
+    const number =
+        Number(
+            value
+        );
+
+
     if(
-        value >= 1e9
+        !Number.isFinite(
+            number
+        )
     ) {
 
-        return `$${(
-            value /
-            1e9
-        ).toFixed(2)}B`;
+        return "--";
 
     }
 
 
     if(
-        value >= 1e6
+        number >= 1e9
     ) {
 
-        return `$${(
-            value /
-            1e6
-        ).toFixed(2)}M`;
+        return (
+
+            `$${(
+                number /
+                1e9
+            ).toFixed(2)}B`
+
+        );
+
+    }
+
+
+    if(
+        number >= 1e6
+    ) {
+
+        return (
+
+            `$${(
+                number /
+                1e6
+            ).toFixed(2)}M`
+
+        );
 
     }
 
 
     return formatUSD(
+        number
+    );
+
+}
+
+
+
+function clamp(
+
+    value,
+
+    min,
+
+    max
+
+) {
+
+    return Math.min(
+
+        max,
+
+        Math.max(
+
+            min,
+
+            Number(
+                value
+            )
+            ||
+            0
+
+        )
+
+    );
+
+}
+
+
+
+function escapeHTML(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+
+function escapeAttribute(
+    value
+) {
+
+    return escapeHTML(
         value
     );
 
