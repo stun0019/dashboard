@@ -1,416 +1,1146 @@
 import {
-    APP_CONFIG
+
+  APP_CONFIG,
+
+  toBingXSymbol,
+
+  fromBingXSymbol
+
 }
 from "../config.js";
 
 
+
 export class BingXMarketClient {
 
-    constructor({
+  constructor({
 
-        onStatus,
-        onTicker
+    symbols =
+      APP_CONFIG
+        .scanner
+        .symbols,
 
-    }) {
+    onStatus,
 
-        this.ws =
-            null;
+    onTicker,
 
-        this.reconnectTimer =
-            null;
+    onOpenInterest,
 
-        this.intentionalClose =
-            false;
+    onFunding
 
-        this.onStatus =
-            onStatus;
+  }) {
 
-        this.onTicker =
-            onTicker;
-
-    }
+    this.symbols =
+      symbols;
 
 
-    connect() {
+    this.onStatus =
+      onStatus;
 
-        this.disconnect();
+
+    this.onTicker =
+      onTicker;
 
 
-        this.intentionalClose =
-            false;
+    this.onOpenInterest =
+      onOpenInterest;
 
+
+    this.onFunding =
+      onFunding;
+
+
+    this.ws =
+      null;
+
+
+    this.reconnectTimer =
+      null;
+
+
+    this.restTimer =
+      null;
+
+
+    this.intentionalClose =
+      false;
+
+
+    this.restCursor =
+      0;
+
+
+    this.restTick =
+      0;
+
+  }
+
+
+
+  connect() {
+
+    this.disconnect();
+
+
+    this.intentionalClose =
+      false;
+
+
+    this.onStatus?.({
+
+      connected:
+        false,
+
+      status:
+        "CONNECTING"
+
+    });
+
+
+    this.ws =
+      new WebSocket(
+        APP_CONFIG
+          .bingx
+          .wsUrl
+      );
+
+
+    this.ws.binaryType =
+      "arraybuffer";
+
+
+    this.ws.onopen =
+      () => {
 
         this.onStatus?.({
 
-            connected:
-                false,
+          connected:
+            true,
 
-            status:
-                "CONNECTING"
+          status:
+            "CONNECTED"
 
         });
 
 
-        this.ws =
-            new WebSocket(
-                APP_CONFIG.bingx.wsUrl
+        /*
+        WebSocket:
+        real-time ticker
+        */
+
+        this.subscribeTickers();
+
+
+        /*
+        REST:
+        OI + Funding
+        */
+
+        this.startRestEnrichment();
+
+      };
+
+
+    this.ws.onmessage =
+      async event => {
+
+        await this.handleMessage(
+          event.data
+        );
+
+      };
+
+
+    this.ws.onerror =
+      () => {
+
+        this.onStatus?.({
+
+          connected:
+            false,
+
+          status:
+            "WS ERROR"
+
+        });
+
+      };
+
+
+    this.ws.onclose =
+      () => {
+
+        this.stopRestEnrichment();
+
+
+        this.onStatus?.({
+
+          connected:
+            false,
+
+          status:
+
+            this.intentionalClose
+
+              ?
+
+              "DISCONNECTED"
+
+              :
+
+              "RECONNECTING"
+
+        });
+
+
+        if(
+          !this.intentionalClose
+        ) {
+
+          this.reconnectTimer =
+
+            setTimeout(
+
+              () =>
+                this.connect(),
+
+              3000
+
             );
 
+        }
 
-        this.ws.binaryType =
-            "arraybuffer";
+      };
 
-
-        this.ws.onopen =
-            () => {
-
-                this.onStatus?.({
-
-                    connected:
-                        true,
-
-                    status:
-                        "CONNECTED"
-
-                });
+  }
 
 
-                this.subscribeTicker();
 
-            };
+  /* =====================================================
+  WEBSOCKET TICKER
+  ===================================================== */
 
+  subscribeTickers() {
 
-        this.ws.onmessage =
-            async event => {
+    if(
+      !this.ws
+      ||
+      this.ws.readyState !==
+        WebSocket.OPEN
+    ) {
 
-                await this.handleMessage(
-                    event.data
-                );
-
-            };
-
-
-        this.ws.onerror =
-            () => {
-
-                this.onStatus?.({
-
-                    connected:
-                        false,
-
-                    status:
-                        "WS ERROR"
-
-                });
-
-            };
-
-
-        this.ws.onclose =
-            () => {
-
-                this.onStatus?.({
-
-                    connected:
-                        false,
-
-                    status:
-                        this.intentionalClose
-                            ?
-                            "DISCONNECTED"
-                            :
-                            "RECONNECTING"
-
-                });
-
-
-                if(
-                    !this.intentionalClose
-                ) {
-
-                    this.reconnectTimer =
-                        setTimeout(
-                            () =>
-                                this.connect(),
-                            3000
-                        );
-
-                }
-
-            };
+      return;
 
     }
 
 
-    subscribeTicker() {
+    for(
+      const symbol
+      of this.symbols
+    ) {
+
+      this.ws.send(
+
+        JSON.stringify({
+
+          id:
+            createId(),
+
+          reqType:
+            "sub",
+
+          dataType:
+
+            `${toBingXSymbol(
+              symbol
+            )}@ticker`
+
+        })
+
+      );
+
+    }
+
+  }
+
+
+
+  async handleMessage(
+    raw
+  ) {
+
+    let text;
+
+
+    try {
+
+      text =
+        await decodeMessage(
+          raw
+        );
+
+    }
+    catch(error) {
+
+      console.error(
+        "BingX decode error",
+        error
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+    BingX heartbeat
+    */
+
+    if(
+      text
+        .trim()
+        .toLowerCase()
+      ===
+      "ping"
+    ) {
+
+      if(
+        this.ws
+        ?.readyState ===
+        WebSocket.OPEN
+      ) {
+
+        this.ws.send(
+          "Pong"
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    let payload;
+
+
+    try {
+
+      payload =
+        JSON.parse(
+          text
+        );
+
+    }
+    catch {
+
+      return;
+
+    }
+
+
+    if(
+      !payload.data
+
+      ||
+
+      !payload
+        .dataType
+        ?.endsWith(
+          "@ticker"
+        )
+    ) {
+
+      return;
+
+    }
+
+
+    const data =
+      payload.data;
+
+
+    const symbol =
+
+      fromBingXSymbol(
+
+        data.s
+
+        ||
+
+        payload
+          .dataType
+          .split("@")[0]
+
+      );
+
+
+    const price =
+      Number(
+        data.c
+      );
+
+
+    /*
+    BingX ticker P:
+    Price Change Percent
+    */
+
+    let change24h =
+      Number(
+        data.P
+      );
+
+
+    /*
+    fallback:
+    p = absolute price change
+    */
+
+    if(
+      !Number.isFinite(
+        change24h
+      )
+    ) {
+
+      const absoluteChange =
+        Number(
+          data.p || 0
+        );
+
+
+      const previousClose =
+        price -
+        absoluteChange;
+
+
+      change24h =
+
+        previousClose > 0
+
+          ?
+
+          (
+            absoluteChange
+            /
+            previousClose
+          )
+
+          *
+
+          100
+
+          :
+
+          null;
+
+    }
+
+
+    this.onTicker?.({
+
+      symbol,
+
+      price,
+
+      change24h,
+
+      volume24h:
+
+        toFiniteNumber(
+          data.v
+        ),
+
+      timestamp:
+        Date.now(),
+
+      source:
+        "BINGX"
+
+    });
+
+  }
+
+
+
+  /* =====================================================
+  BINGX REST ENRICHMENT
+
+  OI endpoint 是逐 Symbol。
+  Rate limit 比較低。
+
+  因此使用 Round Robin：
+  BTC
+  ETH
+  SOL
+  ...
+  每次只打一個。
+  ===================================================== */
+
+  startRestEnrichment() {
+
+    this.stopRestEnrichment();
+
+
+    this.restCursor =
+      0;
+
+
+    this.restTick =
+      0;
+
+
+    const loop =
+      async () => {
 
         if(
-            !this.ws ||
-            this.ws.readyState !==
-                WebSocket.OPEN
+          this.intentionalClose
         ) {
 
-            return;
+          return;
 
         }
 
 
-        const symbol =
-            APP_CONFIG.bingx.symbol;
-
-
-        this.ws.send(
-
-            JSON.stringify({
-
-                id:
-                    crypto.randomUUID
-                        ?
-                        crypto.randomUUID()
-                        :
-                        String(
-                            Date.now()
-                        ),
-
-                reqType:
-                    "sub",
-
-                dataType:
-                    `${symbol}@ticker`
-
-            })
-
-        );
-
-    }
-
-
-    async handleMessage(raw) {
-
-        let text;
-
-
         try {
 
-            text =
-                await decodeMessage(
-                    raw
-                );
+          /*
+          約每 60 秒
+          Refresh Funding。
+          */
+
+          if(
+
+            this.restTick
+
+            %
+
+            APP_CONFIG
+              .bingx
+              .fundingEveryTicks
+
+            ===
+
+            0
+
+          ) {
+
+            await this
+              .fetchFundingSnapshot();
+
+          }
+          else {
+
+            await this
+              .fetchNextOpenInterest();
+
+          }
 
         }
         catch(error) {
 
-            console.error(
-                "BingX decode error",
-                error
-            );
+          /*
+          如果 Browser CORS
+          或網路問題，
 
-            return;
+          不影響 WebSocket Ticker。
+          */
 
-        }
+          console.debug(
 
+            "BingX REST enrichment unavailable:",
 
-        if(
-            text === "Ping" ||
-            text.includes("ping")
-        ) {
+            error?.message
+            ||
+            error
 
-            if(
-                this.ws &&
-                this.ws.readyState ===
-                    WebSocket.OPEN
-            ) {
-
-                this.ws.send(
-                    "Pong"
-                );
-
-            }
-
-            return;
+          );
 
         }
 
 
-        let payload;
+        this.restTick +=
+          1;
 
 
-        try {
+        this.restTimer =
 
-            payload =
-                JSON.parse(text);
+          setTimeout(
 
-        }
-        catch {
+            loop,
 
-            return;
+            APP_CONFIG
+              .bingx
+              .restPollMs
 
-        }
+          );
 
-
-        if(
-            !payload.data
-        ) {
-
-            return;
-
-        }
+      };
 
 
-        if(
-            payload.dataType?.endsWith(
-                "@ticker"
-            )
-        ) {
+    this.restTimer =
 
-            const data =
-                payload.data;
+      setTimeout(
+        loop,
+        400
+      );
 
-
-            const price =
-                Number(data.c);
+  }
 
 
-            const absoluteChange =
-                Number(
-                    data.p || 0
-                );
+
+  stopRestEnrichment() {
+
+    clearTimeout(
+      this.restTimer
+    );
 
 
-            const previousClose =
-                price -
-                absoluteChange;
+    this.restTimer =
+      null;
+
+  }
 
 
-            const change24h =
-                previousClose
-                    ?
-                    (
-                        absoluteChange
-                        /
-                        previousClose
-                    )
-                    * 100
-                    :
-                    0;
+
+  /* =====================================================
+  FUNDING
+
+  premiumIndex 可一次取得多個合約，
+  不需要逐幣呼叫。
+  ===================================================== */
+
+  async fetchFundingSnapshot() {
+
+    const url =
+      new URL(
+
+        `${APP_CONFIG.bingx.restBaseUrl}` +
+        `/openApi/swap/v2/quote/premiumIndex`
+
+      );
 
 
-            this.onTicker?.({
+    url.searchParams.set(
 
-                price,
+      "timestamp",
 
-                change24h,
+      String(
+        Date.now()
+      )
 
-                timestamp:
-                    Date.now()
-
-            });
-
-        }
-
-    }
+    );
 
 
-    disconnect() {
+    const payload =
+      await fetchJson(
+        url.toString()
+      );
 
-        this.intentionalClose =
-            true;
+
+    const rows =
+
+      Array.isArray(
+        payload.data
+      )
+
+        ?
+
+        payload.data
+
+        :
+
+        [
+          payload.data
+        ];
 
 
-        clearTimeout(
-            this.reconnectTimer
+    const allowed =
+      new Set(
+        this.symbols
+      );
+
+
+    for(
+      const item
+      of rows
+    ) {
+
+      if(!item) {
+
+        continue;
+
+      }
+
+
+      const symbol =
+
+        fromBingXSymbol(
+          item.symbol
         );
 
 
-        if(this.ws) {
+      if(
+        !allowed.has(
+          symbol
+        )
+      ) {
 
-            this.ws.onclose =
-                null;
+        continue;
 
-            this.ws.close();
+      }
 
-            this.ws =
-                null;
 
-        }
+      this.onFunding?.({
+
+        symbol,
+
+        fundingRate:
+
+          toFiniteNumber(
+            item.lastFundingRate
+          ),
+
+        nextFundingTime:
+
+          Number(
+            item.nextFundingTime
+          )
+
+          ||
+
+          null,
+
+        timestamp:
+
+          Number(
+            item.time
+          )
+
+          ||
+
+          Date.now(),
+
+        source:
+          "BINGX"
+
+      });
 
     }
+
+  }
+
+
+
+  /* =====================================================
+  OPEN INTEREST
+  ===================================================== */
+
+  async fetchNextOpenInterest() {
+
+    if(
+      !this.symbols.length
+    ) {
+
+      return;
+
+    }
+
+
+    const symbol =
+
+      this.symbols[
+
+        this.restCursor
+
+        %
+
+        this.symbols.length
+
+      ];
+
+
+    this.restCursor =
+
+      (
+        this.restCursor +
+        1
+      )
+
+      %
+
+      this.symbols.length;
+
+
+    const url =
+      new URL(
+
+        `${APP_CONFIG.bingx.restBaseUrl}` +
+        `/openApi/swap/v2/quote/openInterest`
+
+      );
+
+
+    url.searchParams.set(
+
+      "symbol",
+
+      toBingXSymbol(
+        symbol
+      )
+
+    );
+
+
+    url.searchParams.set(
+
+      "timestamp",
+
+      String(
+        Date.now()
+      )
+
+    );
+
+
+    const payload =
+      await fetchJson(
+        url.toString()
+      );
+
+
+    const data =
+      payload.data;
+
+
+    if(!data) {
+
+      return;
+
+    }
+
+
+    this.onOpenInterest?.({
+
+      symbol,
+
+      /*
+      BingX Open Interest
+      回傳 base asset 數量。
+
+      market-scanner.js
+      會用 price 換成 USD。
+      */
+
+      oiCcy:
+
+        toFiniteNumber(
+          data.openInterest
+        ),
+
+      timestamp:
+
+        Number(
+          data.time
+        )
+
+        ||
+
+        Date.now(),
+
+      source:
+        "BINGX"
+
+    });
+
+  }
+
+
+
+  disconnect() {
+
+    this.intentionalClose =
+      true;
+
+
+    clearTimeout(
+      this.reconnectTimer
+    );
+
+
+    this.stopRestEnrichment();
+
+
+    if(this.ws) {
+
+      this.ws.onclose =
+        null;
+
+
+      this.ws.close();
+
+
+      this.ws =
+        null;
+
+    }
+
+  }
 
 }
 
 
 
-async function decodeMessage(data) {
+/* =====================================================
+REST
+===================================================== */
+
+async function fetchJson(
+  url
+) {
+
+  const controller =
+    new AbortController();
+
+
+  const timeout =
+
+    setTimeout(
+      () =>
+        controller.abort(),
+      8000
+    );
+
+
+  try {
+
+    const response =
+
+      await fetch(
+
+        url,
+
+        {
+          method:
+            "GET",
+
+          headers: {
+            Accept:
+              "application/json"
+          },
+
+          signal:
+            controller.signal
+        }
+
+      );
+
 
     if(
-        typeof data ===
-        "string"
+      !response.ok
     ) {
 
-        return data;
+      throw new Error(
+        `HTTP ${response.status}`
+      );
 
     }
 
 
-    let buffer;
+    const payload =
+      await response.json();
 
 
     if(
-        data instanceof Blob
+
+      payload.code !==
+      undefined
+
+      &&
+
+      Number(
+        payload.code
+      )
+      !==
+      0
+
     ) {
 
-        buffer =
-            await data.arrayBuffer();
+      throw new Error(
+
+        payload.msg
+
+        ||
+
+        `BingX code ${payload.code}`
+
+      );
 
     }
-    else {
-
-        buffer =
-            data;
-
-    }
 
 
-    if(
-        typeof DecompressionStream ===
-        "undefined"
-    ) {
+    return payload;
 
-        return new TextDecoder(
-            "utf-8"
+  }
+  finally {
+
+    clearTimeout(
+      timeout
+    );
+
+  }
+
+}
+
+
+
+/* =====================================================
+GZIP
+===================================================== */
+
+async function decodeMessage(
+  data
+) {
+
+  if(
+    typeof data ===
+    "string"
+  ) {
+
+    return data;
+
+  }
+
+
+  const buffer =
+
+    data instanceof Blob
+
+      ?
+
+      await data.arrayBuffer()
+
+      :
+
+      data;
+
+
+  if(
+    typeof DecompressionStream ===
+    "undefined"
+  ) {
+
+    return new TextDecoder(
+      "utf-8"
+    )
+    .decode(
+      buffer
+    );
+
+  }
+
+
+  try {
+
+    const stream =
+
+      new Blob(
+        [buffer]
+      )
+
+      .stream()
+
+      .pipeThrough(
+
+        new DecompressionStream(
+          "gzip"
         )
-        .decode(buffer);
 
-    }
-
-
-    try {
-
-        const stream =
-            new Blob(
-                [buffer]
-            )
-            .stream()
-            .pipeThrough(
-                new DecompressionStream(
-                    "gzip"
-                )
-            );
+      );
 
 
-        return await new Response(
-            stream
-        )
-        .text();
+    return await new Response(
+      stream
+    )
+    .text();
 
-    }
-    catch {
+  }
+  catch {
 
-        return new TextDecoder(
-            "utf-8"
-        )
-        .decode(buffer);
+    return new TextDecoder(
+      "utf-8"
+    )
+    .decode(
+      buffer
+    );
 
-    }
+  }
+
+}
+
+
+
+/* =====================================================
+HELPERS
+===================================================== */
+
+function createId() {
+
+  if(
+    globalThis
+      .crypto
+      ?.randomUUID
+  ) {
+
+    return globalThis
+      .crypto
+      .randomUUID();
+
+  }
+
+
+  return (
+
+    `${Date.now()}-`
+
+    +
+
+    Math.random()
+      .toString(16)
+      .slice(2)
+
+  );
+
+}
+
+
+
+function toFiniteNumber(
+  value
+) {
+
+  const number =
+    Number(
+      value
+    );
+
+
+  return (
+
+    Number.isFinite(
+      number
+    )
+
+      ?
+
+      number
+
+      :
+
+      null
+
+  );
 
 }
