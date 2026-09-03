@@ -1,0 +1,13 @@
+{
+  "name": "tick-market-scanner",
+  "version": "0.3.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "check": "node scripts/check.mjs"
+  }
+}

@@ -105,6 +105,16 @@
 }
 
 
+.scanner-table tbody tr.scanner-row-stale {
+  opacity: .5;
+}
+
+
+.scanner-table tbody tr.scanner-row-stale:hover {
+  opacity: .72;
+}
+
+
 .scanner-table strong {
   color:
     var(--text);

@@ -26,15 +26,15 @@ from "../services/market-scanner.js";
 
 
 
-function createScannerState() {
+function createScannerState(
+  symbols = []
+) {
 
   return {
 
     rows:
       createEmptyScannerRows(
-        APP_CONFIG
-          .scanner
-          .symbols
+        symbols
       ),
 
     longRanking:
@@ -53,6 +53,9 @@ function createScannerState() {
       0,
 
     anomalyCount:
+      0,
+
+    staleCount:
       0,
 
     updatedAt:
@@ -104,6 +107,22 @@ let state = {
 
   scanner:
     createScannerState(),
+
+
+  universe: {
+
+    byExchange: {
+      OKX: [],
+      BINGX: []
+    },
+
+    allSymbols: [],
+
+    errors: {},
+
+    loadedAt: null
+
+  },
 
 
   /*
@@ -201,7 +220,8 @@ export function subscribe(
 
 
 export function setExchange(
-  exchange
+  exchange,
+  symbols = []
 ) {
 
   state = {
@@ -246,7 +266,7 @@ export function setExchange(
     */
 
     scanner:
-      createScannerState()
+      createScannerState(symbols)
 
   };
 
@@ -254,6 +274,24 @@ export function setExchange(
   emit(
     "all"
   );
+
+}
+
+
+
+export function setUniverse(
+  universe
+) {
+
+  state = {
+    ...state,
+    universe: {
+      ...state.universe,
+      ...universe
+    }
+  };
+
+  emit("universe");
 
 }
 

@@ -47,20 +47,9 @@ export function renderScanner(
 
 
   const rows =
-
-    APP_CONFIG
-      .scanner
-      .symbols
-
-      .map(
-        symbol =>
-          scanner
-            .rows[symbol]
-      )
-
-      .filter(
-        Boolean
-      );
+    Object.values(
+      scanner.rows
+    );
 
 
   renderScannerTable(
@@ -74,7 +63,7 @@ export function renderScanner(
 
 
   renderScannerCoverage(
-    state.exchange
+    state
   );
 
 
@@ -421,7 +410,7 @@ function renderScannerTable(
 
           return `
 
-            <tr>
+            <tr class="${row.isStale ? "scanner-row-stale" : ""}">
 
 
               <td>
@@ -638,7 +627,7 @@ DATA COVERAGE
 ===================================================== */
 
 function renderScannerCoverage(
-  exchange
+  state
 ) {
 
   const element =
@@ -654,17 +643,17 @@ function renderScannerCoverage(
   }
 
 
-  element.textContent =
+  const exchange = state.exchange;
+  const total = Object.keys(state.scanner.rows).length;
+  const stale = state.scanner.staleCount || 0;
+  const error = state.universe.errors[exchange];
+  const source = exchange === "OKX"
+    ? "Price / Volume / OI / Funding = WebSocket"
+    : "Price / Volume = WebSocket · OI / Funding = same-origin REST proxy";
 
-    exchange === "OKX"
-
-      ?
-
-      "OKX · Price / Volume / OI / Funding = WebSocket"
-
-      :
-
-      "BingX · Price / Volume = WebSocket · OI / Funding = Public REST";
+  element.textContent = error
+    ? `${exchange} · Universe 載入失敗：${error}`
+    : `${exchange} · ${total} USDT 永續 · stale ${stale} · ${source}`;
 
 }
 

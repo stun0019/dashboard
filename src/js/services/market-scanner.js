@@ -118,7 +118,9 @@ export function mergeScannerRow(
 
 export function analyzeScannerRows(
   rows,
-  rankingLimit = 5
+  rankingLimit = 5,
+  staleAfterMs = 15_000,
+  now = Date.now()
 ) {
 
   const enrichedRows = {};
@@ -138,10 +140,19 @@ export function analyzeScannerRows(
     of Object.entries(rows)
   ) {
 
-    const scored =
-      scoreRow(
-        row
-      );
+    const tickerUpdatedAt = Number(row.tickerUpdatedAt);
+    const isStale = (
+      Number.isFinite(tickerUpdatedAt) &&
+      tickerUpdatedAt > 0 &&
+      now - tickerUpdatedAt > staleAfterMs
+    );
+
+    const score = scoreRow(row);
+    const scored = {
+      ...score,
+      isStale,
+      bias: isStale ? "STALE" : score.bias
+    };
 
 
     enrichedRows[symbol] =
@@ -149,9 +160,8 @@ export function analyzeScannerRows(
 
 
     if(
-      isPositive(
-        scored.price
-      )
+      isPositive(scored.price) &&
+      !scored.isStale
     ) {
 
       readyRows.push(
@@ -274,6 +284,11 @@ export function analyzeScannerRows(
 
     anomalyCount,
 
+    staleCount:
+      Object.values(enrichedRows)
+        .filter(row => row.isStale)
+        .length,
+
     updatedAt:
       Date.now()
 
@@ -329,6 +344,18 @@ function createEmptyRow(
 
     nextFundingTime:
       null,
+
+    tickerUpdatedAt:
+      null,
+
+    oiUpdatedAt:
+      null,
+
+    fundingUpdatedAt:
+      null,
+
+    isStale:
+      false,
 
     longScore:
       50,

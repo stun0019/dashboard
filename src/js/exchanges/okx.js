@@ -1,685 +1,198 @@
-import {
-
-  APP_CONFIG,
-
-  toOKXInstrument,
-
-  fromOKXInstrument
-
-}
-from "../config.js";
-
-
+import { APP_CONFIG, fromOKXInstrument } from "../config.js";
 
 export class OKXMarketClient {
-
-  constructor({
-
-    symbols =
-      APP_CONFIG
-        .scanner
-        .symbols,
-
-    onStatus,
-
-    onTicker,
-
-    onOpenInterest,
-
-    onFunding
-
-  }) {
-
-    this.symbols =
-      symbols;
-
-
-    this.onStatus =
-      onStatus;
-
-
-    this.onTicker =
-      onTicker;
-
-
-    this.onOpenInterest =
-      onOpenInterest;
-
-
-    this.onFunding =
-      onFunding;
-
-
-    this.ws =
-      null;
-
-
-    this.reconnectTimer =
-      null;
-
-
-    this.heartbeatTimer =
-      null;
-
-
-    this.intentionalClose =
-      false;
-
+  constructor({ instruments = [], onStatus, onTicker, onOpenInterest, onFunding }) {
+    this.instruments = instruments;
+    this.onStatus = onStatus;
+    this.onTicker = onTicker;
+    this.onOpenInterest = onOpenInterest;
+    this.onFunding = onFunding;
+    this.sockets = new Set();
+    this.reconnectTimers = new Set();
+    this.heartbeatTimers = new Map();
+    this.subscriptionTimers = new Set();
+    this.lastPrices = new Map();
+    this.intentionalClose = false;
   }
-
-
 
   connect() {
-
     this.disconnect();
+    this.intentionalClose = false;
 
+    if (!this.instruments.length) {
+      this.onStatus?.({ connected: false, status: "NO INSTRUMENTS" });
+      return;
+    }
 
-    this.intentionalClose =
-      false;
+    this.onStatus?.({ connected: false, status: "CONNECTING" });
+    for (const group of chunk(this.instruments, APP_CONFIG.okx.instrumentsPerSocket)) {
+      this.openSocket(group);
+    }
+  }
 
+  openSocket(instruments) {
+    if (this.intentionalClose) return;
 
-    this.onStatus?.({
+    const socket = new WebSocket(APP_CONFIG.okx.wsUrl);
+    this.sockets.add(socket);
 
-      connected:
-        false,
+    socket.onopen = () => {
+      this.onStatus?.({ connected: true, status: "CONNECTED" });
+      this.subscribe(socket, instruments);
+      const heartbeat = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) socket.send("ping");
+      }, 20_000);
+      this.heartbeatTimers.set(socket, heartbeat);
+    };
 
-      status:
-        "CONNECTING"
+    socket.onmessage = event => this.handleMessage(event.data);
+    socket.onerror = () => {
+      if (!this.intentionalClose && !this.hasOpenSocket()) {
+        this.onStatus?.({ connected: false, status: "WS ERROR" });
+      }
+    };
+    socket.onclose = () => {
+      this.clearSocket(socket);
+      if (this.intentionalClose) return;
 
+      if (!this.hasOpenSocket()) {
+        this.onStatus?.({ connected: false, status: "RECONNECTING" });
+      }
+      const timer = setTimeout(() => {
+        this.reconnectTimers.delete(timer);
+        this.openSocket(instruments);
+      }, 3_000);
+      this.reconnectTimers.add(timer);
+    };
+  }
+
+  subscribe(socket, instruments) {
+    const args = instruments.flatMap(instrument => [
+      { channel: "tickers", instId: instrument.instrumentId },
+      { channel: "open-interest", instId: instrument.instrumentId },
+      { channel: "funding-rate", instId: instrument.instrumentId }
+    ]);
+
+    chunk(args, APP_CONFIG.okx.subscribeBatchSize).forEach((batch, index) => {
+      const timer = setTimeout(() => {
+        this.subscriptionTimers.delete(timer);
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ op: "subscribe", args: batch }));
+        }
+      }, index * 100);
+      this.subscriptionTimers.add(timer);
     });
-
-
-    this.ws =
-      new WebSocket(
-        APP_CONFIG
-          .okx
-          .wsUrl
-      );
-
-
-    this.ws.onopen =
-      () => {
-
-        this.onStatus?.({
-
-          connected:
-            true,
-
-          status:
-            "CONNECTED"
-
-        });
-
-
-        this.subscribe();
-
-
-        this.startHeartbeat();
-
-      };
-
-
-    this.ws.onmessage =
-      event => {
-
-        this.handleMessage(
-          event.data
-        );
-
-      };
-
-
-    this.ws.onerror =
-      () => {
-
-        this.onStatus?.({
-
-          connected:
-            false,
-
-          status:
-            "WS ERROR"
-
-        });
-
-      };
-
-
-    this.ws.onclose =
-      () => {
-
-        this.stopHeartbeat();
-
-
-        this.onStatus?.({
-
-          connected:
-            false,
-
-          status:
-
-            this.intentionalClose
-
-              ?
-
-              "DISCONNECTED"
-
-              :
-
-              "RECONNECTING"
-
-        });
-
-
-        if(
-          !this.intentionalClose
-        ) {
-
-          this.reconnectTimer =
-
-            setTimeout(
-
-              () =>
-                this.connect(),
-
-              3000
-
-            );
-
-        }
-
-      };
-
   }
 
-
-
-  subscribe() {
-
-    if(
-      !this.ws
-      ||
-      this.ws.readyState !==
-        WebSocket.OPEN
-    ) {
-
-      return;
-
-    }
-
-
-    const args = [];
-
-
-    /*
-    每個 Symbol 同時訂閱：
-
-    ticker
-    OI
-    funding
-    */
-
-    for(
-      const symbol
-      of this.symbols
-    ) {
-
-      const instId =
-        toOKXInstrument(
-          symbol
-        );
-
-
-      args.push(
-
-        {
-          channel:
-            "tickers",
-
-          instId
-        },
-
-
-        {
-          channel:
-            "open-interest",
-
-          instId
-        },
-
-
-        {
-          channel:
-            "funding-rate",
-
-          instId
-        }
-
-      );
-
-    }
-
-
-    this.ws.send(
-
-      JSON.stringify({
-
-        id:
-          String(
-            Date.now()
-          ),
-
-        op:
-          "subscribe",
-
-        args
-
-      })
-
-    );
-
-  }
-
-
-
-  handleMessage(
-    raw
-  ) {
-
-    /*
-    OKX heartbeat response
-    */
-
-    if(
-      raw === "pong"
-    ) {
-
-      return;
-
-    }
-
+  handleMessage(raw) {
+    if (raw === "pong") return;
 
     let payload;
-
-
     try {
-
-      payload =
-        JSON.parse(
-          raw
-        );
-
+      payload = JSON.parse(raw);
     }
     catch {
-
       return;
-
     }
 
-
-    /*
-    某單一 Symbol 不存在，
-    不應讓整個 Scanner crash。
-    */
-
-    if(
-      payload.event ===
-      "error"
-    ) {
-
-      console.warn(
-
-        "OKX subscription error:",
-
-        payload.code,
-
-        payload.msg
-
-      );
-
-
+    if (payload.event === "error") {
+      console.warn("OKX subscription error:", payload.code, payload.msg);
       return;
-
     }
+    if (!Array.isArray(payload.data) || !payload.data.length) return;
 
+    const channel = payload.arg?.channel;
+    for (const data of payload.data) {
+      const instrumentId = data.instId || payload.arg?.instId;
+      const symbol = fromOKXInstrument(instrumentId);
+      if (!symbol) continue;
 
-    if(
-      !payload.data
-      ||
-      !payload.data.length
-    ) {
+      if (channel === "tickers") {
+        const price = toFiniteNumber(data.last);
+        const open24h = toFiniteNumber(data.open24h);
+        if (price !== null) this.lastPrices.set(instrumentId, price);
 
-      return;
+        this.onTicker?.({
+          symbol,
+          price,
+          change24h: price !== null && open24h > 0
+            ? ((price - open24h) / open24h) * 100
+            : null,
+          volume24h: toFiniteNumber(data.volCcy24h) ?? toFiniteNumber(data.vol24h),
+          timestamp: toFiniteNumber(data.ts) ?? Date.now(),
+          source: "OKX"
+        });
+        continue;
+      }
 
+      if (channel === "open-interest") {
+        const oiCcy = toFiniteNumber(data.oiCcy);
+        const directOiUsd = toFiniteNumber(data.oiUsd);
+        const lastPrice = this.lastPrices.get(instrumentId);
+        const fallbackOiUsd = oiCcy !== null && Number.isFinite(lastPrice)
+          ? oiCcy * lastPrice
+          : null;
+
+        this.onOpenInterest?.({
+          symbol,
+          oiUsd: directOiUsd !== null && directOiUsd > 0 ? directOiUsd : fallbackOiUsd,
+          oiCcy,
+          timestamp: toFiniteNumber(data.ts) ?? Date.now(),
+          source: "OKX"
+        });
+        continue;
+      }
+
+      if (channel === "funding-rate") {
+        this.onFunding?.({
+          symbol,
+          fundingRate: toFiniteNumber(data.fundingRate),
+          nextFundingTime: toFiniteNumber(data.nextFundingTime),
+          timestamp: toFiniteNumber(data.ts) ?? Date.now(),
+          source: "OKX"
+        });
+      }
     }
-
-
-    const channel =
-      payload
-        .arg
-        ?.channel;
-
-
-    const data =
-      payload.data[0];
-
-
-    const symbol =
-
-      fromOKXInstrument(
-
-        data.instId
-
-        ||
-
-        payload
-          .arg
-          ?.instId
-
-      );
-
-
-    if(!symbol) {
-
-      return;
-
-    }
-
-
-    /* ===================================================
-    TICKER
-    =================================================== */
-
-    if(
-      channel ===
-      "tickers"
-    ) {
-
-      const price =
-        Number(
-          data.last
-        );
-
-
-      const open24h =
-        Number(
-          data.open24h
-        );
-
-
-      const change24h =
-
-        open24h > 0
-
-          ?
-
-          (
-            (
-              price -
-              open24h
-            )
-
-            /
-
-            open24h
-
-          )
-
-          *
-
-          100
-
-          :
-
-          null;
-
-
-      this.onTicker?.({
-
-        symbol,
-
-        price,
-
-        change24h,
-
-        volume24h:
-
-          toFiniteNumber(
-
-            data.volCcy24h
-
-            ??
-
-            data.vol24h
-
-          ),
-
-        timestamp:
-
-          Number(
-            data.ts
-          )
-
-          ||
-
-          Date.now(),
-
-        source:
-          "OKX"
-
-      });
-
-
-      return;
-
-    }
-
-
-    /* ===================================================
-    OPEN INTEREST
-    =================================================== */
-
-    if(
-      channel ===
-      "open-interest"
-    ) {
-
-      this.onOpenInterest?.({
-
-        symbol,
-
-        oiUsd:
-
-          toFiniteNumber(
-            data.oiUsd
-          ),
-
-        oiCcy:
-
-          toFiniteNumber(
-            data.oiCcy
-          ),
-
-        timestamp:
-
-          Number(
-            data.ts
-          )
-
-          ||
-
-          Date.now(),
-
-        source:
-          "OKX"
-
-      });
-
-
-      return;
-
-    }
-
-
-    /* ===================================================
-    FUNDING
-    =================================================== */
-
-    if(
-      channel ===
-      "funding-rate"
-    ) {
-
-      this.onFunding?.({
-
-        symbol,
-
-        fundingRate:
-
-          toFiniteNumber(
-            data.fundingRate
-          ),
-
-        nextFundingTime:
-
-          Number(
-            data.nextFundingTime
-          )
-
-          ||
-
-          null,
-
-        timestamp:
-
-          Number(
-            data.ts
-          )
-
-          ||
-
-          Date.now(),
-
-        source:
-          "OKX"
-
-      });
-
-    }
-
   }
 
-
-
-  startHeartbeat() {
-
-    this.stopHeartbeat();
-
-
-    this.heartbeatTimer =
-
-      setInterval(
-
-        () => {
-
-          if(
-            this.ws
-            ?.readyState ===
-            WebSocket.OPEN
-          ) {
-
-            this.ws.send(
-              "ping"
-            );
-
-          }
-
-        },
-
-        20000
-
-      );
-
+  hasOpenSocket() {
+    return [...this.sockets].some(socket => socket.readyState === WebSocket.OPEN);
   }
 
-
-
-  stopHeartbeat() {
-
-    clearInterval(
-      this.heartbeatTimer
-    );
-
-
-    this.heartbeatTimer =
-      null;
-
+  clearSocket(socket) {
+    clearInterval(this.heartbeatTimers.get(socket));
+    this.heartbeatTimers.delete(socket);
+    this.sockets.delete(socket);
   }
-
-
 
   disconnect() {
+    this.intentionalClose = true;
+    for (const timer of this.reconnectTimers) clearTimeout(timer);
+    for (const timer of this.subscriptionTimers) clearTimeout(timer);
+    this.reconnectTimers.clear();
+    this.subscriptionTimers.clear();
 
-    this.intentionalClose =
-      true;
-
-
-    clearTimeout(
-      this.reconnectTimer
-    );
-
-
-    this.stopHeartbeat();
-
-
-    if(this.ws) {
-
-      this.ws.onclose =
-        null;
-
-
-      this.ws.close();
-
-
-      this.ws =
-        null;
-
+    for (const socket of this.sockets) {
+      clearInterval(this.heartbeatTimers.get(socket));
+      socket.onclose = null;
+      socket.close();
     }
-
+    this.sockets.clear();
+    this.heartbeatTimers.clear();
+    this.lastPrices.clear();
   }
-
 }
 
+function chunk(items, size) {
+  const groups = [];
+  for (let index = 0; index < items.length; index += size) {
+    groups.push(items.slice(index, index + size));
+  }
+  return groups;
+}
 
-
-/* =====================================================
-HELPERS
-===================================================== */
-
-function toFiniteNumber(
-  value
-) {
-
-  const number =
-    Number(
-      value
-    );
-
-
-  return (
-
-    Number.isFinite(
-      number
-    )
-
-      ?
-
-      number
-
-      :
-
-      null
-
-  );
-
+function toFiniteNumber(value) {
+  if (value === "" || value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
