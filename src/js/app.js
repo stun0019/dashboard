@@ -1,233 +1,210 @@
 import { APP_CONFIG } from "./config.js";
-import {
-  getState,
-  replaceScanner,
-  setExchange,
-  setUniverse,
-  subscribe,
-  updateMarket,
-  updateTicker
-} from "./core/store.js";
 import { OKXMarketClient } from "./exchanges/okx.js";
-import { BingXMarketClient } from "./exchanges/bingx.js";
-import { analyzeScannerRows, mergeScannerRow } from "./services/market-scanner.js";
-import { loadSymbolUniverse } from "./services/symbol-universe.js";
-import { initAIPanel, askAI } from "./ui/ai-panel.js";
-import { initRenderer, renderApp } from "./ui/render.js";
-import { initScannerUI, renderScanner } from "./ui/scanner.js";
-import { initTradeModal, openTradeModal } from "./ui/trade-modal.js";
+import {
+  analyzeCandidate,
+  calculateAttentionScore,
+  selectCandidates
+} from "./services/decision-engine.js";
+import { buildTradePlan } from "./services/risk-engine.js";
+import { loadOKXInstruments } from "./services/symbol-universe.js";
+import { initFocusDashboard, renderFocusDashboard } from "./ui/focus-dashboard.js";
 
-let activeClient = null;
-let connectionGeneration = 0;
-let scannerBatchTimer = null;
-let staleTimer = null;
+const rows = {};
+const instrumentBySymbol = new Map();
+const pendingPatches = new Map();
+
+let client = null;
+let batchTimer = null;
 let renderTimer = null;
-let lastRenderAt = 0;
-let latestRenderState = null;
-const pendingScannerPatches = new Map();
-const pendingRenderScopes = new Set();
+let candidateTimer = null;
+let candidateSymbols = [];
+let selectedSymbol = null;
 
-function queueScannerPatch(symbol, patch) {
-  const normalizedSymbol = String(symbol || "").toUpperCase();
-  if (!getState().scanner.rows[normalizedSymbol]) return;
-
-  pendingScannerPatches.set(normalizedSymbol, {
-    ...(pendingScannerPatches.get(normalizedSymbol) || {}),
-    ...patch,
-    symbol: normalizedSymbol
-  });
-
-  if (scannerBatchTimer === null) {
-    scannerBatchTimer = setTimeout(flushScannerPatches, APP_CONFIG.scanner.updateBatchMs);
-  }
-}
-
-function flushScannerPatches() {
-  scannerBatchTimer = null;
-  if (!pendingScannerPatches.size) return;
-
-  let rows = getState().scanner.rows;
-  for (const [symbol, patch] of pendingScannerPatches) {
-    rows = {
-      ...rows,
-      [symbol]: mergeScannerRow(rows[symbol], patch)
-    };
-  }
-  pendingScannerPatches.clear();
-
-  replaceScanner(analyzeScannerRows(
-    rows,
-    APP_CONFIG.scanner.rankingLimit,
-    APP_CONFIG.scanner.staleAfterMs
-  ));
-
-  const btc = getState().scanner.rows[APP_CONFIG.market.base];
-  if (Number.isFinite(Number(btc?.oiUsd)) && Number(btc.oiUsd) > 0) {
-    updateMarket({ oiUsd: Number(btc.oiUsd) });
-  }
-}
-
-function refreshStaleState() {
-  const scanner = getState().scanner;
-  if (!Object.keys(scanner.rows).length) return;
-
-  replaceScanner(analyzeScannerRows(
-    scanner.rows,
-    APP_CONFIG.scanner.rankingLimit,
-    APP_CONFIG.scanner.staleAfterMs
-  ));
-}
-
-const commonCallbacks = {
-  onStatus({ connected, status }) {
-    updateMarket({ connected, connectionStatus: status });
-  },
-
-  onTicker({ symbol, price, change24h, volume24h, timestamp, source }) {
-    if (getState().exchange !== source) return;
-    const updatedAt = Number(timestamp) || Date.now();
-    queueScannerPatch(symbol, {
-      price,
-      change24h,
-      volume24h,
-      tickerUpdatedAt: updatedAt,
-      source
-    });
-
-    if (symbol === APP_CONFIG.market.base) {
-      updateTicker({ price, change24h, timestamp: updatedAt });
-    }
-  },
-
-  onOpenInterest({ symbol, oiUsd, oiUsdSource, oiCcy, timestamp, source }) {
-    if (getState().exchange !== source) return;
-    queueScannerPatch(symbol, {
-      oiUsd,
-      oiUsdSource,
-      oiCcy,
-      oiUpdatedAt: Number(timestamp) || Date.now(),
-      source
-    });
-  },
-
-  onFunding({ symbol, fundingRate, nextFundingTime, timestamp, source }) {
-    if (getState().exchange !== source) return;
-    queueScannerPatch(symbol, {
-      fundingRate,
-      nextFundingTime,
-      fundingUpdatedAt: Number(timestamp) || Date.now(),
-      source
-    });
-  }
+const state = {
+  connected: false,
+  connectionStatus: "CONNECTING",
+  scannedCount: 0,
+  candidates: [],
+  selectedSymbol: null,
+  lastUpdate: null
 };
 
-function createClient(exchange, instruments) {
-  const options = { instruments, ...commonCallbacks };
-  if (exchange === "OKX") return new OKXMarketClient(options);
-  if (exchange === "BINGX") return new BingXMarketClient(options);
-  return null;
-}
-
-function connectExchange(exchange) {
-  const nextExchange = String(exchange || "").toUpperCase();
-  const generation = ++connectionGeneration;
-  activeClient?.disconnect();
-  activeClient = null;
-  pendingScannerPatches.clear();
-  clearTimeout(scannerBatchTimer);
-  scannerBatchTimer = null;
-
-  const instruments = getState().universe.byExchange[nextExchange] || [];
-  setExchange(nextExchange, instruments.map(item => item.symbol));
-
-  if (!instruments.length) {
-    const detail = getState().universe.errors[nextExchange];
-    updateMarket({
-      connected: false,
-      connectionStatus: detail ? "UNIVERSE ERROR" : "NO INSTRUMENTS"
+function queuePatch(symbol, patch) {
+  if (!rows[symbol]) return;
+  const pending = pendingPatches.get(symbol) || {};
+  if (patch.candle) {
+    pendingPatches.set(symbol, {
+      ...pending,
+      candles: [...(pending.candles || []), patch.candle]
     });
-    if (detail) console.error(`${nextExchange} universe unavailable:`, detail);
-    return;
+  }
+  else {
+    pendingPatches.set(symbol, { ...pending, ...patch });
+  }
+  if (batchTimer === null) {
+    batchTimer = setTimeout(flushPatches, APP_CONFIG.scanner.updateBatchMs);
+  }
+}
+
+function flushPatches() {
+  batchTimer = null;
+  for (const [symbol, patch] of pendingPatches) {
+    rows[symbol] = mergeRow(rows[symbol], patch);
+  }
+  pendingPatches.clear();
+
+  state.scannedCount = Object.values(rows).filter(row => Number(row.price) > 0).length;
+  state.lastUpdate = Date.now();
+  refreshCandidateViews();
+  scheduleRender();
+}
+
+function refreshCandidateUniverse() {
+  const next = selectCandidates(rows, APP_CONFIG.scanner.candidateLimit);
+  candidateSymbols = next.map(row => row.symbol);
+  selectedSymbol = candidateSymbols.includes(selectedSymbol)
+    ? selectedSymbol
+    : candidateSymbols[0] || null;
+
+  client?.setCandidates(candidateSymbols
+    .map(symbol => instrumentBySymbol.get(symbol)?.instrumentId)
+    .filter(Boolean));
+
+  refreshCandidateViews();
+  scheduleRender();
+}
+
+function refreshCandidateViews() {
+  state.candidates = candidateSymbols
+    .map(symbol => rows[symbol])
+    .filter(Boolean)
+    .map(row => {
+      const analyzed = analyzeCandidate({
+        ...row,
+        attentionScore: calculateAttentionScore(row)
+      });
+      const plan = analyzed.side === "WAIT"
+        ? null
+        : buildTradePlan({
+          side: analyzed.side,
+          trigger: analyzed.price,
+          timeframe: "15m"
+        });
+      return { ...analyzed, plan };
+    })
+    .sort((a, b) => b.attentionScore - a.attentionScore);
+
+  state.selectedSymbol = selectedSymbol;
+}
+
+function mergeRow(current, patch) {
+  const next = { ...current, ...patch };
+
+  if (patch.candles?.length) {
+    const byTimestamp = new Map((current.candles || []).map(candle => [candle.timestamp, candle]));
+    for (const candle of patch.candles) byTimestamp.set(candle.timestamp, candle);
+    next.candles = [...byTimestamp.values()]
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(-30);
+    next.candleUpdatedAt = Date.now();
   }
 
-  const client = createClient(nextExchange, instruments);
-  if (!client || generation !== connectionGeneration) return;
-  activeClient = client;
-  client.connect();
+  if (Number(patch.oiUsd) > 0) {
+    next.oiBaselineUsd = Number(current.oiBaselineUsd) > 0
+      ? current.oiBaselineUsd
+      : Number(patch.oiUsd);
+    next.oiChangePct = ((Number(patch.oiUsd) - next.oiBaselineUsd) / next.oiBaselineUsd) * 100;
+  }
+
+  return next;
 }
 
-function initExchangeSelector() {
-  const select = document.getElementById("exchangeSelect");
-  if (!select) return;
-  select.value = APP_CONFIG.defaultExchange;
-  select.addEventListener("change", () => connectExchange(select.value));
-}
-
-function scheduleRender(state, scope) {
-  latestRenderState = state;
-  pendingRenderScopes.add(scope);
+function scheduleRender() {
   if (renderTimer !== null) return;
-
-  const elapsed = performance.now() - lastRenderAt;
-  const delay = Math.max(0, APP_CONFIG.ui.renderThrottleMs - elapsed);
-  renderTimer = setTimeout(flushRender, delay);
+  renderTimer = setTimeout(() => {
+    renderTimer = null;
+    renderFocusDashboard(state);
+  }, APP_CONFIG.ui.renderThrottleMs);
 }
 
-function flushRender() {
-  renderTimer = null;
-  lastRenderAt = performance.now();
-  const state = latestRenderState;
-  const scopes = new Set(pendingRenderScopes);
-  pendingRenderScopes.clear();
-
-  if (scopes.has("all")) {
-    renderApp(state, "all");
-    renderScanner(state);
-    return;
-  }
-
-  for (const scope of scopes) {
-    if (scope !== "scanner" && scope !== "universe") renderApp(state, scope);
-  }
-  if (scopes.has("scanner") || scopes.has("universe")) renderScanner(state);
+function handleStatus({ connected, status }) {
+  state.connected = connected;
+  state.connectionStatus = status;
+  scheduleRender();
 }
 
 async function init() {
-  initRenderer({
-    onTrade(signal) {
-      openTradeModal(signal, getState().exchange);
-    },
-    onAI(symbol) {
-      askAI(`分析 ${symbol} 目前的 Signal、風險與交易機會`);
+  initFocusDashboard({
+    onSelect(symbol) {
+      selectedSymbol = symbol;
+      state.selectedSymbol = symbol;
+      scheduleRender();
     }
   });
-  initScannerUI();
-  initTradeModal();
-  initAIPanel(getState);
-  initExchangeSelector();
+  renderFocusDashboard(state);
 
-  subscribe(scheduleRender);
-  renderApp(getState(), "all");
-  renderScanner(getState());
-  updateMarket({ connected: false, connectionStatus: "LOADING UNIVERSE" });
+  state.connectionStatus = "LOADING OKX";
+  renderFocusDashboard(state);
+  const instruments = await loadOKXInstruments();
+  for (const instrument of instruments) {
+    instrumentBySymbol.set(instrument.symbol, instrument);
+    rows[instrument.symbol] = createRow(instrument.symbol);
+  }
 
-  const universe = await loadSymbolUniverse();
-  setUniverse(universe);
-  connectExchange(document.getElementById("exchangeSelect")?.value || APP_CONFIG.defaultExchange);
+  client = new OKXMarketClient({
+    instruments,
+    onStatus: handleStatus,
+    onTicker({ symbol, price, change24h, volume24h, timestamp }) {
+      queuePatch(symbol, { price, change24h, volume24h, tickerUpdatedAt: timestamp });
+    },
+    onOpenInterest({ symbol, oiUsd, oiCcy, timestamp }) {
+      queuePatch(symbol, { oiUsd, oiCcy, oiUpdatedAt: timestamp });
+    },
+    onFunding({ symbol, fundingRate, nextFundingTime, timestamp }) {
+      queuePatch(symbol, { fundingRate, nextFundingTime, fundingUpdatedAt: timestamp });
+    },
+    onCandle({ symbol, candle }) {
+      queuePatch(symbol, { candle });
+    }
+  });
 
-  staleTimer = setInterval(refreshStaleState, APP_CONFIG.scanner.staleCheckMs);
+  client.connect();
+  candidateTimer = setInterval(refreshCandidateUniverse, APP_CONFIG.scanner.candidateRefreshMs);
+  setTimeout(refreshCandidateUniverse, 2_500);
+}
+
+function createRow(symbol) {
+  return {
+    symbol,
+    price: null,
+    change24h: null,
+    volume24h: null,
+    tickerUpdatedAt: null,
+    candles: [],
+    candleUpdatedAt: null,
+    oiCcy: null,
+    oiUsd: null,
+    oiBaselineUsd: null,
+    oiChangePct: null,
+    oiUpdatedAt: null,
+    fundingRate: null,
+    fundingUpdatedAt: null,
+    nextFundingTime: null
+  };
 }
 
 window.addEventListener("beforeunload", () => {
-  activeClient?.disconnect();
-  clearTimeout(scannerBatchTimer);
+  client?.disconnect();
+  clearTimeout(batchTimer);
   clearTimeout(renderTimer);
-  clearInterval(staleTimer);
+  clearInterval(candidateTimer);
 });
 
 document.addEventListener("DOMContentLoaded", () => {
   init().catch(error => {
     console.error("TICK initialization failed", error);
-    updateMarket({ connected: false, connectionStatus: "INIT ERROR" });
+    state.connected = false;
+    state.connectionStatus = "INIT ERROR";
+    renderFocusDashboard(state);
   });
 });

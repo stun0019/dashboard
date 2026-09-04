@@ -1,17 +1,22 @@
 import { APP_CONFIG, fromOKXInstrument } from "../config.js";
 
 export class OKXMarketClient {
-  constructor({ instruments = [], onStatus, onTicker, onOpenInterest, onFunding }) {
+  constructor({ instruments = [], onStatus, onTicker, onOpenInterest, onFunding, onCandle }) {
     this.instruments = instruments;
     this.onStatus = onStatus;
     this.onTicker = onTicker;
     this.onOpenInterest = onOpenInterest;
     this.onFunding = onFunding;
+    this.onCandle = onCandle;
     this.sockets = new Set();
     this.reconnectTimers = new Set();
     this.heartbeatTimers = new Map();
     this.subscriptionTimers = new Set();
     this.lastPrices = new Map();
+    this.socketInstruments = new Map();
+    this.enrichmentSubscriptions = new Map();
+    this.candidateIds = new Set();
+    this.candleSnapshots = new Map();
     this.intentionalClose = false;
   }
 
@@ -35,10 +40,12 @@ export class OKXMarketClient {
 
     const socket = new WebSocket(APP_CONFIG.okx.wsUrl);
     this.sockets.add(socket);
+    this.socketInstruments.set(socket, instruments);
 
     socket.onopen = () => {
       this.onStatus?.({ connected: true, status: "CONNECTED" });
-      this.subscribe(socket, instruments);
+      this.subscribeTickers(socket, instruments);
+      this.syncCandidateSubscriptions(socket);
       const heartbeat = setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) socket.send("ping");
       }, 20_000);
@@ -66,18 +73,93 @@ export class OKXMarketClient {
     };
   }
 
-  subscribe(socket, instruments) {
-    const args = instruments.flatMap(instrument => [
-      { channel: "tickers", instId: instrument.instrumentId },
-      { channel: "open-interest", instId: instrument.instrumentId },
-      { channel: "funding-rate", instId: instrument.instrumentId }
-    ]);
+  subscribeTickers(socket, instruments) {
+    const args = instruments.map(instrument => ({
+      channel: "tickers",
+      instId: instrument.instrumentId
+    }));
+
+    this.sendBatched(socket, "subscribe", args);
+  }
+
+  setCandidates(instrumentIds) {
+    this.candidateIds = new Set(instrumentIds);
+    for (const socket of this.sockets) {
+      if (socket.readyState === WebSocket.OPEN) this.syncCandidateSubscriptions(socket);
+    }
+  }
+
+  syncCandidateSubscriptions(socket) {
+    const group = this.socketInstruments.get(socket) || [];
+    const desired = new Set(
+      group
+        .map(instrument => instrument.instrumentId)
+        .filter(instrumentId => this.candidateIds.has(instrumentId))
+    );
+    const current = this.enrichmentSubscriptions.get(socket) || new Set();
+    const added = [...desired].filter(instrumentId => !current.has(instrumentId));
+    const removed = [...current].filter(instrumentId => !desired.has(instrumentId));
+    const channels = ["open-interest", "funding-rate"];
+
+    for (const instId of desired) {
+      const lastSnapshot = this.candleSnapshots.get(instId) || 0;
+      if (Date.now() - lastSnapshot >= 60_000) {
+        this.candleSnapshots.set(instId, Date.now());
+        void this.fetchCandleSnapshot(instId);
+      }
+    }
+
+    this.sendBatched(socket, "subscribe", added.flatMap(instId =>
+      channels.map(channel => ({ channel, instId }))
+    ));
+    this.sendBatched(socket, "unsubscribe", removed.flatMap(instId =>
+      channels.map(channel => ({ channel, instId }))
+    ));
+    this.enrichmentSubscriptions.set(socket, desired);
+  }
+
+  async fetchCandleSnapshot(instId) {
+    try {
+      const url = new URL("/api/v5/market/candles", APP_CONFIG.okx.restBaseUrl);
+      url.searchParams.set("instId", instId);
+      url.searchParams.set("bar", "15m");
+      url.searchParams.set("limit", "20");
+      const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      if (String(payload.code) !== "0" || !Array.isArray(payload.data)) return;
+
+      const symbol = fromOKXInstrument(instId);
+      for (const candle of payload.data.reverse()) {
+        this.onCandle?.({
+          symbol,
+          candle: {
+            timestamp: toFiniteNumber(candle[0]) ?? Date.now(),
+            open: toFiniteNumber(candle[1]),
+            high: toFiniteNumber(candle[2]),
+            low: toFiniteNumber(candle[3]),
+            close: toFiniteNumber(candle[4]),
+            volume: toFiniteNumber(candle[5]),
+            confirmed: String(candle[8]) === "1"
+          },
+          source: "OKX"
+        });
+      }
+    }
+    catch (error) {
+      this.candleSnapshots.delete(instId);
+      console.debug("OKX candle snapshot unavailable:", error.message);
+    }
+  }
+
+  sendBatched(socket, operation, args) {
+    if (!args.length) return;
 
     chunk(args, APP_CONFIG.okx.subscribeBatchSize).forEach((batch, index) => {
       const timer = setTimeout(() => {
         this.subscriptionTimers.delete(timer);
         if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ op: "subscribe", args: batch }));
+          socket.send(JSON.stringify({ op: operation, args: batch }));
         }
       }, index * 100);
       this.subscriptionTimers.add(timer);
@@ -102,6 +184,28 @@ export class OKXMarketClient {
     if (!Array.isArray(payload.data) || !payload.data.length) return;
 
     const channel = payload.arg?.channel;
+
+    if (channel?.startsWith("candle")) {
+      const symbol = fromOKXInstrument(payload.arg?.instId);
+      for (const candle of payload.data) {
+        if (!Array.isArray(candle)) continue;
+        this.onCandle?.({
+          symbol,
+          candle: {
+            timestamp: toFiniteNumber(candle[0]) ?? Date.now(),
+            open: toFiniteNumber(candle[1]),
+            high: toFiniteNumber(candle[2]),
+            low: toFiniteNumber(candle[3]),
+            close: toFiniteNumber(candle[4]),
+            volume: toFiniteNumber(candle[5]),
+            confirmed: String(candle[8]) === "1"
+          },
+          source: "OKX"
+        });
+      }
+      return;
+    }
+
     for (const data of payload.data) {
       const instrumentId = data.instId || payload.arg?.instId;
       const symbol = fromOKXInstrument(instrumentId);
@@ -164,6 +268,8 @@ export class OKXMarketClient {
     clearInterval(this.heartbeatTimers.get(socket));
     this.heartbeatTimers.delete(socket);
     this.sockets.delete(socket);
+    this.socketInstruments.delete(socket);
+    this.enrichmentSubscriptions.delete(socket);
   }
 
   disconnect() {
@@ -181,6 +287,10 @@ export class OKXMarketClient {
     this.sockets.clear();
     this.heartbeatTimers.clear();
     this.lastPrices.clear();
+    this.socketInstruments.clear();
+    this.enrichmentSubscriptions.clear();
+    this.candidateIds.clear();
+    this.candleSnapshots.clear();
   }
 }
 

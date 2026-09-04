@@ -9,6 +9,8 @@ export const APP_CONFIG = {
 
   scanner: {
     rankingLimit: 5,
+    candidateLimit: 12,
+    candidateRefreshMs: 10_000,
     updateBatchMs: 200,
     staleAfterMs: 15_000,
     staleCheckMs: 5_000

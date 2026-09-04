@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { APP_CONFIG } from "../src/js/config.js";
 import { BingXMarketClient } from "../src/js/exchanges/bingx.js";
+import { analyzeCandidate, selectCandidates } from "../src/js/services/decision-engine.js";
 import {
   analyzeScannerRows,
   createEmptyScannerRows,
@@ -116,6 +117,38 @@ assert.equal(firstTablePage.rows.length, 50, "Scanner table must render at most 
 assert.equal(lastTablePage.rows.length, 25);
 assert.equal(selectScannerTablePage(tableRows, { query: "COIN12", pageSize: 50 }).total, 6);
 
+const marketRows = Object.fromEntries(Array.from({ length: 30 }, (_, index) => [
+  `COIN${index}`,
+  {
+    symbol: `COIN${index}`,
+    price: 100 + index,
+    change24h: index / 2,
+    volume24h: 1_000_000 + index * 100_000
+  }
+]));
+const focusedCandidates = selectCandidates(marketRows, 12);
+assert.equal(focusedCandidates.length, 12, "Only the focused candidate set should be enriched and rendered");
+assert.equal(Object.keys(marketRows).length, 30, "Candidate filtering must retain the full market source rows");
+
+const longDecision = analyzeCandidate({
+  symbol: "BTC",
+  price: 100,
+  change24h: 4,
+  oiUsd: 2_000,
+  oiChangePct: 1,
+  fundingRate: 0.0001,
+  candles: [
+    { close: 96 },
+    { close: 97 },
+    { close: 99 },
+    { close: 101 },
+    { close: 103 }
+  ]
+});
+assert.equal(longDecision.side, "LONG");
+assert.equal(longDecision.completeness, 3);
+assert.equal(longDecision.explanation.reasons.length, 4);
+
 const plan = buildTradePlan({ side: "LONG", trigger: 100, timeframe: "15m" });
 const risk = calculateRisk({
   side: plan.side,
@@ -139,6 +172,7 @@ console.log(`OK: ${javascriptFiles.length} JavaScript files parsed`);
 console.log("OK: all relative imports resolve");
 console.log("OK: direct OI precedence, single BingX REST loop and independent freshness tests passed");
 console.log("OK: scanner table search and 50-row pagination tests passed");
+console.log("OK: full-market candidate funnel and decision explanation tests passed");
 console.log("OK: frontend source does not use browser storage");
 
 async function collectJavaScriptFiles(directory) {
