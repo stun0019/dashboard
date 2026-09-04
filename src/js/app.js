@@ -60,7 +60,11 @@ function flushPatches() {
 }
 
 function refreshCandidateUniverse() {
-  const next = selectCandidates(rows, APP_CONFIG.scanner.candidateLimit);
+  const now = Date.now();
+  const next = selectCandidates(rows, APP_CONFIG.scanner.candidateLimit, {
+    now,
+    staleAfterMs: APP_CONFIG.scanner.staleAfterMs
+  });
   candidateSymbols = next.map(row => row.symbol);
   selectedSymbol = candidateSymbols.includes(selectedSymbol)
     ? selectedSymbol
@@ -82,6 +86,12 @@ function refreshCandidateViews() {
       const analyzed = analyzeCandidate({
         ...row,
         attentionScore: calculateAttentionScore(row)
+      }, {
+        now: Date.now(),
+        tickerStaleAfterMs: APP_CONFIG.scanner.staleAfterMs,
+        candleStaleAfterMs: APP_CONFIG.scanner.candleStaleAfterMs,
+        oiStaleAfterMs: APP_CONFIG.scanner.oiStaleAfterMs,
+        fundingStaleAfterMs: APP_CONFIG.scanner.fundingStaleAfterMs
       });
       const plan = analyzed.side === "WAIT"
         ? null
@@ -154,8 +164,14 @@ async function init() {
   client = new OKXMarketClient({
     instruments,
     onStatus: handleStatus,
-    onTicker({ symbol, price, change24h, volume24h, timestamp }) {
-      queuePatch(symbol, { price, change24h, volume24h, tickerUpdatedAt: timestamp });
+    onTicker({ symbol, price, change24h, volume24h, volumeNotional24h, timestamp }) {
+      queuePatch(symbol, {
+        price,
+        change24h,
+        volume24h,
+        volumeNotional24h,
+        tickerUpdatedAt: timestamp
+      });
     },
     onOpenInterest({ symbol, oiUsd, oiCcy, timestamp }) {
       queuePatch(symbol, { oiUsd, oiCcy, oiUpdatedAt: timestamp });
@@ -179,6 +195,7 @@ function createRow(symbol) {
     price: null,
     change24h: null,
     volume24h: null,
+    volumeNotional24h: null,
     tickerUpdatedAt: null,
     candles: [],
     candleUpdatedAt: null,

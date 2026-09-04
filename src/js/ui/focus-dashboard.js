@@ -64,9 +64,9 @@ function renderAnalysis(row) {
     </div>
 
     <div class="evidence-grid">
-      ${evidence("15M K 線", row.candleTrend, freshness(row.candleUpdatedAt))}
-      ${evidence("OPEN INTEREST", formatUSD(row.oiUsd), freshness(row.oiUpdatedAt))}
-      ${evidence("FUNDING", formatFunding(row.fundingRate), freshness(row.fundingUpdatedAt))}
+      ${evidence("15M K 線", row.candleTrend, freshnessLabel(row.freshness.candle))}
+      ${evidence("OPEN INTEREST", formatUSD(row.oiUsd), freshnessLabel(row.freshness.oi))}
+      ${evidence("FUNDING", formatFunding(row.fundingRate), freshnessLabel(row.freshness.funding))}
     </div>
 
     <section class="plan">
@@ -96,13 +96,10 @@ function planItem(label, value, className) {
   return `<div class="plan-item ${className}"><small>${label}</small><strong>${value ? formatPrice(value) : "--"}</strong></div>`;
 }
 
-function freshness(timestamp) {
-  const time = Number(timestamp);
-  if (!Number.isFinite(time) || time <= 0) return { label: "WAITING", className: "" };
-  const age = Date.now() - time;
-  return age > 60_000
-    ? { label: "STALE", className: "stale" }
-    : { label: "LIVE", className: "live" };
+function freshnessLabel(state) {
+  if (state === "fresh") return { label: "LIVE", className: "live" };
+  if (state === "stale") return { label: "STALE · EXCLUDED", className: "stale" };
+  return { label: "WAITING · EXCLUDED", className: "" };
 }
 
 function formatPrice(value) {

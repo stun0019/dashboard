@@ -214,6 +214,7 @@ export class OKXMarketClient {
       if (channel === "tickers") {
         const price = toFiniteNumber(data.last);
         const open24h = toFiniteNumber(data.open24h);
+        const volumeBase24h = toFiniteNumber(data.volCcy24h);
         if (price !== null) this.lastPrices.set(instrumentId, price);
 
         this.onTicker?.({
@@ -222,7 +223,10 @@ export class OKXMarketClient {
           change24h: price !== null && open24h > 0
             ? ((price - open24h) / open24h) * 100
             : null,
-          volume24h: toFiniteNumber(data.volCcy24h) ?? toFiniteNumber(data.vol24h),
+          volume24h: volumeBase24h,
+          volumeNotional24h: price !== null && volumeBase24h !== null
+            ? volumeBase24h * price
+            : null,
           timestamp: toFiniteNumber(data.ts) ?? Date.now(),
           source: "OKX"
         });
