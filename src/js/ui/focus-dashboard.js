@@ -1,11 +1,15 @@
-let selectHandler = null;
+let toggleHandler = null;
 
-export function initFocusDashboard({ onSelect }) {
-  selectHandler = onSelect;
+export function initFocusDashboard({ onToggle }) {
+  toggleHandler = onToggle;
   document.getElementById("candidateList")?.addEventListener("click", event => {
-    const row = event.target.closest("[data-symbol]");
-    if (row) selectHandler?.(row.dataset.symbol);
+    const card = event.target.closest("[data-candidate-card]");
+    if (card) toggleHandler?.(card.dataset.symbol);
   });
+}
+
+export function toggleExpandedSymbol(currentSymbol, clickedSymbol) {
+  return currentSymbol === clickedSymbol ? null : clickedSymbol;
 }
 
 export function renderFocusDashboard(state) {
@@ -15,91 +19,102 @@ export function renderFocusDashboard(state) {
   setText("scannedCount", state.scannedCount.toLocaleString());
   setText("candidateCount", state.candidates.length);
   setText("lastUpdate", state.lastUpdate ? formatTime(state.lastUpdate) : "--");
-
-  renderCandidates(state.candidates, state.selectedSymbol);
-  renderAnalysis(state.candidates.find(row => row.symbol === state.selectedSymbol));
+  renderCandidates(state.candidates, state.expandedSymbol);
 }
 
-function renderCandidates(candidates, selectedSymbol) {
+function renderCandidates(candidates, expandedSymbol) {
   const container = document.getElementById("candidateList");
   if (!container) return;
-
   if (!candidates.length) {
     container.innerHTML = '<div class="empty-state">正在掃描全市場並建立候選清單…</div>';
     return;
   }
-
-  container.innerHTML = candidates.map(row => `
-    <button class="candidate-row ${row.symbol === selectedSymbol ? "selected" : ""}" data-symbol="${escapeHTML(row.symbol)}">
-      <span class="symbol"><strong>${escapeHTML(row.symbol)}</strong><small>ATTN ${Math.round(row.attentionScore)}</small></span>
-      <span class="numeric">${formatPrice(row.price)}</span>
-      <span class="numeric ${numberClass(row.change24h)}">${formatPercent(row.change24h)}</span>
-      <span><b class="side-badge ${row.side.toLowerCase()}">${row.side}</b></span>
-    </button>
-  `).join("");
+  container.innerHTML = candidates.map(row => renderCandidateCard(row, row.symbol === expandedSymbol)).join("");
 }
 
-function renderAnalysis(row) {
-  const panel = document.getElementById("analysisPanel");
-  if (!panel) return;
+function renderCandidateCard(row, expanded) {
+  const symbol = escapeHTML(row.symbol);
+  const detailId = `candidate-detail-${safeId(row.symbol)}`;
+  const rating = Math.max(1, Math.min(5, Number(row.setupRating) || 1));
+  const plan = row.tradePlan;
 
-  if (!row) {
-    panel.innerHTML = '<div class="empty-state">選出候選幣後，這裡會顯示交易判斷。</div>';
-    return;
-  }
+  return `
+    <article class="candidate-card ${expanded ? "expanded" : ""}" data-candidate-card data-symbol="${symbol}">
+      <button class="candidate-card-summary" type="button" aria-expanded="${expanded}" aria-controls="${detailId}">
+        <span class="candidate-identity">
+          <strong>${symbol}<small>/ USDT</small></strong>
+          <span class="current-price" data-role="current-price">${formatPrice(row.currentPrice)}</span>
+          <span class="${numberClass(row.change24h)}">${formatPercent(row.change24h)} 24H</span>
+        </span>
+        <span class="candidate-metrics">
+          ${metric("成交額", formatUSD(row.volumeNotional24h))}
+          ${metric("OI 變化", formatSignedPercent(row.oiChangePct), row.freshness?.oi)}
+          ${metric("Funding", formatFunding(row.fundingRate), row.freshness?.funding)}
+        </span>
+        <span class="candidate-decision">
+          <b class="side-badge ${String(row.side).toLowerCase()}">${escapeHTML(row.side)}</b>
+          ${renderRating(rating)}
+          <i class="expand-icon" aria-hidden="true">⌄</i>
+        </span>
+      </button>
+      <div id="${detailId}" class="candidate-card-detail" aria-hidden="${!expanded}">
+        <div class="candidate-card-detail-inner">
+          <div class="evidence-grid">
+            ${evidence("15M K 線", row.candleTrend, freshnessLabel(row.freshness?.candle))}
+            ${evidence("OPEN INTEREST", formatUSD(row.oiUsd), freshnessLabel(row.freshness?.oi))}
+            ${evidence("FUNDING", formatFunding(row.fundingRate), freshnessLabel(row.freshness?.funding))}
+          </div>
 
-  const plan = row.plan;
-  panel.innerHTML = `
-    <div class="analysis-top">
-      <div>
-        <p class="eyebrow">${escapeHTML(row.symbol)} · 15M SETUP</p>
-        <h2 class="analysis-symbol">${escapeHTML(row.symbol)} / USDT</h2>
-        <div class="analysis-price">${formatPrice(row.price)} · 24h ${formatPercent(row.change24h)}</div>
+          <section class="plan">
+            <div class="plan-title">
+              <h3>交易計畫</h3>
+              <small>${plan ? `建立 ${formatTime(row.tradePlanCreatedAt)} · 同方向期間固定` : "WAIT · 尚未形成交易計畫"}</small>
+            </div>
+            <div class="plan-grid">
+              ${planItem("CURRENT", row.currentPrice, "current", "current")}
+              ${planItem("ENTRY", plan?.entry, "entry", "entry")}
+              ${planItem("STOP LOSS", plan?.stopLoss, "sl", "stop-loss")}
+              ${planItem("TP 1", plan?.tp1, "tp", "tp1")}
+              ${planItem("TP 2", plan?.tp2, "tp", "tp2")}
+              ${planItem("TP 3", plan?.tp3, "tp", "tp3")}
+            </div>
+          </section>
+
+          <section class="reason-block">
+            <div class="reason-title"><h3>判斷原因</h3><small>SETUP ANALYSIS · DATA ${escapeHTML(row.explanation?.completeness || "0/3")}</small></div>
+            <ul>${(row.explanation?.reasons || []).map(reason => `<li>${escapeHTML(reason)}</li>`).join("")}</ul>
+            <p class="conclusion">${escapeHTML(row.explanation?.conclusion || "資料準備中。")}</p>
+          </section>
+        </div>
       </div>
-      <div class="score-ring">
-        <b class="side-badge ${row.side.toLowerCase()}">${row.side}</b>
-        <strong>${row.score}</strong>
-        <small>DECISION SCORE</small>
-      </div>
-    </div>
-
-    <div class="evidence-grid">
-      ${evidence("15M K 線", row.candleTrend, freshnessLabel(row.freshness.candle))}
-      ${evidence("OPEN INTEREST", formatUSD(row.oiUsd), freshnessLabel(row.freshness.oi))}
-      ${evidence("FUNDING", formatFunding(row.fundingRate), freshnessLabel(row.freshness.funding))}
-    </div>
-
-    <section class="plan">
-      <div class="plan-title"><h3>Entry / SL / TP</h3><small>${plan ? "固定風險模型" : "WAIT 不建立交易計畫"}</small></div>
-      <div class="plan-grid">
-        ${planItem("ENTRY", plan?.entry, "entry")}
-        ${planItem("STOP LOSS", plan?.stopLoss, "sl")}
-        ${planItem("TP 1", plan?.tp1, "tp")}
-        ${planItem("TP 2", plan?.tp2, "tp")}
-        ${planItem("TP 3", plan?.tp3, "tp")}
-      </div>
-    </section>
-
-    <section class="reason-block">
-      <div class="reason-title"><h3>AI 解釋原因</h3><small>本機規則摘要 · DATA ${row.explanation.completeness}</small></div>
-      <ul>${row.explanation.reasons.map(reason => `<li>${escapeHTML(reason)}</li>`).join("")}</ul>
-      <p class="conclusion">${escapeHTML(row.explanation.conclusion)}</p>
-    </section>
+    </article>
   `;
+}
+
+function renderRating(rating) {
+  const numbers = [1, 2, 3, 4, 5]
+    .map(value => `<span class="rating-number ${value === rating ? "active" : ""}" aria-hidden="true">${value}</span>`)
+    .join("");
+  return `<span class="setup-rating" aria-label="Setup rating ${rating} of 5"><small>RATING</small><span>${numbers}</span></span>`;
+}
+
+function metric(label, value, freshnessState) {
+  const status = freshnessState ? freshnessLabel(freshnessState) : null;
+  return `<span class="metric"><small>${label}</small><strong>${value}</strong>${status ? `<em class="freshness ${status.className}">${status.shortLabel}</em>` : ""}</span>`;
 }
 
 function evidence(label, value, state) {
   return `<div class="evidence"><small>${label}</small><strong>${value}</strong><div class="freshness ${state.className}">${state.label}</div></div>`;
 }
 
-function planItem(label, value, className) {
-  return `<div class="plan-item ${className}"><small>${label}</small><strong>${value ? formatPrice(value) : "--"}</strong></div>`;
+function planItem(label, value, className, role) {
+  return `<div class="plan-item ${className}" data-role="${role}"><small>${label}</small><strong>${value ? formatPrice(value) : "--"}</strong></div>`;
 }
 
 function freshnessLabel(state) {
-  if (state === "fresh") return { label: "LIVE", className: "live" };
-  if (state === "stale") return { label: "STALE · EXCLUDED", className: "stale" };
-  return { label: "WAITING · EXCLUDED", className: "" };
+  if (state === "fresh") return { label: "LIVE", shortLabel: "LIVE", className: "live" };
+  if (state === "stale") return { label: "STALE · EXCLUDED", shortLabel: "STALE", className: "stale" };
+  return { label: "WAITING · EXCLUDED", shortLabel: "WAIT", className: "" };
 }
 
 function formatPrice(value) {
@@ -121,6 +136,12 @@ function formatFunding(value) {
   return Number.isFinite(number) ? `${number > 0 ? "+" : ""}${number.toFixed(4)}%` : "--";
 }
 
+function formatSignedPercent(value) {
+  if (value === null || value === undefined) return "--";
+  const number = Number(value);
+  return Number.isFinite(number) ? `${number > 0 ? "+" : ""}${number.toFixed(2)}%` : "--";
+}
+
 function formatPercent(value) {
   const number = Number(value);
   return Number.isFinite(number) ? `${number > 0 ? "+" : ""}${number.toFixed(2)}%` : "--";
@@ -132,7 +153,14 @@ function numberClass(value) {
 }
 
 function formatTime(timestamp) {
-  return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const date = new Date(timestamp);
+  return Number.isFinite(date.getTime())
+    ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : "--";
+}
+
+function safeId(value) {
+  return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "-");
 }
 
 function setText(id, value) {

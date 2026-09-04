@@ -63,12 +63,16 @@ export function analyzeCandidate(row, options = {}) {
       : score <= 42
         ? "SHORT"
         : "WAIT";
+  const directionStrength = calculateDirectionStrength(score);
+  const setupRating = calculateSetupRating(score, side);
 
   return {
     ...row,
     side,
     score: Math.round(score),
-    confidence: hasEnoughData ? Math.round(Math.abs(score - 50) * 2) : 0,
+    confidence: hasEnoughData ? Math.round(directionStrength) : 0,
+    directionStrength: Math.round(directionStrength),
+    setupRating,
     candleMomentum,
     candleTrend: states.candle !== "fresh"
       ? "WAIT"
@@ -90,6 +94,18 @@ export function analyzeCandidate(row, options = {}) {
       completeness
     })
   };
+}
+
+export function calculateSetupRating(score, side) {
+  const strength = calculateDirectionStrength(score);
+  const rating = Math.min(5, Math.floor(strength / 20) + 1);
+  return String(side || "").toUpperCase() === "WAIT"
+    ? Math.min(3, rating)
+    : rating;
+}
+
+export function calculateDirectionStrength(score) {
+  return clamp(Math.abs(finite(score) - 50) * 2, 0, 100);
 }
 
 export function calculateAttentionScore(row) {

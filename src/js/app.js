@@ -7,25 +7,30 @@ import {
 } from "./services/decision-engine.js";
 import { buildTradePlan } from "./services/risk-engine.js";
 import { loadOKXInstruments } from "./services/symbol-universe.js";
-import { initFocusDashboard, renderFocusDashboard } from "./ui/focus-dashboard.js";
+import {
+  initFocusDashboard,
+  renderFocusDashboard,
+  toggleExpandedSymbol
+} from "./ui/focus-dashboard.js";
 
 const rows = {};
 const instrumentBySymbol = new Map();
 const pendingPatches = new Map();
+const tradePlansBySymbol = new Map();
 
 let client = null;
 let batchTimer = null;
 let renderTimer = null;
 let candidateTimer = null;
 let candidateSymbols = [];
-let selectedSymbol = null;
+let expandedSymbol = null;
 
 const state = {
   connected: false,
   connectionStatus: "CONNECTING",
   scannedCount: 0,
   candidates: [],
-  selectedSymbol: null,
+  expandedSymbol: null,
   lastUpdate: null
 };
 
@@ -65,10 +70,10 @@ function refreshCandidateUniverse() {
     now,
     staleAfterMs: APP_CONFIG.scanner.staleAfterMs
   });
-  candidateSymbols = next.map(row => row.symbol);
-  selectedSymbol = candidateSymbols.includes(selectedSymbol)
-    ? selectedSymbol
-    : candidateSymbols[0] || null;
+  const nextCandidateSymbols = next.map(row => row.symbol);
+  reconcileCandidateMembership(candidateSymbols, nextCandidateSymbols, rows, tradePlansBySymbol);
+  candidateSymbols = nextCandidateSymbols;
+  if (!candidateSymbols.includes(expandedSymbol)) expandedSymbol = null;
 
   client?.setCandidates(candidateSymbols
     .map(symbol => instrumentBySymbol.get(symbol)?.instrumentId)
@@ -93,21 +98,31 @@ function refreshCandidateViews() {
         oiStaleAfterMs: APP_CONFIG.scanner.oiStaleAfterMs,
         fundingStaleAfterMs: APP_CONFIG.scanner.fundingStaleAfterMs
       });
-      const plan = analyzed.side === "WAIT"
-        ? null
-        : buildTradePlan({
+      const planRecord = reconcileTradePlan(
+        tradePlansBySymbol.get(analyzed.symbol),
+        {
+          symbol: analyzed.symbol,
           side: analyzed.side,
-          trigger: analyzed.price,
-          timeframe: "15m"
-        });
-      return { ...analyzed, plan };
+          currentPrice: analyzed.price
+        }
+      );
+
+      if (planRecord) tradePlansBySymbol.set(analyzed.symbol, planRecord);
+      else tradePlansBySymbol.delete(analyzed.symbol);
+
+      return {
+        ...analyzed,
+        currentPrice: analyzed.price,
+        tradePlan: planRecord?.plan || null,
+        tradePlanCreatedAt: planRecord?.createdAt || null
+      };
     })
     .sort((a, b) => b.attentionScore - a.attentionScore);
 
-  state.selectedSymbol = selectedSymbol;
+  state.expandedSymbol = expandedSymbol;
 }
 
-function mergeRow(current, patch) {
+export function mergeRow(current, patch) {
   const next = { ...current, ...patch };
 
   if (patch.candles?.length) {
@@ -129,6 +144,42 @@ function mergeRow(current, patch) {
   return next;
 }
 
+export function reconcileTradePlan(existing, setup, now = Date.now()) {
+  const side = String(setup.side || "").toUpperCase();
+  if (side === "WAIT") return null;
+  if (existing?.side === side) return existing;
+
+  return {
+    symbol: setup.symbol,
+    side,
+    plan: buildTradePlan({
+      side,
+      trigger: setup.currentPrice,
+      timeframe: "15m"
+    }),
+    createdAt: now
+  };
+}
+
+export function reconcileCandidateMembership(previousSymbols, nextSymbols, marketRows, planMap) {
+  const previous = new Set(previousSymbols);
+  const next = new Set(nextSymbols);
+  const entered = nextSymbols.filter(symbol => !previous.has(symbol));
+  const kept = nextSymbols.filter(symbol => previous.has(symbol));
+  const exited = previousSymbols.filter(symbol => !next.has(symbol));
+
+  for (const symbol of [...entered, ...exited]) {
+    const row = marketRows[symbol];
+    if (!row) continue;
+    row.oiBaselineUsd = null;
+    row.oiChangePct = null;
+    if (entered.includes(symbol)) row.oiUpdatedAt = null;
+  }
+
+  for (const symbol of exited) planMap.delete(symbol);
+  return { entered, kept, exited };
+}
+
 function scheduleRender() {
   if (renderTimer !== null) return;
   renderTimer = setTimeout(() => {
@@ -145,9 +196,9 @@ function handleStatus({ connected, status }) {
 
 async function init() {
   initFocusDashboard({
-    onSelect(symbol) {
-      selectedSymbol = symbol;
-      state.selectedSymbol = symbol;
+    onToggle(symbol) {
+      expandedSymbol = toggleExpandedSymbol(expandedSymbol, symbol);
+      state.expandedSymbol = expandedSymbol;
       scheduleRender();
     }
   });
@@ -210,18 +261,20 @@ function createRow(symbol) {
   };
 }
 
-window.addEventListener("beforeunload", () => {
-  client?.disconnect();
-  clearTimeout(batchTimer);
-  clearTimeout(renderTimer);
-  clearInterval(candidateTimer);
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  init().catch(error => {
-    console.error("TICK initialization failed", error);
-    state.connected = false;
-    state.connectionStatus = "INIT ERROR";
-    renderFocusDashboard(state);
+if (typeof window !== "undefined" && typeof document !== "undefined") {
+  window.addEventListener("beforeunload", () => {
+    client?.disconnect();
+    clearTimeout(batchTimer);
+    clearTimeout(renderTimer);
+    clearInterval(candidateTimer);
   });
-});
+
+  document.addEventListener("DOMContentLoaded", () => {
+    init().catch(error => {
+      console.error("TICK initialization failed", error);
+      state.connected = false;
+      state.connectionStatus = "INIT ERROR";
+      renderFocusDashboard(state);
+    });
+  });
+}

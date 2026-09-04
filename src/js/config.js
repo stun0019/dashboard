@@ -1,5 +1,6 @@
 export const APP_CONFIG = {
-  version: "0.3.3",
+  version: "0.4.0",
+  name: "Candidate Card UI",
 
   market: {
     base: "BTC",
