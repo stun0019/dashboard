@@ -3,274 +3,227 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>OKX Trading Dashboard</title>
+  <title>倉位計算器</title>
 
   <style>
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        "Microsoft JhengHei",
-        Arial,
-        sans-serif;
-
-      background: #0d0f12;
-      color: #f5f5f5;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0f14;
+      color: #f3f5f7;
       min-height: 100vh;
     }
 
     .container {
-      width: min(1400px, calc(100% - 32px));
+      width: min(100% - 28px, 520px);
       margin: 0 auto;
-      padding: 28px 0 50px;
+      padding: 28px 0 48px;
     }
-
-    /* =========================
-       HEADER
-    ========================= */
 
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
       margin-bottom: 24px;
     }
 
-    .header-left h1 {
-      font-size: 26px;
-      font-weight: 700;
-      margin-bottom: 6px;
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
     }
 
-    .header-left p {
+    .header p {
+      margin: 0;
+      color: #8f9baa;
       font-size: 14px;
-      color: #888;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #999;
-      font-size: 13px;
-    }
-
-    .status-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #666;
-    }
-
-    .status-dot.online {
-      background: #22c55e;
-    }
-
-    .status-dot.error {
-      background: #ef4444;
-    }
-
-    button {
-      border: 1px solid #2b2f35;
-      background: #171a1f;
-      color: #fff;
-      padding: 9px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    button:hover {
-      background: #22262d;
-    }
-
-    /* =========================
-       ACCOUNT
-    ========================= */
-
-    .account-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
+      line-height: 1.6;
     }
 
     .card {
-      background: #15181d;
-      border: 1px solid #252930;
-      border-radius: 12px;
+      background: #121821;
+      border: 1px solid #202936;
+      border-radius: 18px;
       padding: 20px;
+      margin-bottom: 16px;
     }
 
-    .card-label {
-      color: #888;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .card-value {
-      font-size: 28px;
+    .card-title {
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      margin-bottom: 18px;
     }
 
-    .card-unit {
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
       font-size: 13px;
-      color: #777;
-      margin-left: 5px;
+      color: #9aa5b3;
+      margin-bottom: 8px;
     }
 
-    /* =========================
-       SECTION
-    ========================= */
-
-    .section {
-      margin-top: 22px;
-      background: #15181d;
-      border: 1px solid #252930;
+    input,
+    select {
+      width: 100%;
+      height: 48px;
       border-radius: 12px;
-      overflow: hidden;
+      border: 1px solid #2a3442;
+      background: #0d131b;
+      color: #ffffff;
+      padding: 0 14px;
+      font-size: 16px;
+      outline: none;
     }
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 20px;
-      border-bottom: 1px solid #252930;
+    input:focus,
+    select:focus {
+      border-color: #5f7cff;
     }
 
-    .section-title {
-      font-size: 17px;
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .direction-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .direction-btn {
+      border: 1px solid #2a3442;
+      background: #0d131b;
+      color: #aab4c2;
+      padding: 13px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
       font-weight: 700;
     }
 
-    .section-count {
-      font-size: 12px;
-      color: #888;
+    .direction-btn.long.active {
+      background: rgba(30, 210, 140, 0.12);
+      border-color: #1ed28c;
+      color: #1ed28c;
     }
 
-    /* =========================
-       TABLE
-    ========================= */
+    .direction-btn.short.active {
+      background: rgba(255, 84, 98, 0.12);
+      border-color: #ff5462;
+      color: #ff5462;
+    }
 
-    .table-wrap {
+    .result-main {
+      text-align: center;
+      padding: 8px 0 20px;
+    }
+
+    .result-label {
+      font-size: 13px;
+      color: #8f9baa;
+      margin-bottom: 8px;
+    }
+
+    .result-value {
+      font-size: 38px;
+      font-weight: 800;
+      font-family: Consolas, monospace;
+    }
+
+    .result-unit {
+      font-size: 16px;
+      color: #8f9baa;
+      margin-left: 4px;
+    }
+
+    .metrics {
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric {
+      background: #0d131b;
+      border-radius: 12px;
+      padding: 13px 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .metric span:first-child {
+      color: #8f9baa;
+      font-size: 13px;
+    }
+
+    .metric span:last-child {
+      font-family: Consolas, monospace;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .risk-bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #232d39;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+
+    .risk-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.2s ease;
+      background: #ffffff;
+    }
+
+    .warning {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #9aa5b3;
+      line-height: 1.55;
+    }
+
+    .formula {
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      color: #aeb8c6;
+      background: #0d131b;
+      border-radius: 12px;
+      padding: 14px;
+      line-height: 1.7;
       overflow-x: auto;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 850px;
+    .error {
+      color: #ff6b76;
     }
 
-    thead {
-      background: #101216;
-    }
-
-    th {
-      padding: 13px 16px;
-      font-size: 12px;
-      font-weight: 500;
-      color: #777;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 15px 16px;
-      font-size: 14px;
-      border-top: 1px solid #20242a;
-      white-space: nowrap;
-    }
-
-    tbody tr:hover {
-      background: #191d22;
-    }
-
-    .symbol {
-      font-weight: 700;
-    }
-
-    .long {
-      color: #22c55e;
-      font-weight: 700;
-    }
-
-    .short {
-      color: #ef4444;
-      font-weight: 700;
-    }
-
-    .profit {
-      color: #22c55e;
-      font-weight: 600;
-    }
-
-    .loss {
-      color: #ef4444;
-      font-weight: 600;
-    }
-
-    .buy {
-      color: #22c55e;
-    }
-
-    .sell {
-      color: #ef4444;
-    }
-
-    .empty {
-      padding: 40px;
-      text-align: center;
-      color: #666;
-    }
-
-    /* =========================
-       LOADING
-    ========================= */
-
-    .loading {
-      opacity: 0.55;
-      pointer-events: none;
-    }
-
-    /* =========================
-       RESPONSIVE
-    ========================= */
-
-    @media (max-width: 850px) {
+    @media (max-width: 420px) {
       .container {
-        width: min(100% - 20px, 1400px);
-        padding-top: 18px;
+        width: min(100% - 20px, 520px);
+        padding-top: 20px;
       }
 
-      .header {
-        align-items: flex-start;
-        flex-direction: column;
+      .header h1 {
+        font-size: 24px;
       }
 
-      .account-grid {
+      .row {
         grid-template-columns: 1fr;
       }
 
-      .card-value {
-        font-size: 24px;
+      .result-value {
+        font-size: 32px;
       }
     }
   </style>
@@ -278,172 +231,180 @@
 
 <body>
 
-  <main class="container" id="dashboard">
-
-    <!-- =========================
-         HEADER
-    ========================== -->
+  <main class="container">
 
     <header class="header">
-
-      <div class="header-left">
-        <h1>OKX Trading Dashboard</h1>
-        <p id="lastUpdated">尚未更新</p>
-      </div>
-
-      <div class="header-right">
-
-        <div class="status">
-          <span class="status-dot" id="statusDot"></span>
-          <span id="statusText">Connecting</span>
-        </div>
-
-        <button id="refreshBtn">
-          更新
-        </button>
-
-      </div>
-
+      <h1>倉位計算器</h1>
+      <p>
+        先設定最大可承受虧損，再依進場價、止損與槓桿，
+        自動反推出適合使用多少保證金。
+      </p>
     </header>
 
+    <section class="card">
+      <div class="card-title">交易設定</div>
 
-    <!-- =========================
-         ACCOUNT
-    ========================== -->
+      <div class="field">
+        <label>交易方向</label>
 
-    <section class="account-grid">
+        <div class="direction-group">
+          <button
+            class="direction-btn long"
+            id="longBtn"
+            onclick="setDirection('long')"
+          >
+            LONG 做多
+          </button>
 
-      <div class="card">
-        <div class="card-label">
-          總資產
-        </div>
-
-        <div class="card-value">
-          <span id="totalEquity">--</span>
-          <span class="card-unit">USDT</span>
-        </div>
-      </div>
-
-
-      <div class="card">
-        <div class="card-label">
-          可用餘額
-        </div>
-
-        <div class="card-value">
-          <span id="availableBalance">--</span>
-          <span class="card-unit">USDT</span>
+          <button
+            class="direction-btn short active"
+            id="shortBtn"
+            onclick="setDirection('short')"
+          >
+            SHORT 做空
+          </button>
         </div>
       </div>
 
-
-      <div class="card">
-        <div class="card-label">
-          已使用保證金
-        </div>
-
-        <div class="card-value">
-          <span id="usedMargin">--</span>
-          <span class="card-unit">USDT</span>
-        </div>
+      <div class="field">
+        <label for="balance">總資金 USDT</label>
+        <input
+          id="balance"
+          type="number"
+          step="0.01"
+          value="60"
+          oninput="calculate()"
+        />
       </div>
+
+      <div class="row">
+
+        <div class="field">
+          <label for="riskPercent">單筆最大風險 %</label>
+          <input
+            id="riskPercent"
+            type="number"
+            step="0.1"
+            value="10"
+            oninput="calculate()"
+          />
+        </div>
+
+        <div class="field">
+          <label for="leverage">槓桿倍數</label>
+          <input
+            id="leverage"
+            type="number"
+            step="1"
+            value="300"
+            oninput="calculate()"
+          />
+        </div>
+
+      </div>
+
+      <div class="row">
+
+        <div class="field">
+          <label for="entry">進場價</label>
+          <input
+            id="entry"
+            type="number"
+            step="any"
+            value="0.4212"
+            oninput="calculate()"
+          />
+        </div>
+
+        <div class="field">
+          <label for="sl">止損價 SL</label>
+          <input
+            id="sl"
+            type="number"
+            step="any"
+            value="0.4262"
+            oninput="calculate()"
+          />
+        </div>
+
+      </div>
+    </section>
+
+    <section class="card">
+
+      <div class="result-main">
+        <div class="result-label">
+          建議使用保證金
+        </div>
+
+        <span class="result-value" id="marginResult">
+          --
+        </span>
+
+        <span class="result-unit">
+          USDT
+        </span>
+      </div>
+
+      <div class="metrics">
+
+        <div class="metric">
+          <span>占總資金</span>
+          <span id="marginPercentResult">--</span>
+        </div>
+
+        <div class="metric">
+          <span>最大預計虧損</span>
+          <span id="riskAmountResult">--</span>
+        </div>
+
+        <div class="metric">
+          <span>SL 距離</span>
+          <span id="slDistanceResult">--</span>
+        </div>
+
+        <div class="metric">
+          <span>建議名義倉位</span>
+          <span id="notionalResult">--</span>
+        </div>
+
+        <div class="metric">
+          <span>倉位 / 本金</span>
+          <span id="exposureResult">--</span>
+        </div>
+
+      </div>
+
+      <div class="risk-bar">
+        <div
+          class="risk-fill"
+          id="riskFill"
+        ></div>
+      </div>
+
+      <div
+        class="warning"
+        id="warning"
+      ></div>
 
     </section>
 
+    <section class="card">
 
-    <!-- =========================
-         POSITIONS
-    ========================== -->
-
-    <section class="section">
-
-      <div class="section-header">
-
-        <div class="section-title">
-          持倉
-        </div>
-
-        <div class="section-count" id="positionCount">
-          0 筆
-        </div>
-
+      <div class="card-title">
+        計算方式
       </div>
 
-      <div class="table-wrap">
+      <div class="formula">
+SL距離% = |Entry - SL| ÷ Entry × 100
 
-        <table>
+最大虧損 = 總資金 × 風險%
 
-          <thead>
-            <tr>
-              <th>幣種</th>
-              <th>方向</th>
-              <th>數量</th>
-              <th>均價</th>
-              <th>Mark Price</th>
-              <th>槓桿</th>
-              <th>浮動盈虧</th>
-            </tr>
-          </thead>
+名義倉位 = 最大虧損 ÷ SL距離%
 
-          <tbody id="positionTable">
-            <tr>
-              <td colspan="7" class="empty">
-                尚無持倉資料
-              </td>
-            </tr>
-          </tbody>
+保證金 = 名義倉位 ÷ 槓桿
 
-        </table>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         ORDERS
-    ========================== -->
-
-    <section class="section">
-
-      <div class="section-header">
-
-        <div class="section-title">
-          訂單紀錄
-        </div>
-
-        <div class="section-count" id="orderCount">
-          0 筆
-        </div>
-
-      </div>
-
-      <div class="table-wrap">
-
-        <table>
-
-          <thead>
-            <tr>
-              <th>時間</th>
-              <th>幣種</th>
-              <th>方向</th>
-              <th>類型</th>
-              <th>價格</th>
-              <th>數量</th>
-              <th>狀態</th>
-            </tr>
-          </thead>
-
-          <tbody id="orderTable">
-            <tr>
-              <td colspan="7" class="empty">
-                尚無訂單資料
-              </td>
-            </tr>
-          </tbody>
-
-        </table>
-
+保證金占本金% = 保證金 ÷ 總資金 × 100
       </div>
 
     </section>
@@ -453,440 +414,281 @@
 
   <script>
 
-    /* ==========================================
-       CONFIG
-    ========================================== */
-
-    const API = {
-      account: "/api/account",
-      positions: "/api/positions",
-      orders: "/api/orders"
-    };
-
-    const REFRESH_INTERVAL = 10000;
+    let direction = "short";
 
 
-    /* ==========================================
-       DOM
-    ========================================== */
+    function setDirection(type) {
 
-    const dashboard = document.getElementById("dashboard");
+      direction = type;
 
-    const totalEquity = document.getElementById("totalEquity");
-    const availableBalance = document.getElementById("availableBalance");
-    const usedMargin = document.getElementById("usedMargin");
+      const longBtn =
+        document.getElementById("longBtn");
 
-    const positionTable = document.getElementById("positionTable");
-    const orderTable = document.getElementById("orderTable");
-
-    const positionCount = document.getElementById("positionCount");
-    const orderCount = document.getElementById("orderCount");
-
-    const statusDot = document.getElementById("statusDot");
-    const statusText = document.getElementById("statusText");
-
-    const lastUpdated = document.getElementById("lastUpdated");
-
-    const refreshBtn = document.getElementById("refreshBtn");
+      const shortBtn =
+        document.getElementById("shortBtn");
 
 
-    /* ==========================================
-       UTILS
-    ========================================== */
+      longBtn.classList.remove("active");
+      shortBtn.classList.remove("active");
 
-    function formatNumber(value, digits = 2) {
 
-      const number = Number(value);
+      if (type === "long") {
 
-      if (!Number.isFinite(number)) {
-        return "--";
+        longBtn.classList.add("active");
+
+      } else {
+
+        shortBtn.classList.add("active");
+
       }
 
-      return number.toLocaleString("en-US", {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits
-      });
 
+      calculate();
     }
 
 
-    function formatPrice(value) {
+    function calculate() {
 
-      const number = Number(value);
+      const balance =
+        parseFloat(
+          document.getElementById("balance").value
+        );
 
-      if (!Number.isFinite(number)) {
-        return "--";
+      const riskPercent =
+        parseFloat(
+          document.getElementById("riskPercent").value
+        );
+
+      const leverage =
+        parseFloat(
+          document.getElementById("leverage").value
+        );
+
+      const entry =
+        parseFloat(
+          document.getElementById("entry").value
+        );
+
+      const sl =
+        parseFloat(
+          document.getElementById("sl").value
+        );
+
+
+      const marginResult =
+        document.getElementById("marginResult");
+
+      const marginPercentResult =
+        document.getElementById(
+          "marginPercentResult"
+        );
+
+      const riskAmountResult =
+        document.getElementById(
+          "riskAmountResult"
+        );
+
+      const slDistanceResult =
+        document.getElementById(
+          "slDistanceResult"
+        );
+
+      const notionalResult =
+        document.getElementById(
+          "notionalResult"
+        );
+
+      const exposureResult =
+        document.getElementById(
+          "exposureResult"
+        );
+
+      const warning =
+        document.getElementById("warning");
+
+      const riskFill =
+        document.getElementById("riskFill");
+
+
+      if (
+        !balance ||
+        !riskPercent ||
+        !leverage ||
+        !entry ||
+        !sl ||
+        balance <= 0 ||
+        riskPercent <= 0 ||
+        leverage <= 0 ||
+        entry <= 0 ||
+        sl <= 0
+      ) {
+
+        marginResult.textContent = "--";
+
+        marginPercentResult.textContent = "--";
+        riskAmountResult.textContent = "--";
+        slDistanceResult.textContent = "--";
+        notionalResult.textContent = "--";
+        exposureResult.textContent = "--";
+
+        warning.textContent =
+          "請輸入完整且有效的數值。";
+
+        warning.className =
+          "warning error";
+
+        return;
       }
 
-      if (number >= 1000) {
-        return formatNumber(number, 2);
+
+      if (
+        direction === "long" &&
+        sl >= entry
+      ) {
+
+        warning.textContent =
+          "做多時，正常止損價格應低於進場價。";
+
+        warning.className =
+          "warning error";
+
+        return;
       }
 
-      if (number >= 1) {
-        return formatNumber(number, 4);
+
+      if (
+        direction === "short" &&
+        sl <= entry
+      ) {
+
+        warning.textContent =
+          "做空時，正常止損價格應高於進場價。";
+
+        warning.className =
+          "warning error";
+
+        return;
       }
 
-      return formatNumber(number, 6);
 
+      const slDistanceDecimal =
+        Math.abs(entry - sl) / entry;
+
+
+      const slDistancePercent =
+        slDistanceDecimal * 100;
+
+
+      const riskAmount =
+        balance *
+        (riskPercent / 100);
+
+
+      const notional =
+        riskAmount /
+        slDistanceDecimal;
+
+
+      const margin =
+        notional /
+        leverage;
+
+
+      const marginPercent =
+        (margin / balance) * 100;
+
+
+      const exposureMultiple =
+        notional / balance;
+
+
+      marginResult.textContent =
+        formatNumber(margin, 2);
+
+
+      marginPercentResult.textContent =
+        formatNumber(
+          marginPercent,
+          2
+        ) + " %";
+
+
+      riskAmountResult.textContent =
+        formatNumber(
+          riskAmount,
+          2
+        ) + " U";
+
+
+      slDistanceResult.textContent =
+        formatNumber(
+          slDistancePercent,
+          3
+        ) + " %";
+
+
+      notionalResult.textContent =
+        formatNumber(
+          notional,
+          2
+        ) + " U";
+
+
+      exposureResult.textContent =
+        formatNumber(
+          exposureMultiple,
+          2
+        ) + " x";
+
+
+      warning.className =
+        "warning";
+
+
+      if (riskPercent > 10) {
+
+        warning.textContent =
+          "目前單筆風險超過本金 10%，屬於非常激進的設定。";
+
+      } else if (riskPercent >= 5) {
+
+        warning.textContent =
+          "目前屬於高風險設定。若連續數筆止損，本金回撤會非常快。";
+
+      } else {
+
+        warning.textContent =
+          "目前計算以設定的最大風險為上限。實際成交仍需考慮手續費、滑價與強平風險。";
+      }
+
+
+      const fillWidth =
+        Math.min(
+          riskPercent * 5,
+          100
+        );
+
+      riskFill.style.width =
+        fillWidth + "%";
     }
 
 
-    function formatDate(timestamp) {
+    function formatNumber(
+      number,
+      digits
+    ) {
 
-      if (!timestamp) {
-        return "--";
-      }
-
-      const date = new Date(Number(timestamp));
-
-      if (Number.isNaN(date.getTime())) {
-        return timestamp;
-      }
-
-      return date.toLocaleString("zh-TW", {
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      });
-
-    }
-
-
-    function pnlClass(value) {
-
-      const number = Number(value);
-
-      if (number > 0) {
-        return "profit";
-      }
-
-      if (number < 0) {
-        return "loss";
-      }
-
-      return "";
-
-    }
-
-
-    /* ==========================================
-       ACCOUNT
-    ========================================== */
-
-    async function loadAccount() {
-
-      const response = await fetch(API.account);
-
-      if (!response.ok) {
-        throw new Error("Account API Error");
-      }
-
-      const data = await response.json();
-
-      /*
-        Backend 建議回傳：
-
+      return Number(number).toLocaleString(
+        "en-US",
         {
-          "totalEquity": 91.23,
-          "availableBalance": 75.50,
-          "usedMargin": 15.73
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
         }
-      */
-
-      totalEquity.textContent =
-        formatNumber(data.totalEquity);
-
-      availableBalance.textContent =
-        formatNumber(data.availableBalance);
-
-      usedMargin.textContent =
-        formatNumber(data.usedMargin);
-
+      );
     }
 
 
-    /* ==========================================
-       POSITIONS
-    ========================================== */
-
-    async function loadPositions() {
-
-      const response = await fetch(API.positions);
-
-      if (!response.ok) {
-        throw new Error("Positions API Error");
-      }
-
-      const data = await response.json();
-
-      /*
-        Backend 建議回傳：
-
-        [
-          {
-            "symbol": "BTC-USDT-SWAP",
-            "side": "long",
-            "size": 0.01,
-            "avgPrice": 112000,
-            "markPrice": 113200,
-            "leverage": 20,
-            "unrealizedPnl": 12.4
-          }
-        ]
-      */
-
-      positionCount.textContent =
-        `${data.length} 筆`;
-
-      if (!data.length) {
-
-        positionTable.innerHTML = `
-          <tr>
-            <td colspan="7" class="empty">
-              目前沒有持倉
-            </td>
-          </tr>
-        `;
-
-        return;
-      }
-
-      positionTable.innerHTML =
-        data.map(position => {
-
-          const side =
-            String(position.side).toLowerCase();
-
-          const sideText =
-            side === "long"
-              ? "LONG"
-              : "SHORT";
-
-          const sideClass =
-            side === "long"
-              ? "long"
-              : "short";
-
-          return `
-            <tr>
-
-              <td class="symbol">
-                ${position.symbol || "--"}
-              </td>
-
-              <td class="${sideClass}">
-                ${sideText}
-              </td>
-
-              <td>
-                ${formatNumber(position.size, 4)}
-              </td>
-
-              <td>
-                ${formatPrice(position.avgPrice)}
-              </td>
-
-              <td>
-                ${formatPrice(position.markPrice)}
-              </td>
-
-              <td>
-                ${position.leverage || "--"}x
-              </td>
-
-              <td class="${pnlClass(position.unrealizedPnl)}">
-                ${formatNumber(position.unrealizedPnl)}
-                USDT
-              </td>
-
-            </tr>
-          `;
-
-        }).join("");
-
-    }
-
-
-    /* ==========================================
-       ORDERS
-    ========================================== */
-
-    async function loadOrders() {
-
-      const response = await fetch(API.orders);
-
-      if (!response.ok) {
-        throw new Error("Orders API Error");
-      }
-
-      const data = await response.json();
-
-      /*
-        Backend 建議回傳：
-
-        [
-          {
-            "time": 1788471000000,
-            "symbol": "BTC-USDT-SWAP",
-            "side": "buy",
-            "type": "market",
-            "price": 112000,
-            "size": 0.01,
-            "status": "filled"
-          }
-        ]
-      */
-
-      orderCount.textContent =
-        `${data.length} 筆`;
-
-      if (!data.length) {
-
-        orderTable.innerHTML = `
-          <tr>
-            <td colspan="7" class="empty">
-              尚無訂單紀錄
-            </td>
-          </tr>
-        `;
-
-        return;
-      }
-
-      orderTable.innerHTML =
-        data.map(order => {
-
-          const side =
-            String(order.side).toLowerCase();
-
-          const sideText =
-            side === "buy"
-              ? "BUY"
-              : "SELL";
-
-          const sideClass =
-            side === "buy"
-              ? "buy"
-              : "sell";
-
-          return `
-            <tr>
-
-              <td>
-                ${formatDate(order.time)}
-              </td>
-
-              <td class="symbol">
-                ${order.symbol || "--"}
-              </td>
-
-              <td class="${sideClass}">
-                ${sideText}
-              </td>
-
-              <td>
-                ${String(order.type || "--").toUpperCase()}
-              </td>
-
-              <td>
-                ${formatPrice(order.price)}
-              </td>
-
-              <td>
-                ${formatNumber(order.size, 4)}
-              </td>
-
-              <td>
-                ${String(order.status || "--").toUpperCase()}
-              </td>
-
-            </tr>
-          `;
-
-        }).join("");
-
-    }
-
-
-    /* ==========================================
-       DASHBOARD LOAD
-    ========================================== */
-
-    async function loadDashboard() {
-
-      dashboard.classList.add("loading");
-
-      statusText.textContent =
-        "Updating";
-
-      statusDot.className =
-        "status-dot";
-
-      try {
-
-        await Promise.all([
-          loadAccount(),
-          loadPositions(),
-          loadOrders()
-        ]);
-
-        statusDot.className =
-          "status-dot online";
-
-        statusText.textContent =
-          "Connected";
-
-        lastUpdated.textContent =
-          `最後更新：${new Date().toLocaleString("zh-TW")}`;
-
-      }
-
-      catch (error) {
-
-        console.error(error);
-
-        statusDot.className =
-          "status-dot error";
-
-        statusText.textContent =
-          "Connection Error";
-
-        lastUpdated.textContent =
-          "無法取得 OKX 資料";
-
-      }
-
-      finally {
-
-        dashboard.classList.remove("loading");
-
-      }
-
-    }
-
-
-    /* ==========================================
-       EVENTS
-    ========================================== */
-
-    refreshBtn.addEventListener(
-      "click",
-      loadDashboard
-    );
-
-
-    /* ==========================================
-       START
-    ========================================== */
-
-    loadDashboard();
-
-    setInterval(
-      loadDashboard,
-      REFRESH_INTERVAL
-    );
+    calculate();
 
   </script>
 
