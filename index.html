@@ -22,7 +22,6 @@
     --green: #12d7a0;
     --red: #ff5a7c;
     --yellow: #f0c65d;
-    --blue: #4c8dff;
 
     --trade-card: #142640;
     --trade-border: #294366;
@@ -30,8 +29,6 @@
     --entry-bg: #070c12;
     --sl-bg: #39243c;
     --tp-bg: #0d4c4d;
-
-    --closed-bg: #151b25;
 }
 
 body {
@@ -55,12 +52,8 @@ body {
 
 .app {
     width: min(100% - 24px, 820px);
-
     margin: 0 auto;
-
-    padding:
-        20px 0
-        80px;
+    padding: 20px 0 80px;
 }
 
 
@@ -174,15 +167,12 @@ SUMMARY
 
 .summary-label {
     color: var(--muted);
-
     font-size: 11px;
-
     margin-bottom: 8px;
 }
 
 .summary-value {
     font-size: 23px;
-
     font-weight: 900;
 
     font-family:
@@ -190,11 +180,15 @@ SUMMARY
         monospace;
 }
 
-.summary-value.green {
+.green {
     color: var(--green);
 }
 
-.summary-value.yellow {
+.red {
+    color: var(--red);
+}
+
+.yellow {
     color: var(--yellow);
 }
 
@@ -239,7 +233,6 @@ CALCULATOR
 
 .calc-close {
     border: 0;
-
     background: transparent;
 
     color: var(--muted);
@@ -251,9 +244,7 @@ CALCULATOR
 
 .direction {
     display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
+    grid-template-columns: 1fr 1fr;
 
     gap: 8px;
 
@@ -281,9 +272,7 @@ CALCULATOR
 
 .direction .long.active {
     color: var(--green);
-
-    border-color:
-        var(--green);
+    border-color: var(--green);
 
     background:
         rgba(18, 215, 160, .08);
@@ -291,9 +280,7 @@ CALCULATOR
 
 .direction .short.active {
     color: var(--red);
-
-    border-color:
-        var(--red);
+    border-color: var(--red);
 
     background:
         rgba(255, 90, 124, .08);
@@ -500,9 +487,19 @@ TRADE CARD
 
     border-radius: 13px;
 
-    padding: 17px;
+    margin-bottom: 14px;
 
-    margin-bottom: 18px;
+    overflow: hidden;
+
+    cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        border-color .18s ease;
+}
+
+.trade-card:hover {
+    border-color: #3a5c88;
 }
 
 .trade-card.closed {
@@ -513,13 +510,20 @@ TRADE CARD
             #10151d
         );
 
-    border-color:
-        #303b49;
+    border-color: #303b49;
 }
 
-.trade-header {
-    display: flex;
 
+/* =========================
+COLLAPSED HEADER
+========================= */
+
+.trade-summary {
+    padding: 16px;
+}
+
+.trade-top {
+    display: flex;
     justify-content: space-between;
     align-items: flex-start;
 
@@ -532,8 +536,8 @@ TRADE CARD
 }
 
 .coin-icon {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
 
     border-radius: 11px;
 
@@ -556,29 +560,15 @@ TRADE CARD
 }
 
 .symbol {
-    font-size: 24px;
+    font-size: 21px;
 
     font-weight: 900;
 }
 
 .exchange {
-    display: inline-block;
+    margin-top: 5px;
 
-    margin-top: 7px;
-
-    padding:
-        5px 8px;
-
-    background:
-        #080d13;
-
-    border:
-        1px solid
-        #28374b;
-
-    border-radius: 6px;
-
-    color: #b7c2d1;
+    color: #9aa8ba;
 
     font-size: 11px;
 }
@@ -586,15 +576,16 @@ TRADE CARD
 .status-area {
     display: flex;
     gap: 7px;
+    align-items: center;
 }
 
 .status {
     padding:
-        9px 12px;
+        8px 10px;
 
     border-radius: 9px;
 
-    font-size: 13px;
+    font-size: 12px;
 
     font-weight: 800;
 }
@@ -621,16 +612,111 @@ TRADE CARD
         rgba(18, 215, 160, .25);
 }
 
-.trade-time {
-    margin-top: 15px;
+.expand-icon {
+    width: 30px;
+    height: 30px;
 
-    color: #93a6c1;
+    border-radius: 8px;
 
+    background:
+        rgba(0,0,0,.18);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--muted);
+
+    transition: transform .2s ease;
+}
+
+.trade-card.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+
+/* =========================
+COLLAPSED QUICK INFO
+========================= */
+
+.quick-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 8px;
+
+    margin-top: 14px;
+}
+
+.quick-item {
+    background:
+        rgba(5, 11, 18, .45);
+
+    border:
+        1px solid
+        rgba(48, 68, 92, .8);
+
+    border-radius: 9px;
+
+    padding: 10px;
+}
+
+.quick-label {
+    color: var(--muted);
+
+    font-size: 9px;
+
+    margin-bottom: 5px;
+}
+
+.quick-value {
     font-family:
         Consolas,
         monospace;
 
     font-size: 13px;
+
+    font-weight: 800;
+}
+
+.quick-value.profit {
+    color: var(--green);
+}
+
+
+/* =========================
+EXPANDED CONTENT
+========================= */
+
+.trade-details {
+    max-height: 0;
+
+    overflow: hidden;
+
+    opacity: 0;
+
+    transition:
+        max-height .35s ease,
+        opacity .25s ease;
+}
+
+.trade-card.expanded
+.trade-details {
+    max-height: 1500px;
+
+    opacity: 1;
+}
+
+.trade-details-inner {
+    padding:
+        0 16px
+        16px;
+
+    border-top:
+        1px solid
+        rgba(47, 68, 94, .75);
 }
 
 
@@ -729,8 +815,7 @@ PNL
 .pnl-sub {
     margin-top: 6px;
 
-    color:
-        #9cb3a9;
+    color: #9cb3a9;
 
     font-size: 11px;
 }
@@ -760,23 +845,19 @@ LEVEL GRID
 }
 
 .level.entry {
-    background:
-        var(--entry-bg);
+    background: var(--entry-bg);
 }
 
 .level.sl {
-    background:
-        var(--sl-bg);
+    background: var(--sl-bg);
 }
 
 .level.tp {
-    background:
-        var(--tp-bg);
+    background: var(--tp-bg);
 }
 
 .level-head {
     display: flex;
-
     justify-content: space-between;
     align-items: center;
 
@@ -795,10 +876,6 @@ LEVEL GRID
 
 .level.tp .level-head {
     color: var(--green);
-}
-
-.rr {
-    color: var(--yellow);
 }
 
 .level-price {
@@ -831,12 +908,7 @@ RISK
 
 .risk-mini {
     background:
-        rgba(
-            4,
-            10,
-            17,
-            .5
-        );
+        rgba(4, 10, 17, .5);
 
     border:
         1px solid
@@ -912,14 +984,6 @@ CLOSED RESULT
     font-weight: 900;
 }
 
-.closed-value.green {
-    color: var(--green);
-}
-
-.closed-value.yellow {
-    color: var(--yellow);
-}
-
 
 /* =========================
 RESPONSIVE
@@ -947,13 +1011,6 @@ RESPONSIVE
     .action-btn {
         width: 42px;
         height: 42px;
-
-        font-size: 16px;
-    }
-
-    .summary-grid {
-        grid-template-columns:
-            repeat(3, 1fr);
     }
 
     .calc-grid {
@@ -984,15 +1041,13 @@ RESPONSIVE
 
 @media (max-width: 450px) {
 
-    .header-actions {
-        gap: 5px;
+    .summary-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
     }
 
-    .action-btn {
-        width: 39px;
-        height: 39px;
-
-        border-radius: 10px;
+    .summary-value {
+        font-size: 18px;
     }
 
     .page-title h1 {
@@ -1000,39 +1055,31 @@ RESPONSIVE
     }
 
     .symbol {
-        font-size: 20px;
+        font-size: 19px;
     }
 
-    .coin-icon {
-        width: 44px;
-        height: 44px;
+    .quick-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
     }
 
-    .status {
-        padding:
-            8px 9px;
+    .quick-value {
+        font-size: 12px;
     }
 
     .level-price {
         font-size: 24px;
     }
-
-    .summary-value {
-        font-size: 19px;
-    }
 }
 </style>
 </head>
-
 
 <body>
 
 <div class="app">
 
 
-    <!-- =========================
-    HEADER
-    ========================= -->
+    <!-- HEADER -->
 
     <header class="header">
 
@@ -1059,22 +1106,13 @@ RESPONSIVE
                 %
             </button>
 
-            <button
-                class="action-btn"
-                title="交易紀錄"
-            >
-                ≡
-            </button>
-
         </div>
 
     </header>
 
 
 
-    <!-- =========================
-    SUMMARY
-    ========================= -->
+    <!-- SUMMARY -->
 
     <section class="summary-grid">
 
@@ -1120,9 +1158,7 @@ RESPONSIVE
 
 
 
-    <!-- =========================
-    CALCULATOR
-    ========================= -->
+    <!-- CALCULATOR -->
 
     <section
         id="calculator"
@@ -1172,14 +1208,13 @@ RESPONSIVE
             <div class="field">
 
                 <label>
-                    總資金 USDT
+                    總資金
                 </label>
 
                 <input
                     id="balance"
                     type="number"
                     value="60"
-                    step="0.01"
                     oninput="calculate()"
                 >
 
@@ -1196,7 +1231,6 @@ RESPONSIVE
                     id="risk"
                     type="number"
                     value="10"
-                    step="0.1"
                     oninput="calculate()"
                 >
 
@@ -1213,7 +1247,6 @@ RESPONSIVE
                     id="leverage"
                     type="number"
                     value="300"
-                    step="1"
                     oninput="calculate()"
                 >
 
@@ -1343,9 +1376,7 @@ RESPONSIVE
 
 
 
-    <!-- =========================
-    TITLE
-    ========================= -->
+    <!-- TITLE -->
 
     <div class="page-title">
 
@@ -1361,9 +1392,7 @@ RESPONSIVE
 
 
 
-    <!-- =========================
-    FILTER
-    ========================= -->
+    <!-- FILTER -->
 
     <div class="filter-row">
 
@@ -1406,24 +1435,42 @@ RESPONSIVE
     <section
         class="trade-card"
         data-status="open"
+        onclick="toggleTradeCard(this)"
     >
 
-        <div class="trade-header">
+        <div class="trade-summary">
 
-            <div class="coin-area">
+            <div class="trade-top">
 
-                <div class="coin-icon">
-                    WLD
-                </div>
+                <div class="coin-area">
 
-                <div>
-
-                    <div class="symbol">
-                        WLDUSDT
+                    <div class="coin-icon">
+                        WLD
                     </div>
 
-                    <div class="exchange">
-                        BingX　USDT PERP　SHORT 300X
+                    <div>
+
+                        <div class="symbol">
+                            WLDUSDT
+                        </div>
+
+                        <div class="exchange">
+                            BingX · SHORT · 300X
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="status-area">
+
+                    <div class="status open">
+                        持倉中
+                    </div>
+
+                    <div class="expand-icon">
+                        ▼
                     </div>
 
                 </div>
@@ -1431,162 +1478,45 @@ RESPONSIVE
             </div>
 
 
-            <div class="status-area">
 
-                <div class="status open">
-                    持倉中
-                </div>
+            <div class="quick-grid">
 
-            </div>
+                <div class="quick-item">
 
-        </div>
+                    <div class="quick-label">
+                        ENTRY
+                    </div>
 
-
-        <div class="trade-time">
-            Entry　0.4212
-        </div>
-
-
-
-        <div class="current-block">
-
-            <div class="block-top">
-
-                <span>
-                    CURRENT PRICE
-                </span>
-
-                <span class="price-time">
-                    LIVE
-                </span>
-
-            </div>
-
-
-            <div
-                id="wldCurrentPrice"
-                class="current-price"
-            >
-                0.4114
-            </div>
-
-        </div>
-
-
-
-        <div class="pnl-block">
-
-            <div class="pnl-label">
-                未實現盈虧
-            </div>
-
-            <div
-                id="wldFloatingPnl"
-                class="pnl-value"
-            >
-                +84.05 U
-            </div>
-
-
-            <div class="pnl-sub">
-                目前為手動資料，之後可串 BingX API 自動更新
-            </div>
-
-        </div>
-
-
-
-        <div class="level-grid">
-
-            <div class="level entry">
-
-                <div class="level-head">
-                    ENTRY
-                </div>
-
-                <div class="level-price">
-                    0.4212
-                </div>
-
-            </div>
-
-
-            <div class="level sl">
-
-                <div class="level-head">
-                    CURRENT SL
-                </div>
-
-                <div class="level-price">
-                    0.4205
-                </div>
-
-            </div>
-
-
-            <div class="level tp">
-
-                <div class="level-head">
-
-                    <span>
-                        TP1
-                    </span>
+                    <div class="quick-value">
+                        0.4212
+                    </div>
 
                 </div>
 
-                <div class="level-price">
-                    0.4100
-                </div>
 
-            </div>
+                <div class="quick-item">
 
+                    <div class="quick-label">
+                        CURRENT
+                    </div>
 
-            <div class="level tp">
-
-                <div class="level-head">
-
-                    <span>
-                        TP2
-                    </span>
+                    <div class="quick-value">
+                        0.4114
+                    </div>
 
                 </div>
 
-                <div class="level-price">
-                    0.4000
-                </div>
 
-            </div>
+                <div class="quick-item">
 
+                    <div class="quick-label">
+                        FLOATING PNL
+                    </div>
 
-            <div class="level tp">
+                    <div class="quick-value profit">
+                        +84.05 U
+                    </div>
 
-                <div class="level-head">
-
-                    <span>
-                        TP3
-                    </span>
-
-                </div>
-
-                <div class="level-price">
-                    0.3900
-                </div>
-
-            </div>
-
-
-            <div class="level tp">
-
-                <div class="level-head">
-
-                    <span>
-                        FTP
-                    </span>
-
-                </div>
-
-                <div class="level-price">
-                    0.3800
                 </div>
 
             </div>
@@ -1595,55 +1525,187 @@ RESPONSIVE
 
 
 
-        <div class="risk-info">
+        <div class="trade-details">
 
-            <div class="risk-mini">
+            <div class="trade-details-inner">
 
-                <div class="risk-mini-label">
-                    SIDE
+
+                <div class="current-block">
+
+                    <div class="block-top">
+
+                        <span>
+                            CURRENT PRICE
+                        </span>
+
+                        <span class="price-time">
+                            LIVE
+                        </span>
+
+                    </div>
+
+                    <div class="current-price">
+                        0.4114
+                    </div>
+
                 </div>
 
-                <div class="risk-mini-value">
-                    SHORT
+
+
+                <div class="pnl-block">
+
+                    <div class="pnl-label">
+                        未實現盈虧
+                    </div>
+
+                    <div class="pnl-value">
+                        +84.05 U
+                    </div>
+
+                    <div class="pnl-sub">
+                        目前為手動資料
+                    </div>
+
                 </div>
 
-            </div>
 
 
-            <div class="risk-mini">
+                <div class="level-grid">
 
-                <div class="risk-mini-label">
-                    LEVERAGE
+                    <div class="level entry">
+
+                        <div class="level-head">
+                            ENTRY
+                        </div>
+
+                        <div class="level-price">
+                            0.4212
+                        </div>
+
+                    </div>
+
+
+                    <div class="level sl">
+
+                        <div class="level-head">
+                            CURRENT SL
+                        </div>
+
+                        <div class="level-price">
+                            0.4205
+                        </div>
+
+                    </div>
+
+
+                    <div class="level tp">
+
+                        <div class="level-head">
+                            TP1
+                        </div>
+
+                        <div class="level-price">
+                            0.4100
+                        </div>
+
+                    </div>
+
+
+                    <div class="level tp">
+
+                        <div class="level-head">
+                            TP2
+                        </div>
+
+                        <div class="level-price">
+                            0.4000
+                        </div>
+
+                    </div>
+
+
+                    <div class="level tp">
+
+                        <div class="level-head">
+                            TP3
+                        </div>
+
+                        <div class="level-price">
+                            0.3900
+                        </div>
+
+                    </div>
+
+
+                    <div class="level tp">
+
+                        <div class="level-head">
+                            FTP
+                        </div>
+
+                        <div class="level-price">
+                            0.3800
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <div class="risk-mini-value">
-                    300X
-                </div>
-
-            </div>
 
 
-            <div class="risk-mini">
+                <div class="risk-info">
 
-                <div class="risk-mini-label">
-                    NOTIONAL
-                </div>
+                    <div class="risk-mini">
 
-                <div class="risk-mini-value">
-                    ≈ 3,614 U
-                </div>
+                        <div class="risk-mini-label">
+                            SIDE
+                        </div>
 
-            </div>
+                        <div class="risk-mini-value">
+                            SHORT
+                        </div>
+
+                    </div>
 
 
-            <div class="risk-mini">
+                    <div class="risk-mini">
 
-                <div class="risk-mini-label">
-                    STATUS
-                </div>
+                        <div class="risk-mini-label">
+                            LEVERAGE
+                        </div>
 
-                <div class="risk-mini-value">
-                    RUNNING
+                        <div class="risk-mini-value">
+                            300X
+                        </div>
+
+                    </div>
+
+
+                    <div class="risk-mini">
+
+                        <div class="risk-mini-label">
+                            NOTIONAL
+                        </div>
+
+                        <div class="risk-mini-value">
+                            ≈ 3,614 U
+                        </div>
+
+                    </div>
+
+
+                    <div class="risk-mini">
+
+                        <div class="risk-mini-label">
+                            STATUS
+                        </div>
+
+                        <div class="risk-mini-value">
+                            RUNNING
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
@@ -1655,30 +1717,48 @@ RESPONSIVE
 
 
     <!-- =========================
-    ARB CLOSED
+    ARB
     ========================= -->
 
     <section
         class="trade-card closed"
         data-status="closed"
+        onclick="toggleTradeCard(this)"
     >
 
-        <div class="trade-header">
+        <div class="trade-summary">
 
-            <div class="coin-area">
+            <div class="trade-top">
 
-                <div class="coin-icon">
-                    ARB
-                </div>
+                <div class="coin-area">
 
-                <div>
-
-                    <div class="symbol">
-                        ARBUSDT
+                    <div class="coin-icon">
+                        ARB
                     </div>
 
-                    <div class="exchange">
-                        BingX　USDT PERP　SHORT 75X
+                    <div>
+
+                        <div class="symbol">
+                            ARBUSDT
+                        </div>
+
+                        <div class="exchange">
+                            BingX · SHORT · 75X
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="status-area">
+
+                    <div class="status closed">
+                        已平倉
+                    </div>
+
+                    <div class="expand-icon">
+                        ▼
                     </div>
 
                 </div>
@@ -1686,10 +1766,45 @@ RESPONSIVE
             </div>
 
 
-            <div class="status-area">
 
-                <div class="status closed">
-                    已平倉
+            <div class="quick-grid">
+
+                <div class="quick-item">
+
+                    <div class="quick-label">
+                        ENTRY
+                    </div>
+
+                    <div class="quick-value">
+                        0.19075
+                    </div>
+
+                </div>
+
+
+                <div class="quick-item">
+
+                    <div class="quick-label">
+                        CLOSED PNL
+                    </div>
+
+                    <div class="quick-value profit">
+                        +1.7255 U
+                    </div>
+
+                </div>
+
+
+                <div class="quick-item">
+
+                    <div class="quick-label">
+                        REALIZED
+                    </div>
+
+                    <div class="quick-value profit">
+                        +1.2933 U
+                    </div>
+
                 </div>
 
             </div>
@@ -1698,154 +1813,157 @@ RESPONSIVE
 
 
 
-        <div class="trade-time">
-            Entry　0.19075
-        </div>
+        <div class="trade-details">
+
+            <div class="trade-details-inner">
 
 
+                <div class="pnl-block">
 
-        <div class="pnl-block">
+                    <div class="pnl-label">
+                        最終實現盈虧
+                    </div>
 
-            <div class="pnl-label">
-                最終實現盈虧
-            </div>
+                    <div class="pnl-value">
+                        +1.2933 U
+                    </div>
 
-            <div class="pnl-value">
-                +1.2933 U
-            </div>
+                    <div class="pnl-sub">
+                        交易已結束
+                    </div>
 
-            <div class="pnl-sub">
-                交易已結束
-            </div>
-
-        </div>
-
-
-
-        <div class="closed-result">
-
-            <div class="closed-item">
-
-                <div class="closed-label">
-                    平倉盈虧
                 </div>
 
-                <div class="closed-value green">
-                    +1.7255 U
+
+
+                <div class="closed-result">
+
+                    <div class="closed-item">
+
+                        <div class="closed-label">
+                            平倉盈虧
+                        </div>
+
+                        <div class="closed-value green">
+                            +1.7255 U
+                        </div>
+
+                    </div>
+
+
+                    <div class="closed-item">
+
+                        <div class="closed-label">
+                            實現盈虧
+                        </div>
+
+                        <div class="closed-value green">
+                            +1.2933 U
+                        </div>
+
+                    </div>
+
+
+                    <div class="closed-item">
+
+                        <div class="closed-label">
+                            手續費 / 費用差額
+                        </div>
+
+                        <div class="closed-value yellow">
+                            -0.4322 U
+                        </div>
+
+                    </div>
+
                 </div>
 
-            </div>
 
 
-            <div class="closed-item">
+                <div class="level-grid">
 
-                <div class="closed-label">
-                    實現盈虧
+                    <div class="level entry">
+
+                        <div class="level-head">
+                            ENTRY
+                        </div>
+
+                        <div class="level-price">
+                            0.19075
+                        </div>
+
+                    </div>
+
+
+                    <div class="level sl">
+
+                        <div class="level-head">
+                            ORIGINAL SL
+                        </div>
+
+                        <div class="level-price">
+                            0.19412
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <div class="closed-value green">
-                    +1.2933 U
-                </div>
-
-            </div>
 
 
-            <div class="closed-item">
+                <div class="risk-info">
 
-                <div class="closed-label">
-                    手續費 / 費用差額
-                </div>
+                    <div class="risk-mini">
 
-                <div class="closed-value yellow">
-                    -0.4322 U
-                </div>
+                        <div class="risk-mini-label">
+                            SIDE
+                        </div>
 
-            </div>
+                        <div class="risk-mini-value">
+                            SHORT
+                        </div>
 
-        </div>
-
-
-
-        <div class="level-grid">
-
-            <div class="level entry">
-
-                <div class="level-head">
-                    ENTRY
-                </div>
-
-                <div class="level-price">
-                    0.19075
-                </div>
-
-            </div>
+                    </div>
 
 
-            <div class="level sl">
+                    <div class="risk-mini">
 
-                <div class="level-head">
-                    ORIGINAL SL
-                </div>
+                        <div class="risk-mini-label">
+                            LEVERAGE
+                        </div>
 
-                <div class="level-price">
-                    0.19412
-                </div>
+                        <div class="risk-mini-value">
+                            75X
+                        </div>
 
-            </div>
-
-        </div>
+                    </div>
 
 
+                    <div class="risk-mini">
 
-        <div class="risk-info">
+                        <div class="risk-mini-label">
+                            RESULT
+                        </div>
 
-            <div class="risk-mini">
+                        <div class="risk-mini-value green">
+                            PROFIT
+                        </div>
 
-                <div class="risk-mini-label">
-                    SIDE
-                </div>
-
-                <div class="risk-mini-value">
-                    SHORT
-                </div>
-
-            </div>
+                    </div>
 
 
-            <div class="risk-mini">
+                    <div class="risk-mini">
 
-                <div class="risk-mini-label">
-                    LEVERAGE
-                </div>
+                        <div class="risk-mini-label">
+                            STATUS
+                        </div>
 
-                <div class="risk-mini-value">
-                    75X
-                </div>
+                        <div class="risk-mini-value">
+                            CLOSED
+                        </div>
 
-            </div>
+                    </div>
 
-
-            <div class="risk-mini">
-
-                <div class="risk-mini-label">
-                    RESULT
-                </div>
-
-                <div class="risk-mini-value green">
-                    PROFIT
-                </div>
-
-            </div>
-
-
-            <div class="risk-mini">
-
-                <div class="risk-mini-label">
-                    STATUS
-                </div>
-
-                <div class="risk-mini-value">
-                    CLOSED
                 </div>
 
             </div>
@@ -1865,7 +1983,19 @@ let direction = "short";
 
 
 /* =========================
-CALCULATOR TOGGLE
+CARD COLLAPSE
+========================= */
+
+function toggleTradeCard(card) {
+
+    card.classList.toggle("expanded");
+
+}
+
+
+
+/* =========================
+CALCULATOR
 ========================= */
 
 function toggleCalculator() {
@@ -1879,10 +2009,6 @@ function toggleCalculator() {
 
 
 
-/* =========================
-DIRECTION
-========================= */
-
 function setDirection(type) {
 
     direction = type;
@@ -1891,32 +2017,21 @@ function setDirection(type) {
     const longBtn =
         document.getElementById("longBtn");
 
-
     const shortBtn =
         document.getElementById("shortBtn");
 
 
-    longBtn
-        .classList
-        .remove("active");
-
-
-    shortBtn
-        .classList
-        .remove("active");
+    longBtn.classList.remove("active");
+    shortBtn.classList.remove("active");
 
 
     if (type === "long") {
 
-        longBtn
-            .classList
-            .add("active");
+        longBtn.classList.add("active");
 
     } else {
 
-        shortBtn
-            .classList
-            .add("active");
+        shortBtn.classList.add("active");
 
     }
 
@@ -1925,10 +2040,6 @@ function setDirection(type) {
 }
 
 
-
-/* =========================
-POSITION CALCULATOR
-========================= */
 
 function calculate() {
 
@@ -1969,7 +2080,6 @@ function calculate() {
         !entry ||
         !sl
     ) {
-
         return;
     }
 
@@ -1979,7 +2089,6 @@ function calculate() {
         &&
         sl >= entry
     ) {
-
         return;
     }
 
@@ -1989,15 +2098,12 @@ function calculate() {
         &&
         sl <= entry
     ) {
-
         return;
     }
 
 
     const slDistance =
-        Math.abs(
-            entry - sl
-        )
+        Math.abs(entry - sl)
         /
         entry;
 
@@ -2111,24 +2217,20 @@ function filterTrades() {
                 trade.dataset.status;
 
 
-            if (
-                filter === "all"
-                ||
-                filter === status
-            ) {
-
-                trade.style.display =
-                    "block";
-
-            } else {
-
-                trade.style.display =
-                    "none";
-
-            }
+            trade.style.display =
+                (
+                    filter === "all"
+                    ||
+                    filter === status
+                )
+                ?
+                "block"
+                :
+                "none";
 
         }
     );
+
 }
 
 
@@ -2140,7 +2242,7 @@ REFRESH
 function refreshData() {
 
     alert(
-        "目前使用手動資料。之後串接 BingX API 後，這裡會自動更新持倉、價格與浮動盈虧。"
+        "目前使用手動資料。之後串 BingX API 後可自動更新。"
     );
 
 }
@@ -2151,10 +2253,7 @@ function refreshData() {
 FORMAT
 ========================= */
 
-function format(
-    number,
-    digits
-) {
+function format(number, digits) {
 
     return Number(number)
         .toLocaleString(
@@ -2171,9 +2270,7 @@ function format(
 
 
 
-/* =========================
-INIT
-========================= */
+/* INIT */
 
 calculate();
 
