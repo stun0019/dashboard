@@ -484,6 +484,133 @@ h3 {
     border-radius: 12px;
 }
 
+/* POSITION CALCULATOR */
+
+.calc-intro {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border: 1px solid #31455f;
+    border-radius: 10px;
+    background: #0b1420;
+    color: #c4cfdd;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.calc-intro strong {
+    color: var(--text);
+}
+
+.calc-preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.calc-preset {
+    min-height: 32px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    background: #0a111b;
+}
+
+.calc-preset:hover,
+.calc-preset.active {
+    color: var(--yellow);
+    border-color: #8c7a3d;
+    background: #f0c65d0c;
+}
+
+.calc-decision {
+    margin-top: 14px;
+    padding: 13px 14px;
+    border-radius: 10px;
+    border: 1px solid #3a4f68;
+    background: #0a131f;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.calc-decision.good {
+    border-color: #24634f;
+    background: #0b251f;
+}
+
+.calc-decision.warn {
+    border-color: #806b30;
+    background: #2a2415;
+}
+
+.calc-decision.danger {
+    border-color: #7b4050;
+    background: #321c24;
+}
+
+.calc-focus {
+    border: 1px solid #5f7147;
+    background: #1c2118;
+}
+
+.calc-focus .cell-value {
+    color: var(--yellow);
+    font-size: 19px;
+}
+
+.calc-check {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid #3e526b;
+    border-radius: 12px;
+    background: #0b1420;
+}
+
+.calc-check-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.calc-check-title strong {
+    font-size: 14px;
+}
+
+.calc-check-title span {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.calc-check .result-grid {
+    margin-top: 0;
+}
+
+.calc-rule {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: #080f19;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+@media (max-width: 620px) {
+    .calc-preset {
+        min-height: 36px;
+        padding-inline: 10px;
+    }
+
+    .calc-focus .cell-value {
+        font-size: 17px;
+    }
+}
+
+
 /* DIALOG */
 
 dialog {
@@ -721,9 +848,11 @@ dialog::backdrop {
             >×</button>
         </div>
 
-        <p class="note">
-            以進場價與初始止損估算倉位。持倉移動止損請在交易卡片編輯。
-        </p>
+        <div class="calc-intro">
+            <strong>先決定最多能虧多少，再決定倉位。</strong><br>
+            單筆風險決定「打到 SL 會虧多少」；槓桿主要決定「需要多少保證金」。
+            不要用「保證金占本金幾 %」直接當成風險。
+        </div>
 
         <form
             id="calcForm"
@@ -744,18 +873,27 @@ dialog::backdrop {
                     name="balance"
                     type="number"
                     step="any"
-                    value="60"
+                    value="100"
                 >
             </label>
 
             <label>
-                單筆風險 · %
+                單筆最大風險 · %
                 <input
                     name="risk"
                     type="number"
                     step="any"
-                    value="2"
+                    min="0.1"
+                    max="10"
+                    value="5"
                 >
+
+                <span class="calc-preset-row" aria-label="快速選擇風險比例">
+                    <button type="button" class="calc-preset" data-risk-preset="2">2%</button>
+                    <button type="button" class="calc-preset" data-risk-preset="3">3%</button>
+                    <button type="button" class="calc-preset" data-risk-preset="5">5%</button>
+                    <button type="button" class="calc-preset" data-risk-preset="10">10% 上限</button>
+                </span>
             </label>
 
             <label>
@@ -764,8 +902,17 @@ dialog::backdrop {
                     name="leverage"
                     type="number"
                     step="any"
-                    value="10"
+                    min="1"
+                    value="20"
                 >
+
+                <span class="calc-preset-row" aria-label="快速選擇槓桿">
+                    <button type="button" class="calc-preset" data-leverage-preset="10">10X</button>
+                    <button type="button" class="calc-preset" data-leverage-preset="20">20X</button>
+                    <button type="button" class="calc-preset" data-leverage-preset="50">50X</button>
+                    <button type="button" class="calc-preset" data-leverage-preset="100">100X</button>
+                    <button type="button" class="calc-preset" data-leverage-preset="300">300X</button>
+                </span>
             </label>
 
             <label>
@@ -774,7 +921,7 @@ dialog::backdrop {
                     name="entry"
                     type="number"
                     step="any"
-                    placeholder="請輸入"
+                    placeholder="例如 0.4228"
                 >
             </label>
 
@@ -784,7 +931,18 @@ dialog::backdrop {
                     name="sl"
                     type="number"
                     step="any"
-                    placeholder="請輸入"
+                    placeholder="例如 0.4262"
+                >
+            </label>
+
+            <label class="span-all">
+                我打算用的保證金 · U（選填，用來檢查是否開太大）
+                <input
+                    name="plannedMargin"
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="例如 20；留空只看建議倉位"
                 >
             </label>
         </form>
@@ -795,13 +953,37 @@ dialog::backdrop {
             role="status"
         ></div>
 
+        <div
+            id="calcDecision"
+            class="calc-decision"
+            role="status"
+            hidden
+        ></div>
+
         <div id="calcResults" class="result-grid"></div>
 
+        <div id="plannedCheck" class="calc-check" hidden>
+            <div class="calc-check-title">
+                <strong>你輸入的保證金風險檢查</strong>
+                <span>用「保證金 × 槓桿」反推實際名義倉位</span>
+            </div>
+
+            <div id="plannedResults" class="result-grid"></div>
+            <div id="plannedMessage" class="calc-rule"></div>
+        </div>
+
+        <div class="calc-rule">
+            公式：最大可虧金額＝總資金 × 風險%；名義倉位＝最大可虧金額 ÷ SL 距離%；
+            保證金＝名義倉位 ÷ 槓桿。<br>
+            同一個 Entry / SL / 風險設定下，改變槓桿不應改變建議名義倉位，只會改變所需保證金。
+        </div>
+
         <p class="note">
-            結果未計入手續費、資金費、滑價與交易所數量限制。
-            保證金為簡化估算，未驗證強平價或交易所可用槓桿。
+            風險上限固定為 10%。計算未包含手續費、資金費、滑價、維持保證金與交易所強平規則。
+            「1 ÷ 槓桿」僅作價格容錯的數學提示，不等於實際強平距離。
         </p>
     </section>
+
 
     <div class="section-head">
         <div>
@@ -2439,11 +2621,44 @@ $("closeForm").addEventListener("submit", event => {
    POSITION CALCULATOR
 ========================= */
 
+function calcRiskTone(value) {
+    if (value <= 3) return {
+        className: "good",
+        label: "偏低"
+    };
+
+    if (value <= 5) return {
+        className: "good",
+        label: "中等"
+    };
+
+    if (value <= 10) return {
+        className: "warn",
+        label: "偏高"
+    };
+
+    return {
+        className: "danger",
+        label: "超過上限"
+    };
+}
+
+function calcLeverageLabel(value) {
+    if (value <= 20) return "較低";
+    if (value <= 50) return "中高";
+    if (value <= 100) return "高";
+    return "極高";
+}
+
 function calculate() {
     const form = $("calcForm");
 
     $("calcResults").innerHTML = "";
     $("calcError").textContent = "";
+    $("calcDecision").hidden = true;
+    $("plannedCheck").hidden = true;
+    $("plannedResults").innerHTML = "";
+    $("plannedMessage").textContent = "";
 
     try {
         const balance = positiveNumber(
@@ -2471,10 +2686,18 @@ function calculate() {
             "初始止損價"
         );
 
+        const plannedMargin = positiveNumber(
+            form.elements.plannedMargin.value,
+            "預計保證金",
+            true
+        );
+
         const side = form.elements.side.value;
 
-        if (risk > 100) {
-            throw new Error("風險比例不能超過 100%。");
+        if (risk > 10) {
+            throw new Error(
+                "依目前風控規則，單筆最大風險不能超過總資金 10%。"
+            );
         }
 
         if (leverage < 1) {
@@ -2483,72 +2706,237 @@ function calculate() {
 
         if (side === "long" && sl >= entry) {
             throw new Error(
-                "做多開倉計算：初始止損必須低於進場價。"
+                "做多：初始止損必須低於進場價。"
             );
         }
 
         if (side === "short" && sl <= entry) {
             throw new Error(
-                "做空開倉計算：初始止損必須高於進場價。"
+                "做空：初始止損必須高於進場價。"
             );
         }
 
         const distance = Math.abs(entry - sl);
+        const distanceDecimal = distance / entry;
+        const distancePercent = distanceDecimal * 100;
+
         const riskAmount = balance * risk / 100;
         const quantity = riskAmount / distance;
         const notional = quantity * entry;
+        const exposureMultiple = notional / balance;
+
         const margin = notional / leverage;
         const marginPercent = margin / balance * 100;
-        const distancePercent = distance / entry * 100;
 
-        if (
-            ![
-                riskAmount,
-                quantity,
-                notional,
-                margin,
-                marginPercent,
-                distancePercent
-            ].every(Number.isFinite)
-        ) {
+        /*
+        這是「要讓完整建議名義倉位在保證金不超過總資金」
+        所需的最低數學槓桿，不是推薦槓桿，也不是強平安全值。
+        */
+        const minimumLeverage = Math.max(
+            1,
+            notional / balance
+        );
+
+        /*
+        1 / leverage 僅作簡化的價格容錯提示。
+        實際強平還取決於維持保證金、全倉/逐倉、費用等。
+        */
+        const leverageTolerancePercent = 100 / leverage;
+
+        const values = [
+            distanceDecimal,
+            distancePercent,
+            riskAmount,
+            quantity,
+            notional,
+            exposureMultiple,
+            margin,
+            marginPercent,
+            minimumLeverage,
+            leverageTolerancePercent
+        ];
+
+        if (!values.every(Number.isFinite)) {
             throw new Error(
                 "輸入超出計算範圍，請調整數值。"
             );
         }
 
+        const riskTone = calcRiskTone(risk);
+        const leverageLabel = calcLeverageLabel(leverage);
+
+        const decisionParts = [
+            `單筆最大損失 ${number(riskAmount, 4)} U（本金 ${number(risk, 2)}% · ${riskTone.label}）`,
+            `建議名義倉位 ${number(notional, 2)} U`,
+            `使用 ${number(leverage, 2)}X 時約需 ${number(margin, 4)} U 保證金`
+        ];
+
+        let decisionClass = riskTone.className;
+
         if (margin > balance) {
-            throw new Error(
-                `此組參數估計需要 ${number(margin, 2)} U 保證金，` +
-                "超過所填總資金。"
+            decisionClass = "danger";
+            decisionParts.push(
+                `目前槓桿不足以容納此建議倉位；至少約需要 ${number(minimumLeverage, 2)}X，或降低風險 / 縮小倉位。`
+            );
+        } else if (leverage >= minimumLeverage * 4 && leverage >= 50) {
+            decisionClass = decisionClass === "good" ? "warn" : decisionClass;
+            decisionParts.push(
+                `目前 ${number(leverage, 0)}X 遠高於容納此倉位最低約 ${number(minimumLeverage, 2)}X；高槓桿沒有提高這組風控下的建議名義倉位，只是讓保證金變小。`
             );
         }
 
+        if (leverageTolerancePercent <= distancePercent) {
+            decisionClass = "danger";
+            decisionParts.push(
+                `注意：${number(leverage, 0)}X 的 1/L 理論價格容錯約 ${number(leverageTolerancePercent, 3)}%，小於你的 SL 距離 ${number(distancePercent, 3)}%。逐倉高槓桿尤其要注意強平可能先於計畫 SL。`
+            );
+        }
+
+        $("calcDecision").className =
+            `calc-decision ${decisionClass}`;
+
+        $("calcDecision").innerHTML =
+            decisionParts
+                .map(text => `<div>${escapeHtml(text)}</div>`)
+                .join("");
+
+        $("calcDecision").hidden = false;
+
         $("calcResults").innerHTML =
             cell(
-                "預估止損損失",
-                `${number(riskAmount, 4)} U`,
-                "yellow"
+                "建議保證金",
+                `${number(margin, 4)} U`,
+                "calc-focus"
             ) +
             cell(
-                "估算持倉數量",
-                number(quantity, 8)
+                "保證金占總資金",
+                `${number(marginPercent, 2)}%`
+            ) +
+            cell(
+                "最大止損損失",
+                `${number(riskAmount, 4)} U`,
+                risk >= 10 ? "negative" : "yellow"
             ) +
             cell(
                 "名義倉位",
                 `${number(notional, 2)} U`
             ) +
             cell(
-                "估算保證金",
-                `${number(margin, 4)} U`
+                "持倉數量",
+                number(quantity, 8)
             ) +
             cell(
-                "保證金占資金",
-                `${number(marginPercent, 2)}%`
-            ) +
-            cell(
-                "止損距離",
+                "SL 距離",
                 `${number(distancePercent, 4)}%`
+            ) +
+            cell(
+                "名義倉位 / 本金",
+                `${number(exposureMultiple, 2)}X`
+            ) +
+            cell(
+                "最低所需槓桿 · 數學值",
+                `${number(minimumLeverage, 2)}X`
+            ) +
+            cell(
+                "目前槓桿等級",
+                `${number(leverage, 0)}X · ${leverageLabel}`,
+                leverage > 100 ? "negative" : ""
+            ) +
+            cell(
+                "1/L 理論價格容錯",
+                `${number(leverageTolerancePercent, 4)}%`,
+                leverageTolerancePercent <= distancePercent
+                    ? "negative"
+                    : ""
             );
+
+        /* =========================
+           USER PLANNED MARGIN CHECK
+        ========================= */
+
+        if (plannedMargin !== null) {
+            const plannedNotional = plannedMargin * leverage;
+            const plannedLoss = plannedNotional * distanceDecimal;
+            const plannedRiskPercent = plannedLoss / balance * 100;
+            const plannedExposure = plannedNotional / balance;
+            const plannedTone = calcRiskTone(plannedRiskPercent);
+            const ratioToSuggested = plannedMargin / margin;
+
+            const plannedValues = [
+                plannedNotional,
+                plannedLoss,
+                plannedRiskPercent,
+                plannedExposure,
+                ratioToSuggested
+            ];
+
+            if (!plannedValues.every(Number.isFinite)) {
+                throw new Error(
+                    "預計保證金的風險檢查超出計算範圍。"
+                );
+            }
+
+            $("plannedCheck").hidden = false;
+
+            $("plannedResults").innerHTML =
+                cell(
+                    "你實際會開出的名義倉位",
+                    `${number(plannedNotional, 2)} U`
+                ) +
+                cell(
+                    "打到 SL 約虧",
+                    `${number(plannedLoss, 4)} U`,
+                    plannedRiskPercent > 10 ? "negative" : "yellow"
+                ) +
+                cell(
+                    "實際風險占本金",
+                    `${number(plannedRiskPercent, 2)}%`,
+                    plannedRiskPercent > 10
+                        ? "negative"
+                        : plannedRiskPercent > 5
+                            ? "yellow"
+                            : "positive"
+                ) +
+                cell(
+                    "名義倉位 / 本金",
+                    `${number(plannedExposure, 2)}X`
+                );
+
+            let plannedMessage =
+                `風險判定：${plannedTone.label}。`;
+
+            if (plannedRiskPercent > 10) {
+                plannedMessage +=
+                    ` 這筆若打到 SL，約會損失本金 ${number(plannedRiskPercent, 2)}%，已超過 10% 上限。`;
+            } else if (plannedRiskPercent > risk) {
+                plannedMessage +=
+                    ` 你打算使用的保證金比目前 ${number(risk, 2)}% 風險設定更大；約是建議保證金的 ${number(ratioToSuggested, 2)} 倍。`;
+            } else {
+                plannedMessage +=
+                    ` 以目前 Entry / SL 計算，沒有超過你設定的 ${number(risk, 2)}% 單筆風險。`;
+            }
+
+            $("plannedMessage").textContent = plannedMessage;
+        }
+
+        document
+            .querySelectorAll("[data-risk-preset]")
+            .forEach(button => {
+                button.classList.toggle(
+                    "active",
+                    Number(button.dataset.riskPreset) === risk
+                );
+            });
+
+        document
+            .querySelectorAll("[data-leverage-preset]")
+            .forEach(button => {
+                button.classList.toggle(
+                    "active",
+                    Number(button.dataset.leveragePreset) === leverage
+                );
+            });
+
     } catch (error) {
         $("calcError").textContent = error.message;
     }
@@ -2591,6 +2979,27 @@ $("calcForm").addEventListener(
 $("calcForm").addEventListener("submit", event => {
     event.preventDefault();
 });
+
+document
+    .querySelectorAll("[data-risk-preset]")
+    .forEach(button => {
+        button.addEventListener("click", () => {
+            $("calcForm").elements.risk.value =
+                button.dataset.riskPreset;
+            calculate();
+        });
+    });
+
+document
+    .querySelectorAll("[data-leverage-preset]")
+    .forEach(button => {
+        button.addEventListener("click", () => {
+            $("calcForm").elements.leverage.value =
+                button.dataset.leveragePreset;
+            calculate();
+        });
+    });
+
 
 /* =========================
    UI EVENTS
