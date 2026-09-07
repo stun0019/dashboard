@@ -4,49 +4,60 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Trading Dashboard</title>
+<title>Trading Strategy Dashboard</title>
 
 <style>
-
 * {
     box-sizing: border-box;
 }
 
 :root {
-    --bg: #080b10;
-    --panel: #10151d;
-    --panel2: #151b24;
-    --border: #232c39;
+    --bg: #070b10;
+    --panel: #0e151f;
+    --panel-light: #142238;
+    --border: #26364a;
 
-    --text: #f4f6f8;
-    --muted: #8d98a7;
+    --text: #f3f6fb;
+    --muted: #8491a7;
 
-    --green: #22d49b;
-    --red: #ff5c6b;
-    --yellow: #f4c65d;
-    --blue: #5d7cff;
+    --green: #12d7a0;
+    --green-bg: #003c2d;
+
+    --red: #ff5a7c;
+    --red-bg: #3b243d;
+
+    --yellow: #f0c65d;
+
+    --blue-card: #142640;
 }
 
 body {
     margin: 0;
-    background: var(--bg);
+
+    background:
+        linear-gradient(
+            180deg,
+            #080d13,
+            #05080c
+        );
+
     color: var(--text);
 
     font-family:
-    Inter,
-    Arial,
-    sans-serif;
+        Arial,
+        "Noto Sans TC",
+        sans-serif;
 
     min-height: 100vh;
 }
 
 .app {
-    width: min(100% - 24px, 1100px);
-    margin: auto;
+    width: min(100% - 24px, 820px);
+    margin: 0 auto;
 
     padding:
-    20px 0
-    60px;
+        20px 0
+        80px;
 }
 
 
@@ -56,173 +67,240 @@ HEADER
 
 .header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
 
-    gap: 15px;
+    gap: 16px;
 
-    margin-bottom: 20px;
+    padding-bottom: 18px;
+
+    border-bottom:
+        1px solid
+        #182332;
 }
 
-.logo-area {
+.brand {
     display: flex;
     align-items: center;
+
     gap: 12px;
 }
 
 .logo {
-    width: 44px;
-    height: 44px;
+    width: 54px;
+    height: 54px;
 
     border-radius: 12px;
 
     background:
-    linear-gradient(
-        135deg,
-        #5d7cff,
-        #8a5cff
-    );
+        linear-gradient(
+            135deg,
+            #17263b,
+            #29486e
+        );
 
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
 
     font-weight: 900;
     font-size: 18px;
+
+    border:
+        1px solid
+        #304763;
 }
 
-.title h1 {
-    margin: 0;
-
+.brand-name {
     font-size: 21px;
+    font-weight: 900;
 }
 
-.title p {
-    margin:
-    4px 0
-    0;
-
-    font-size: 12px;
-
-    color: var(--muted);
-}
-
-.live {
+.header-actions {
     display: flex;
-    align-items: center;
-    gap: 6px;
-
-    color: var(--green);
-
-    font-size: 12px;
+    gap: 8px;
 }
 
-.live-dot {
-    width: 7px;
-    height: 7px;
+.action-btn {
+    width: 48px;
+    height: 48px;
 
-    background: var(--green);
+    border-radius: 12px;
 
-    border-radius: 50%;
+    border:
+        1px solid
+        var(--border);
+
+    background:
+        #111925;
+
+    color: var(--text);
+
+    font-size: 20px;
+
+    cursor: pointer;
 }
 
 
 /* =========================
-TOP STATS
+SUMMARY BAR
 ========================= */
 
-.stats-grid {
-    display: grid;
+.summary {
+    margin-top: 14px;
 
-    grid-template-columns:
-    repeat(5, 1fr);
+    border:
+        1px solid
+        var(--border);
+
+    background:
+        var(--panel);
+
+    border-radius: 13px;
+
+    padding: 15px 16px;
+}
+
+.summary-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.summary-label {
+    color: var(--muted);
+
+    font-size: 12px;
+
+    margin-bottom: 6px;
+}
+
+.summary-value {
+    color: var(--green);
+
+    font-size: 25px;
+
+    font-weight: 900;
+
+    font-family:
+        Consolas,
+        monospace;
+}
+
+.summary-count {
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.summary-track {
+    margin-top: 12px;
+
+    height: 5px;
+
+    background: #172232;
+
+    border-radius: 999px;
+
+    overflow: hidden;
+}
+
+.summary-fill {
+    width: 14.5%;
+    height: 100%;
+
+    background: var(--green);
+}
+
+
+/* =========================
+PAGE TITLE
+========================= */
+
+.page-title {
+    display: flex;
+    align-items: baseline;
 
     gap: 10px;
 
-    margin-bottom: 18px;
+    margin:
+        26px 0
+        20px;
 }
 
-.stat-card {
-    background:
-    var(--panel);
+.page-title h1 {
+    margin: 0;
 
-    border:
-    1px solid
-    var(--border);
+    font-size: 34px;
 
-    border-radius: 14px;
-
-    padding: 14px;
+    letter-spacing: -1px;
 }
 
-.stat-label {
-    font-size: 11px;
+.page-count {
     color: var(--muted);
 
-    margin-bottom: 8px;
-}
+    font-size: 18px;
 
-.stat-value {
-    font-family:
-    Consolas,
-    monospace;
-
-    font-size: 20px;
-    font-weight: 800;
-}
-
-.green {
-    color: var(--green);
-}
-
-.red {
-    color: var(--red);
-}
-
-.yellow {
-    color: var(--yellow);
+    font-weight: 700;
 }
 
 
 /* =========================
-CARD
+FILTER AREA
 ========================= */
 
-.card {
+.filter-row {
+    display: flex;
+    gap: 12px;
+
+    margin-bottom: 22px;
+}
+
+.filter-select {
+    width: 190px;
+
+    height: 50px;
+
     background:
-    var(--panel);
+        #111a28;
 
     border:
-    1px solid
-    var(--border);
+        1px solid
+        var(--border);
 
-    border-radius: 16px;
+    border-radius: 11px;
 
-    padding: 18px;
+    color: var(--text);
 
-    margin-bottom: 16px;
+    padding: 0 14px;
+
+    font-size: 15px;
+
+    font-weight: 700;
 }
 
-.section-title {
-    display: flex;
+.update-btn {
+    height: 50px;
 
-    justify-content:
-    space-between;
+    padding:
+        0 25px;
 
-    align-items:
-    center;
+    border:
+        1px solid
+        var(--border);
 
-    margin-bottom: 18px;
-}
+    border-radius: 11px;
 
-.section-title h2 {
-    margin: 0;
-    font-size: 16px;
-}
+    background:
+        #111a28;
 
-.section-title span {
-    color: var(--muted);
-    font-size: 11px;
+    color: var(--text);
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
 }
 
 
@@ -230,292 +308,186 @@ CARD
 CALCULATOR
 ========================= */
 
+.calculator {
+    display: none;
+
+    margin-bottom: 20px;
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 14px;
+
+    padding: 17px;
+}
+
+.calculator.open {
+    display: block;
+}
+
+.calc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 14px;
+}
+
+.calc-title {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.calc-close {
+    border: 0;
+    background: transparent;
+
+    color: var(--muted);
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+.direction {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+}
+
+.direction button {
+    height: 40px;
+
+    border-radius: 9px;
+
+    border:
+        1px solid
+        var(--border);
+
+    background: #0b111a;
+
+    color: var(--muted);
+
+    cursor: pointer;
+
+    font-weight: 800;
+}
+
+.direction .long.active {
+    color: var(--green);
+
+    border-color:
+        var(--green);
+
+    background:
+        rgba(18, 215, 160, .08);
+}
+
+.direction .short.active {
+    color: var(--red);
+
+    border-color:
+        var(--red);
+
+    background:
+        rgba(255, 90, 124, .08);
+}
+
 .calc-grid {
     display: grid;
 
     grid-template-columns:
-    repeat(5, 1fr);
+        repeat(5, 1fr);
 
-    gap: 12px;
+    gap: 10px;
 }
 
 .field label {
     display: block;
 
-    margin-bottom: 7px;
-
     color: var(--muted);
 
     font-size: 11px;
+
+    margin-bottom: 6px;
 }
 
-input,
-select {
+.field input {
     width: 100%;
+    height: 42px;
 
-    height: 44px;
-
-    border-radius: 10px;
+    border-radius: 9px;
 
     border:
-    1px solid
-    var(--border);
+        1px solid
+        var(--border);
 
     background:
-    #0b1017;
+        #090f17;
 
-    color:
-    var(--text);
+    color: white;
+
+    padding: 0 11px;
 
     font-size: 14px;
-
-    padding:
-    0 12px;
-
-    outline: none;
 }
 
-input:focus,
-select:focus {
-    border-color:
-    var(--blue);
-}
-
-
-/* =========================
-SIDE BUTTON
-========================= */
-
-.side-switch {
+.calc-result {
     display: grid;
 
     grid-template-columns:
-    1fr 1fr;
+        1.4fr
+        1fr
+        1fr
+        1fr;
 
     gap: 8px;
 
-    margin:
-    14px 0;
+    margin-top: 12px;
 }
 
-.side-btn {
-    height: 42px;
-
+.result-box {
     background:
-    #0b1017;
+        #090f17;
 
     border:
-    1px solid
-    var(--border);
+        1px solid
+        #1c2938;
 
     border-radius: 10px;
 
+    padding: 11px;
+}
+
+.result-label {
     color: var(--muted);
 
-    font-weight: 700;
+    font-size: 10px;
 
-    cursor: pointer;
+    margin-bottom: 6px;
 }
 
-.side-btn.long.active {
-    border-color:
-    var(--green);
-
-    background:
-    rgba(
-        34,
-        212,
-        155,
-        .1
-    );
-
-    color:
-    var(--green);
-}
-
-.side-btn.short.active {
-    border-color:
-    var(--red);
-
-    background:
-    rgba(
-        255,
-        92,
-        107,
-        .1
-    );
-
-    color:
-    var(--red);
-}
-
-
-/* =========================
-RESULT
-========================= */
-
-.result-area {
-    margin-top: 18px;
-
-    display: grid;
-
-    grid-template-columns:
-    1.3fr
-    repeat(4, 1fr);
-
-    gap: 10px;
-}
-
-.main-result {
-    background:
-    #0b1017;
-
-    border:
-    1px solid
-    var(--border);
-
-    border-radius:
-    12px;
-
-    padding:
-    14px;
-}
-
-.main-result .label {
-    font-size:
-    11px;
-
-    color:
-    var(--muted);
-}
-
-.main-result .number {
-    margin-top:
-    6px;
-
-    font-size:
-    26px;
-
+.result-value {
     font-family:
-    Consolas,
-    monospace;
+        Consolas,
+        monospace;
 
-    font-weight:
-    900;
+    font-size: 16px;
+
+    font-weight: 800;
 }
 
-.small-result {
-    background:
-    #0b1017;
+.result-main .result-value {
+    color: var(--yellow);
 
-    border:
-    1px solid
-    var(--border);
-
-    border-radius:
-    12px;
-
-    padding:
-    14px;
-}
-
-.small-result .label {
-    font-size:
-    10px;
-
-    color:
-    var(--muted);
-
-    margin-bottom:
-    7px;
-}
-
-.small-result .value {
-    font-family:
-    Consolas,
-    monospace;
-
-    font-size:
-    14px;
-
-    font-weight:
-    700;
-}
-
-
-/* =========================
-WARNING
-========================= */
-
-.risk-message {
-    margin-top:
-    12px;
-
-    color:
-    var(--muted);
-
-    font-size:
-    11px;
-
-    line-height:
-    1.6;
-}
-
-
-/* =========================
-FILTERS
-========================= */
-
-.filters {
-    display:
-    flex;
-
-    gap:
-    8px;
-
-    overflow-x:
-    auto;
-
-    padding-bottom:
-    4px;
-
-    margin-bottom:
-    14px;
-}
-
-.filter-btn {
-    white-space:
-    nowrap;
-
-    border:
-    1px solid
-    var(--border);
-
-    background:
-    var(--panel);
-
-    color:
-    var(--muted);
-
-    border-radius:
-    999px;
-
-    padding:
-    8px 14px;
-
-    font-size:
-    12px;
-
-    cursor:
-    pointer;
-}
-
-.filter-btn.active {
-    background:
-    var(--text);
-
-    color:
-    #000;
+    font-size: 21px;
 }
 
 
@@ -525,372 +497,365 @@ TRADE CARD
 
 .trade-card {
     background:
-    var(--panel);
+        linear-gradient(
+            180deg,
+            #142640,
+            #102039
+        );
 
     border:
-    1px solid
-    var(--border);
+        1px solid
+        #294366;
 
-    border-radius:
-    16px;
+    border-radius: 13px;
 
-    margin-bottom:
-    14px;
+    padding: 17px;
 
-    overflow:
-    hidden;
+    margin-bottom: 18px;
 }
 
-.trade-top {
-    padding:
-    16px;
+.trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 
-    display:
-    flex;
-
-    align-items:
-    flex-start;
-
-    justify-content:
-    space-between;
-
-    gap:
-    10px;
-
-    border-bottom:
-    1px solid
-    var(--border);
+    gap: 12px;
 }
 
-.coin-name {
-    display:
-    flex;
+.coin-area {
+    display: flex;
 
-    align-items:
-    center;
-
-    gap:
-    10px;
+    gap: 11px;
 }
 
 .coin-icon {
-    width:
-    38px;
+    width: 48px;
+    height: 48px;
 
-    height:
-    38px;
-
-    border-radius:
-    50%;
+    border-radius: 11px;
 
     background:
-    #252e3b;
+        #0b1118;
 
-    display:
-    flex;
+    border:
+        1px solid
+        #2c4059;
 
-    align-items:
-    center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    justify-content:
-    center;
+    font-size: 11px;
 
-    font-size:
-    12px;
+    font-weight: 900;
 
-    font-weight:
-    800;
+    color: var(--green);
 }
 
 .symbol {
-    font-size:
-    15px;
+    font-size: 24px;
 
-    font-weight:
-    800;
+    font-weight: 900;
+
+    letter-spacing: .5px;
 }
 
 .exchange {
-    color:
-    var(--muted);
+    display: inline-block;
 
-    font-size:
-    10px;
+    margin-top: 7px;
 
-    margin-top:
-    4px;
-}
-
-.tags {
-    display:
-    flex;
-
-    align-items:
-    center;
-
-    gap:
-    6px;
-
-    flex-wrap:
-    wrap;
-
-    justify-content:
-    flex-end;
-}
-
-.tag {
     padding:
-    5px 8px;
-
-    border-radius:
-    6px;
-
-    font-size:
-    10px;
-
-    font-weight:
-    700;
-}
-
-.tag.short {
-    color:
-    var(--red);
+        5px 8px;
 
     background:
-    rgba(
-        255,
-        92,
-        107,
-        .1
-    );
+        #080d13;
+
+    border:
+        1px solid
+        #28374b;
+
+    border-radius: 6px;
+
+    color: #b7c2d1;
+
+    font-size: 11px;
 }
 
-.tag.long {
-    color:
-    var(--green);
-
-    background:
-    rgba(
-        34,
-        212,
-        155,
-        .1
-    );
+.status-area {
+    display: flex;
+    gap: 7px;
 }
 
-.tag.leverage {
-    background:
-    #202733;
+.status {
+    padding:
+        9px 12px;
 
-    color:
-    #c7d0db;
+    border-radius: 9px;
+
+    background:
+        #101a2a;
+
+    font-size: 13px;
+
+    font-weight: 800;
 }
 
-.tag.open {
-    color:
-    var(--yellow);
+.like {
+    min-width: 60px;
+
+    padding:
+        9px 10px;
+
+    border-radius: 9px;
 
     background:
-    rgba(
-        244,
-        198,
-        93,
-        .1
-    );
+        #101a2a;
+
+    border:
+        1px solid
+        #293950;
+
+    text-align: center;
+
+    font-size: 15px;
 }
 
 
 /* =========================
-TRADE BODY
+TIME
 ========================= */
 
-.trade-body {
+.trade-time {
+    margin-top: 15px;
+
+    color: #93a6c1;
+
+    font-family:
+        Consolas,
+        monospace;
+
+    font-size: 13px;
+
+    letter-spacing: .5px;
+}
+
+
+/* =========================
+PRICE BLOCK
+========================= */
+
+.current-block {
+    margin-top: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #003927,
+            #013323
+        );
+
+    border-radius: 11px;
+
     padding:
-    16px;
+        15px 17px;
 }
 
-.trade-pnl {
-    display:
-    flex;
+.block-top {
+    display: flex;
+    justify-content: space-between;
 
-    align-items:
-    center;
+    color: var(--green);
 
-    justify-content:
-    space-between;
+    font-size: 13px;
 
-    margin-bottom:
-    16px;
+    font-weight: 800;
 }
 
-.current-label {
-    font-size:
-    10px;
-
-    color:
-    var(--muted);
+.price-time {
+    color: var(--yellow);
 }
 
 .current-price {
-    margin-top:
-    4px;
+    margin-top: 10px;
+
+    font-size: 30px;
 
     font-family:
-    Consolas,
-    monospace;
+        Consolas,
+        monospace;
 
-    font-size:
-    18px;
+    font-weight: 900;
 
-    font-weight:
-    800;
+    color: var(--green);
 }
 
-.pnl {
-    text-align:
-    right;
+
+/* =========================
+PNL
+========================= */
+
+.pnl-block {
+    margin-top: 10px;
+
+    border-radius: 11px;
+
+    padding:
+        15px 17px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #3b243d,
+            #33243c
+        );
 }
 
 .pnl-label {
-    font-size:
-    10px;
+    color: var(--red);
 
-    color:
-    var(--muted);
+    font-size: 13px;
+
+    font-weight: 800;
 }
 
 .pnl-value {
-    margin-top:
-    4px;
+    margin-top: 9px;
 
-    color:
-    var(--green);
+    color: var(--red);
 
-    font-size:
-    18px;
+    font-size: 30px;
 
-    font-family:
-    Consolas,
-    monospace;
-
-    font-weight:
-    800;
+    font-weight: 900;
 }
 
 
 /* =========================
-PRICE GRID
+LEVEL GRID
 ========================= */
 
-.price-grid {
-    display:
-    grid;
+.level-grid {
+    display: grid;
 
     grid-template-columns:
-    repeat(3, 1fr);
+        repeat(2, 1fr);
 
-    gap:
-    8px;
+    gap: 9px;
+
+    margin-top: 11px;
 }
 
-.price-item {
+.level {
+    min-height: 108px;
+
+    border-radius: 11px;
+
+    padding: 14px 15px;
+}
+
+.level.entry {
     background:
-    #0b1017;
-
-    border-radius:
-    9px;
-
-    padding:
-    10px;
-
-    border:
-    1px solid
-    #1b2330;
+        #070c12;
 }
 
-.price-label {
-    color:
-    var(--muted);
-
-    font-size:
-    9px;
-
-    margin-bottom:
-    6px;
+.level.sl {
+    background:
+        #39243c;
 }
 
-.price-value {
-    font-size:
-    12px;
+.level.tp {
+    background:
+        #0d4c4d;
+}
+
+.level-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: 12px;
+
+    font-weight: 800;
+}
+
+.level.entry .level-head {
+    color: #899bb5;
+}
+
+.level.sl .level-head {
+    color: var(--red);
+}
+
+.level.tp .level-head {
+    color: var(--green);
+}
+
+.rr {
+    color: var(--yellow);
+}
+
+.level-price {
+    margin-top: 19px;
 
     font-family:
-    Consolas,
-    monospace;
+        Consolas,
+        monospace;
 
-    font-weight:
-    700;
-}
+    font-size: 28px;
 
-.sl .price-value {
-    color:
-    var(--red);
-}
-
-.tp .price-value {
-    color:
-    var(--green);
+    font-weight: 900;
 }
 
 
 /* =========================
-PROGRESS
+RISK INFO
 ========================= */
 
-.tp-progress {
-    margin-top:
-    14px;
+.risk-info {
+    margin-top: 12px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 8px;
 }
 
-.progress-title {
-    display:
-    flex;
-
-    justify-content:
-    space-between;
-
-    color:
-    var(--muted);
-
-    font-size:
-    10px;
-
-    margin-bottom:
-    7px;
-}
-
-.progress-bar {
-    height:
-    7px;
-
-    border-radius:
-    999px;
-
+.risk-mini {
     background:
-    #252d38;
+        rgba(
+            4,
+            10,
+            17,
+            .5
+        );
 
-    overflow:
-    hidden;
+    border:
+        1px solid
+        #26384f;
+
+    border-radius: 9px;
+
+    padding: 10px;
 }
 
-.progress-fill {
-    height:
-    100%;
+.risk-mini-label {
+    color: var(--muted);
 
-    width:
-    35%;
+    font-size: 9px;
 
-    background:
-    var(--green);
+    margin-bottom: 5px;
+}
+
+.risk-mini-value {
+    font-size: 12px;
+
+    font-family:
+        Consolas,
+        monospace;
+
+    font-weight: 800;
 }
 
 
@@ -898,71 +863,98 @@ PROGRESS
 RESPONSIVE
 ========================= */
 
-@media
-(max-width: 850px) {
-
-    .stats-grid {
-        grid-template-columns:
-        repeat(3, 1fr);
-    }
-
-    .calc-grid {
-        grid-template-columns:
-        repeat(2, 1fr);
-    }
-
-    .result-area {
-        grid-template-columns:
-        repeat(2, 1fr);
-    }
-
-    .main-result {
-        grid-column:
-        span 2;
-    }
-
-}
-
-@media
-(max-width: 520px) {
+@media (max-width: 700px) {
 
     .app {
         width:
-        min(
-            100% - 18px,
-            1100px
-        );
+            min(
+                100% - 18px,
+                820px
+            );
     }
 
-    .stats-grid {
-        grid-template-columns:
-        repeat(2, 1fr);
+    .brand-name {
+        font-size: 18px;
+    }
+
+    .logo {
+        width: 46px;
+        height: 46px;
+    }
+
+    .action-btn {
+        width: 42px;
+        height: 42px;
+
+        font-size: 17px;
     }
 
     .calc-grid {
         grid-template-columns:
-        1fr 1fr;
+            repeat(2, 1fr);
     }
 
-    .result-area {
+    .calc-result {
         grid-template-columns:
-        1fr 1fr;
+            repeat(2, 1fr);
     }
 
-    .price-grid {
+    .result-main {
+        grid-column:
+            span 2;
+    }
+
+    .risk-info {
         grid-template-columns:
-        repeat(2, 1fr);
-    }
-
-    .header {
-        align-items:
-        flex-start;
+            repeat(2, 1fr);
     }
 
 }
 
-</style>
+@media (max-width: 450px) {
 
+    .header-actions {
+        gap: 5px;
+    }
+
+    .action-btn {
+        width: 39px;
+        height: 39px;
+
+        border-radius: 10px;
+    }
+
+    .page-title h1 {
+        font-size: 30px;
+    }
+
+    .symbol {
+        font-size: 20px;
+    }
+
+    .coin-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .status {
+        padding:
+            8px 9px;
+    }
+
+    .like {
+        min-width: 51px;
+
+        padding:
+            8px;
+    }
+
+    .level-price {
+        font-size: 25px;
+    }
+
+}
+</style>
 </head>
 
 
@@ -970,539 +962,546 @@ RESPONSIVE
 
 <div class="app">
 
+    <!-- HEADER -->
 
-<!-- =====================
-HEADER
-===================== -->
+    <header class="header">
 
-<header class="header">
+        <div class="brand">
 
-    <div class="logo-area">
-
-        <div class="logo">
-            TD
-        </div>
-
-        <div class="title">
-
-            <h1>
-                Trading Dashboard
-            </h1>
-
-            <p>
-                Risk Manager & Signal Tracker
-            </p>
-
-        </div>
-
-    </div>
-
-    <div class="live">
-
-        <div class="live-dot"></div>
-
-        LIVE
-
-    </div>
-
-</header>
-
-
-
-<!-- =====================
-STATS
-===================== -->
-
-<section class="stats-grid">
-
-    <div class="stat-card">
-
-        <div class="stat-label">
-            總交易
-        </div>
-
-        <div class="stat-value">
-            28
-        </div>
-
-    </div>
-
-
-    <div class="stat-card">
-
-        <div class="stat-label">
-            勝率
-        </div>
-
-        <div class="stat-value green">
-            67.9%
-        </div>
-
-    </div>
-
-
-    <div class="stat-card">
-
-        <div class="stat-label">
-            TP1 Rate
-        </div>
-
-        <div class="stat-value green">
-            78%
-        </div>
-
-    </div>
-
-
-    <div class="stat-card">
-
-        <div class="stat-label">
-            TP2 Rate
-        </div>
-
-        <div class="stat-value green">
-            61%
-        </div>
-
-    </div>
-
-
-    <div class="stat-card">
-
-        <div class="stat-label">
-            FTP Rate
-        </div>
-
-        <div class="stat-value yellow">
-            43%
-        </div>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================
-POSITION CALCULATOR
-===================== -->
-
-<section class="card">
-
-    <div class="section-title">
-
-        <h2>
-            倉位風險計算器
-        </h2>
-
-        <span>
-            最大虧損反推倉位
-        </span>
-
-    </div>
-
-
-    <div class="side-switch">
-
-        <button
-        id="longBtn"
-        class="side-btn long"
-        onclick="setDirection('long')"
-        >
-            LONG
-        </button>
-
-        <button
-        id="shortBtn"
-        class="side-btn short active"
-        onclick="setDirection('short')"
-        >
-            SHORT
-        </button>
-
-    </div>
-
-
-    <div class="calc-grid">
-
-        <div class="field">
-
-            <label>
-                總資金 USDT
-            </label>
-
-            <input
-            id="balance"
-            type="number"
-            value="60"
-            step="0.01"
-            oninput="calculate()"
-            >
-
-        </div>
-
-
-        <div class="field">
-
-            <label>
-                最大風險 %
-            </label>
-
-            <input
-            id="risk"
-            type="number"
-            value="10"
-            step="0.1"
-            oninput="calculate()"
-            >
-
-        </div>
-
-
-        <div class="field">
-
-            <label>
-                槓桿
-            </label>
-
-            <input
-            id="leverage"
-            type="number"
-            value="300"
-            step="1"
-            oninput="calculate()"
-            >
-
-        </div>
-
-
-        <div class="field">
-
-            <label>
-                Entry
-            </label>
-
-            <input
-            id="entry"
-            type="number"
-            value="0.4212"
-            step="any"
-            oninput="calculate()"
-            >
-
-        </div>
-
-
-        <div class="field">
-
-            <label>
-                Stop Loss
-            </label>
-
-            <input
-            id="sl"
-            type="number"
-            value="0.4262"
-            step="any"
-            oninput="calculate()"
-            >
-
-        </div>
-
-    </div>
-
-
-
-    <div class="result-area">
-
-        <div class="main-result">
-
-            <div class="label">
-                建議保證金
+            <div class="logo">
+                TD
             </div>
 
-            <div class="number">
+            <div class="brand-name">
+                Bryce 策略
+            </div>
 
-                <span id="margin">
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                class="action-btn"
+                onclick="toggleCalculator()"
+                title="倉位計算器"
+            >
+                📌
+            </button>
+
+            <button
+                class="action-btn"
+                title="交易紀錄"
+            >
+                📚
+            </button>
+
+            <button
+                class="action-btn"
+                title="通知"
+            >
+                📢
+            </button>
+
+            <button
+                class="action-btn"
+                title="提醒"
+            >
+                🔔
+            </button>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- PERFORMANCE -->
+
+    <section class="summary">
+
+        <div class="summary-top">
+
+            <div>
+
+                <div class="summary-label">
+                    FTP觸及機率
+                </div>
+
+                <div class="summary-value">
+                    14.5%
+                </div>
+
+            </div>
+
+            <div class="summary-count">
+                29 / 200 筆
+            </div>
+
+        </div>
+
+
+        <div class="summary-track">
+
+            <div class="summary-fill"></div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- CALCULATOR -->
+
+    <section
+        id="calculator"
+        class="calculator"
+    >
+
+        <div class="calc-header">
+
+            <div class="calc-title">
+                倉位風險計算器
+            </div>
+
+            <button
+                class="calc-close"
+                onclick="toggleCalculator()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="direction">
+
+            <button
+                id="longBtn"
+                class="long"
+                onclick="setDirection('long')"
+            >
+                LONG
+            </button>
+
+            <button
+                id="shortBtn"
+                class="short active"
+                onclick="setDirection('short')"
+            >
+                SHORT
+            </button>
+
+        </div>
+
+
+        <div class="calc-grid">
+
+            <div class="field">
+
+                <label>
+                    總資金
+                </label>
+
+                <input
+                    id="balance"
+                    type="number"
+                    value="60"
+                    oninput="calculate()"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    最大風險 %
+                </label>
+
+                <input
+                    id="risk"
+                    type="number"
+                    value="10"
+                    oninput="calculate()"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    槓桿
+                </label>
+
+                <input
+                    id="leverage"
+                    type="number"
+                    value="300"
+                    oninput="calculate()"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Entry
+                </label>
+
+                <input
+                    id="entry"
+                    type="number"
+                    step="any"
+                    value="0.4212"
+                    oninput="calculate()"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Stop Loss
+                </label>
+
+                <input
+                    id="sl"
+                    type="number"
+                    step="any"
+                    value="0.4262"
+                    oninput="calculate()"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="calc-result">
+
+            <div class="result-box result-main">
+
+                <div class="result-label">
+                    建議保證金
+                </div>
+
+                <div
+                    id="margin"
+                    class="result-value"
+                >
                     --
+                </div>
+
+            </div>
+
+
+            <div class="result-box">
+
+                <div class="result-label">
+                    占本金
+                </div>
+
+                <div
+                    id="marginPercent"
+                    class="result-value"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div class="result-box">
+
+                <div class="result-label">
+                    名義倉位
+                </div>
+
+                <div
+                    id="notional"
+                    class="result-value"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div class="result-box">
+
+                <div class="result-label">
+                    最大虧損
+                </div>
+
+                <div
+                    id="riskAmount"
+                    class="result-value"
+                >
+                    --
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- TITLE -->
+
+    <div class="page-title">
+
+        <h1>
+            全部訊號
+        </h1>
+
+        <div class="page-count">
+            ( 2 / 2 )
+        </div>
+
+    </div>
+
+
+
+    <!-- FILTER -->
+
+    <div class="filter-row">
+
+        <select class="filter-select">
+
+            <option>
+                全部
+            </option>
+
+            <option>
+                持倉中
+            </option>
+
+            <option>
+                已止盈
+            </option>
+
+            <option>
+                已止損
+            </option>
+
+            <option>
+                LONG
+            </option>
+
+            <option>
+                SHORT
+            </option>
+
+        </select>
+
+
+        <button
+            class="update-btn"
+            onclick="refreshData()"
+        >
+            更新
+        </button>
+
+    </div>
+
+
+
+    <!-- WLD CARD -->
+
+    <section class="trade-card">
+
+        <div class="trade-header">
+
+            <div class="coin-area">
+
+                <div class="coin-icon">
+                    WLD
+                </div>
+
+                <div>
+
+                    <div class="symbol">
+                        WLDUSDT
+                    </div>
+
+                    <div class="exchange">
+                        OKX　永續合約
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="status-area">
+
+                <div class="status">
+                    持倉中
+                </div>
+
+                <div class="like">
+                    ❤️ 0
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="trade-time">
+            開單時間　09/07 08:30
+        </div>
+
+
+
+        <div class="current-block">
+
+            <div class="block-top">
+
+                <span>
+                    OKX 價格
                 </span>
 
-                <small>
-                    U
-                </small>
+                <span class="price-time">
+                    09:02
+                </span>
 
             </div>
 
-        </div>
-
-
-        <div class="small-result">
-
-            <div class="label">
-                占本金
-            </div>
-
-            <div
-            class="value"
-            id="marginPercent"
-            >
-                --
-            </div>
-
-        </div>
-
-
-        <div class="small-result">
-
-            <div class="label">
-                名義倉位
-            </div>
-
-            <div
-            class="value"
-            id="notional"
-            >
-                --
-            </div>
-
-        </div>
-
-
-        <div class="small-result">
-
-            <div class="label">
-                SL 距離
-            </div>
-
-            <div
-            class="value"
-            id="slDistance"
-            >
-                --
-            </div>
-
-        </div>
-
-
-        <div class="small-result">
-
-            <div class="label">
-                最大虧損
-            </div>
-
-            <div
-            class="value red"
-            id="riskAmount"
-            >
-                --
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div
-    id="riskMessage"
-    class="risk-message"
-    ></div>
-
-
-</section>
-
-
-
-<!-- =====================
-FILTERS
-===================== -->
-
-<div class="filters">
-
-    <button class="filter-btn active">
-        全部
-    </button>
-
-    <button class="filter-btn">
-        持倉中
-    </button>
-
-    <button class="filter-btn">
-        已止盈
-    </button>
-
-    <button class="filter-btn">
-        已止損
-    </button>
-
-    <button class="filter-btn">
-        LONG
-    </button>
-
-    <button class="filter-btn">
-        SHORT
-    </button>
-
-</div>
-
-
-
-<!-- =====================
-WLD
-===================== -->
-
-<section class="trade-card">
-
-    <div class="trade-top">
-
-        <div class="coin-name">
-
-            <div class="coin-icon">
-                WLD
-            </div>
-
-            <div>
-
-                <div class="symbol">
-                    WLDUSDT
-                </div>
-
-                <div class="exchange">
-                    OKX · USDT PERP
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="tags">
-
-            <div class="tag short">
-                SHORT
-            </div>
-
-            <div class="tag leverage">
-                300X
-            </div>
-
-            <div class="tag open">
-                OPEN
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <div class="trade-body">
-
-
-        <div class="trade-pnl">
-
-            <div>
-
-                <div class="current-label">
-                    CURRENT PRICE
-                </div>
-
-                <div class="current-price">
-                    0.4177
-                </div>
-
-            </div>
-
-
-            <div class="pnl">
-
-                <div class="pnl-label">
-                    UNREALIZED PNL
-                </div>
-
-                <div class="pnl-value">
-                    +30.12 U
-                </div>
-
+            <div class="current-price">
+                0.4177
             </div>
 
         </div>
 
 
 
-        <div class="price-grid">
+        <div class="pnl-block">
 
-            <div class="price-item">
+            <div class="pnl-label">
+                最終盈虧
+            </div>
 
-                <div class="price-label">
+            <div class="pnl-value">
+                未結算
+            </div>
+
+        </div>
+
+
+
+        <div class="level-grid">
+
+            <div class="level entry">
+
+                <div class="level-head">
                     ENTRY
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.4212
                 </div>
 
             </div>
 
 
-            <div class="price-item sl">
+            <div class="level sl">
 
-                <div class="price-label">
-                    STOP LOSS
+                <div class="level-head">
+                    SL
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.4205
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    TP1
+                <div class="level-head">
+
+                    <span>
+                        TP1
+                    </span>
+
+                    <span class="rr">
+                        1.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.4100
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    TP2
+                <div class="level-head">
+
+                    <span>
+                        TP2
+                    </span>
+
+                    <span class="rr">
+                        2.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.4000
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    TP3
+                <div class="level-head">
+
+                    <span>
+                        TP3
+                    </span>
+
+                    <span class="rr">
+                        5.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.3900
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    FINAL TP
+                <div class="level-head">
+
+                    <span>
+                        FTP
+                    </span>
+
+                    <span class="rr">
+                        10.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.3800
                 </div>
 
@@ -1512,194 +1511,252 @@ WLD
 
 
 
-        <div class="tp-progress">
+        <div class="risk-info">
 
-            <div class="progress-title">
+            <div class="risk-mini">
+
+                <div class="risk-mini-label">
+                    LEVERAGE
+                </div>
+
+                <div class="risk-mini-value">
+                    300X
+                </div>
+
+            </div>
+
+
+            <div class="risk-mini">
+
+                <div class="risk-mini-label">
+                    MARGIN
+                </div>
+
+                <div class="risk-mini-value">
+                    1.68 U
+                </div>
+
+            </div>
+
+
+            <div class="risk-mini">
+
+                <div class="risk-mini-label">
+                    MAX RISK
+                </div>
+
+                <div class="risk-mini-value">
+                    6 U
+                </div>
+
+            </div>
+
+
+            <div class="risk-mini">
+
+                <div class="risk-mini-label">
+                    RISK %
+                </div>
+
+                <div class="risk-mini-value">
+                    10%
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ARB CARD -->
+
+    <section class="trade-card">
+
+        <div class="trade-header">
+
+            <div class="coin-area">
+
+                <div class="coin-icon">
+                    ARB
+                </div>
+
+                <div>
+
+                    <div class="symbol">
+                        ARBUSDT
+                    </div>
+
+                    <div class="exchange">
+                        OKX　永續合約
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="status-area">
+
+                <div class="status">
+                    持倉中
+                </div>
+
+                <div class="like">
+                    ❤️ 0
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="trade-time">
+            開單時間　09/07 08:40
+        </div>
+
+
+        <div class="current-block">
+
+            <div class="block-top">
 
                 <span>
-                    TP Progress
+                    OKX 價格
                 </span>
 
-                <span>
-                    31%
+                <span class="price-time">
+                    09:02
                 </span>
 
             </div>
 
-            <div class="progress-bar">
-
-                <div
-                class="progress-fill"
-                style="width:31%"
-                ></div>
-
+            <div class="current-price">
+                0.18997
             </div>
 
         </div>
 
 
-    </div>
+        <div class="pnl-block">
 
-</section>
-
-
-
-<!-- =====================
-ARB
-===================== -->
-
-<section class="trade-card">
-
-    <div class="trade-top">
-
-        <div class="coin-name">
-
-            <div class="coin-icon">
-                ARB
+            <div class="pnl-label">
+                最終盈虧
             </div>
 
-            <div>
-
-                <div class="symbol">
-                    ARBUSDT
-                </div>
-
-                <div class="exchange">
-                    OKX · USDT PERP
-                </div>
-
+            <div class="pnl-value">
+                未結算
             </div>
 
         </div>
 
 
-        <div class="tags">
+        <div class="level-grid">
 
-            <div class="tag short">
-                SHORT
-            </div>
+            <div class="level entry">
 
-            <div class="tag leverage">
-                75X
-            </div>
-
-            <div class="tag open">
-                OPEN
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <div class="trade-body">
-
-        <div class="trade-pnl">
-
-            <div>
-
-                <div class="current-label">
-                    CURRENT PRICE
-                </div>
-
-                <div class="current-price">
-                    0.18997
-                </div>
-
-            </div>
-
-
-            <div class="pnl">
-
-                <div class="pnl-label">
-                    UNREALIZED PNL
-                </div>
-
-                <div class="pnl-value">
-                    +1.76 U
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        <div class="price-grid">
-
-            <div class="price-item">
-
-                <div class="price-label">
+                <div class="level-head">
                     ENTRY
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.19075
                 </div>
 
             </div>
 
 
-            <div class="price-item sl">
+            <div class="level sl">
 
-                <div class="price-label">
-                    STOP LOSS
+                <div class="level-head">
+                    SL
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.19412
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    TP1
+                <div class="level-head">
+
+                    <span>
+                        TP1
+                    </span>
+
+                    <span class="rr">
+                        1.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.18800
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    TP2
+                <div class="level-head">
+
+                    <span>
+                        TP2
+                    </span>
+
+                    <span class="rr">
+                        2.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.18500
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    TP3
+                <div class="level-head">
+
+                    <span>
+                        TP3
+                    </span>
+
+                    <span class="rr">
+                        5.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.18000
                 </div>
 
             </div>
 
 
-            <div class="price-item tp">
+            <div class="level tp">
 
-                <div class="price-label">
-                    FINAL TP
+                <div class="level-head">
+
+                    <span>
+                        FTP
+                    </span>
+
+                    <span class="rr">
+                        10.0R
+                    </span>
+
                 </div>
 
-                <div class="price-value">
+                <div class="level-price">
                     0.17500
                 </div>
 
@@ -1707,9 +1764,7 @@ ARB
 
         </div>
 
-    </div>
-
-</section>
+    </section>
 
 
 </div>
@@ -1721,28 +1776,47 @@ ARB
 let direction = "short";
 
 
+function toggleCalculator() {
+
+    document
+        .getElementById("calculator")
+        .classList
+        .toggle("open");
+}
+
+
+
 function setDirection(type) {
 
     direction = type;
 
     const longBtn =
-    document.getElementById("longBtn");
+        document.getElementById("longBtn");
 
     const shortBtn =
-    document.getElementById("shortBtn");
+        document.getElementById("shortBtn");
 
 
-    longBtn.classList.remove("active");
-    shortBtn.classList.remove("active");
+    longBtn
+        .classList
+        .remove("active");
+
+    shortBtn
+        .classList
+        .remove("active");
 
 
     if (type === "long") {
 
-        longBtn.classList.add("active");
+        longBtn
+            .classList
+            .add("active");
 
     } else {
 
-        shortBtn.classList.add("active");
+        shortBtn
+            .classList
+            .add("active");
 
     }
 
@@ -1755,58 +1829,33 @@ function setDirection(type) {
 function calculate() {
 
     const balance =
-    parseFloat(
-        document.getElementById("balance").value
-    );
+        parseFloat(
+            document.getElementById("balance").value
+        );
 
 
     const risk =
-    parseFloat(
-        document.getElementById("risk").value
-    );
+        parseFloat(
+            document.getElementById("risk").value
+        );
 
 
     const leverage =
-    parseFloat(
-        document.getElementById("leverage").value
-    );
+        parseFloat(
+            document.getElementById("leverage").value
+        );
 
 
     const entry =
-    parseFloat(
-        document.getElementById("entry").value
-    );
+        parseFloat(
+            document.getElementById("entry").value
+        );
 
 
     const sl =
-    parseFloat(
-        document.getElementById("sl").value
-    );
-
-
-    const marginEl =
-    document.getElementById("margin");
-
-
-    const marginPercentEl =
-    document.getElementById("marginPercent");
-
-
-    const notionalEl =
-    document.getElementById("notional");
-
-
-    const slDistanceEl =
-    document.getElementById("slDistance");
-
-
-    const riskAmountEl =
-    document.getElementById("riskAmount");
-
-
-    const riskMessage =
-    document.getElementById("riskMessage");
-
+        parseFloat(
+            document.getElementById("sl").value
+        );
 
 
     if (
@@ -1816,161 +1865,130 @@ function calculate() {
         !entry ||
         !sl
     ) {
-
         return;
-
     }
 
 
-
     if (
-        direction === "long" &&
+        direction === "long"
+        &&
         sl >= entry
     ) {
-
-        riskMessage.innerHTML =
-        "<span class='red'>LONG 的 SL 應低於 Entry。</span>";
-
         return;
-
     }
-
 
 
     if (
-        direction === "short" &&
+        direction === "short"
+        &&
         sl <= entry
     ) {
-
-        riskMessage.innerHTML =
-        "<span class='red'>SHORT 的 SL 應高於 Entry。</span>";
-
         return;
-
     }
-
 
 
     const slDistance =
-    Math.abs(entry - sl)
-    /
-    entry;
+        Math.abs(
+            entry - sl
+        )
+        /
+        entry;
 
 
     const riskAmount =
-    balance
-    *
-    (
-        risk / 100
-    );
+        balance
+        *
+        (
+            risk / 100
+        );
 
 
     const notional =
-    riskAmount
-    /
-    slDistance;
+        riskAmount
+        /
+        slDistance;
 
 
     const margin =
-    notional
-    /
-    leverage;
+        notional
+        /
+        leverage;
 
 
     const marginPercent =
-    margin
-    /
-    balance
-    *
-    100;
-
-
-
-    marginEl.textContent =
-    format(margin, 2);
-
-
-
-    marginPercentEl.textContent =
-    format(
-        marginPercent,
-        2
-    )
-    +
-    "%";
-
-
-
-    notionalEl.textContent =
-    format(
-        notional,
-        2
-    )
-    +
-    " U";
-
-
-
-    slDistanceEl.textContent =
-    format(
-        slDistance
+        margin
+        /
+        balance
         *
-        100,
-        3
-    )
-    +
-    "%";
+        100;
 
 
-
-    riskAmountEl.textContent =
-    format(
-        riskAmount,
-        2
-    )
-    +
-    " U";
+    document
+        .getElementById("margin")
+        .textContent =
+        format(margin, 2)
+        +
+        " U";
 
 
+    document
+        .getElementById("marginPercent")
+        .textContent =
+        format(
+            marginPercent,
+            2
+        )
+        +
+        "%";
 
-    if (risk > 10) {
 
-        riskMessage.innerHTML =
-        "<span class='red'>單筆風險已超過本金 10%。</span>";
+    document
+        .getElementById("notional")
+        .textContent =
+        format(
+            notional,
+            2
+        )
+        +
+        " U";
 
-    }
 
-    else if (risk >= 10) {
-
-        riskMessage.innerHTML =
-        "<span class='yellow'>目前使用最大風險上限 10%。實際止損可能受到手續費與滑價影響。</span>";
-
-    }
-
-    else {
-
-        riskMessage.innerHTML =
-        "依照目前 SL 距離，自動反推出符合風險限制的建議倉位。";
-
-    }
-
+    document
+        .getElementById("riskAmount")
+        .textContent =
+        format(
+            riskAmount,
+            2
+        )
+        +
+        " U";
 }
 
 
 
-function format(number, digits) {
+function format(
+    number,
+    digits
+) {
 
     return Number(number)
-    .toLocaleString(
-        "en-US",
-        {
-            minimumFractionDigits:
-            digits,
+        .toLocaleString(
+            "en-US",
+            {
+                minimumFractionDigits:
+                    digits,
 
-            maximumFractionDigits:
-            digits
-        }
-    );
+                maximumFractionDigits:
+                    digits
+            }
+        );
+}
+
+
+
+function refreshData() {
+
+    alert("目前為 Demo 資料，之後可接 OKX API 自動更新。");
 
 }
 
@@ -1979,7 +1997,6 @@ function format(number, digits) {
 calculate();
 
 </script>
-
 
 </body>
 </html>
