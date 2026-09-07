@@ -2,2279 +2,1437 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Trading Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bryce Strategy · Trading Dashboard</title>
 
 <style>
-* {
-    box-sizing: border-box;
-}
-
 :root {
+    color-scheme: dark;
     --bg: #070b10;
-    --panel: #0e151f;
-    --border: #26364a;
-
-    --text: #f3f6fb;
-    --muted: #8491a7;
-
-    --green: #12d7a0;
-    --red: #ff5a7c;
+    --panel: #101824;
+    --border: #29394f;
+    --text: #eef4fc;
+    --muted: #9aaac0;
+    --green: #21d6a2;
+    --red: #ff708c;
     --yellow: #f0c65d;
-
-    --trade-card: #142640;
-    --trade-border: #294366;
-
-    --entry-bg: #070c12;
-    --sl-bg: #39243c;
-    --tp-bg: #0d4c4d;
 }
+
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
+    background: linear-gradient(180deg, #0b111b, #05080d);
+    color: var(--text);
+    font-family: Arial, "Noto Sans TC", sans-serif;
     min-height: 100vh;
-
-    background:
-        linear-gradient(
-            180deg,
-            #080d13,
-            #05080c
-        );
-
-    color: var(--text);
-
-    font-family:
-        Arial,
-        "Noto Sans TC",
-        sans-serif;
 }
 
-.app {
-    width: min(100% - 24px, 820px);
-    margin: 0 auto;
-    padding: 20px 0 80px;
-}
+button, input, select, textarea { font: inherit; }
 
+button, select { cursor: pointer; }
 
-/* =========================
-HEADER
-========================= */
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    gap: 16px;
-
-    padding-bottom: 18px;
-
-    border-bottom:
-        1px solid
-        #182332;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.logo {
-    width: 54px;
-    height: 54px;
-
-    border-radius: 12px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #17263b,
-            #29486e
-        );
-
-    border:
-        1px solid
-        #304763;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    font-size: 18px;
-    font-weight: 900;
-}
-
-.brand-name {
-    font-size: 21px;
-    font-weight: 900;
-}
-
-.header-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    width: 48px;
-    height: 48px;
-
-    border-radius: 12px;
-
-    border:
-        1px solid
-        var(--border);
-
-    background:
-        #111925;
-
-    color: var(--text);
-
-    font-size: 18px;
-
-    cursor: pointer;
-}
-
-
-/* =========================
-SUMMARY
-========================= */
-
-.summary-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 10px;
-
-    margin-top: 14px;
-}
-
-.summary-card {
-    border:
-        1px solid
-        var(--border);
-
-    background:
-        var(--panel);
-
-    border-radius: 13px;
-
-    padding: 14px 15px;
-}
-
-.summary-label {
-    color: var(--muted);
-    font-size: 11px;
-    margin-bottom: 8px;
-}
-
-.summary-value {
-    font-size: 23px;
-    font-weight: 900;
-
-    font-family:
-        Consolas,
-        monospace;
-}
-
-.green {
-    color: var(--green);
-}
-
-.red {
-    color: var(--red);
-}
-
-.yellow {
-    color: var(--yellow);
-}
-
-
-/* =========================
-CALCULATOR
-========================= */
-
-.calculator {
-    display: none;
-
-    margin-top: 16px;
-
-    background:
-        var(--panel);
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 14px;
-
-    padding: 17px;
-}
-
-.calculator.open {
-    display: block;
-}
-
-.calc-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 14px;
-}
-
-.calc-title {
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.calc-close {
-    border: 0;
-    background: transparent;
-
-    color: var(--muted);
-
-    font-size: 20px;
-
-    cursor: pointer;
-}
-
-.direction {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-
-    gap: 8px;
-
-    margin-bottom: 12px;
-}
-
-.direction button {
-    height: 40px;
-
-    border-radius: 9px;
-
-    border:
-        1px solid
-        var(--border);
-
-    background:
-        #0b111a;
-
-    color: var(--muted);
-
-    cursor: pointer;
-
-    font-weight: 800;
-}
-
-.direction .long.active {
-    color: var(--green);
-    border-color: var(--green);
-
-    background:
-        rgba(18, 215, 160, .08);
-}
-
-.direction .short.active {
-    color: var(--red);
-    border-color: var(--red);
-
-    background:
-        rgba(255, 90, 124, .08);
-}
-
-.calc-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(5, 1fr);
-
-    gap: 10px;
-}
-
-.field label {
-    display: block;
-
-    color: var(--muted);
-
-    font-size: 11px;
-
-    margin-bottom: 6px;
-}
-
-.field input {
-    width: 100%;
-    height: 42px;
-
-    border-radius: 9px;
-
-    border:
-        1px solid
-        var(--border);
-
-    background:
-        #090f17;
-
-    color: white;
-
-    padding: 0 11px;
-
-    font-size: 14px;
-}
-
-.calc-result {
-    display: grid;
-
-    grid-template-columns:
-        1.4fr
-        1fr
-        1fr
-        1fr
-        1fr;
-
-    gap: 8px;
-
-    margin-top: 12px;
-}
-
-.result-box {
-    background:
-        #090f17;
-
-    border:
-        1px solid
-        #1c2938;
-
+button, input, select, textarea {
+    border: 1px solid var(--border);
     border-radius: 10px;
+    color: var(--text);
+    background: #0b121d;
+}
 
+button {
+    min-height: 42px;
+    padding: 9px 14px;
+    font-weight: 700;
+}
+
+button:hover { border-color: #6b87ad; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+:focus-visible {
+    outline: 2px solid var(--yellow);
+    outline-offset: 3px;
+}
+
+input, select, textarea {
+    width: 100%;
+    min-width: 0;
     padding: 11px;
 }
 
-.result-label {
+textarea { min-height: 82px; resize: vertical; }
+
+label {
+    display: grid;
+    gap: 7px;
+    font-size: 12px;
     color: var(--muted);
-
-    font-size: 10px;
-
-    margin-bottom: 6px;
 }
 
-.result-value {
-    font-family:
-        Consolas,
-        monospace;
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 28px; }
+h2 { font-size: 20px; }
+h3 { font-size: 15px; }
 
-    font-size: 15px;
+[hidden] { display: none !important; }
 
-    font-weight: 800;
+.app {
+    width: min(100% - 28px, 900px);
+    margin: auto;
+    padding: 24px 0 72px;
 }
 
-.result-main .result-value {
-    color: var(--yellow);
-
-    font-size: 21px;
-}
-
-
-/* =========================
-PAGE TITLE
-========================= */
-
-.page-title {
+.header, .row, .section-head, .dialog-head {
     display: flex;
-    align-items: baseline;
-
-    gap: 10px;
-
-    margin:
-        28px 0
-        18px;
-}
-
-.page-title h1 {
-    margin: 0;
-
-    font-size: 34px;
-
-    letter-spacing: -1px;
-}
-
-.page-count {
-    color: var(--muted);
-
-    font-size: 18px;
-
-    font-weight: 700;
-}
-
-
-/* =========================
-FILTER
-========================= */
-
-.filter-row {
-    display: flex;
-
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
-
-    margin-bottom: 22px;
 }
 
-.filter-select {
-    width: 190px;
-    height: 50px;
-
-    background:
-        #111a28;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 11px;
-
-    color: var(--text);
-
-    padding: 0 14px;
-
-    font-size: 15px;
-
-    font-weight: 700;
+.header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    flex-wrap: wrap;
 }
 
-.update-btn {
-    height: 50px;
+.brand { display: flex; gap: 12px; align-items: center; }
 
-    padding:
-        0 25px;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 11px;
-
-    background:
-        #111a28;
-
-    color: var(--text);
-
-    font-size: 15px;
-
-    font-weight: 700;
-
-    cursor: pointer;
+.logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: #223b5b;
+    font-weight: 900;
 }
 
+.brand strong { font-size: 20px; }
+.subtitle, .muted { color: var(--muted); }
 
-/* =========================
-TRADE CARD
-========================= */
-
-.trade-card {
-    background:
-        linear-gradient(
-            180deg,
-            #142640,
-            #102039
-        );
-
-    border:
-        1px solid
-        var(--trade-border);
-
-    border-radius: 13px;
-
-    margin-bottom: 14px;
-
-    overflow: hidden;
-
-    cursor: pointer;
-
-    transition:
-        transform .18s ease,
-        border-color .18s ease;
+.subtitle {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.6;
 }
 
-.trade-card:hover {
-    border-color: #3a5c88;
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.primary { background: #20486c; border-color: #37678d; }
+.danger { color: var(--red); }
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
 }
 
-.trade-card.closed {
-    background:
-        linear-gradient(
-            180deg,
-            #151b25,
-            #10151d
-        );
-
-    border-color: #303b49;
-}
-
-
-/* =========================
-COLLAPSED HEADER
-========================= */
-
-.trade-summary {
+.summary-card, .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
     padding: 16px;
 }
 
-.trade-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-
-    gap: 12px;
-}
-
-.coin-area {
-    display: flex;
-    gap: 11px;
-}
-
-.coin-icon {
-    width: 46px;
-    height: 46px;
-
-    border-radius: 11px;
-
-    background:
-        #0b1118;
-
-    border:
-        1px solid
-        #2c4059;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    font-size: 11px;
-
-    font-weight: 900;
-
-    color: var(--green);
-}
-
-.symbol {
-    font-size: 21px;
-
-    font-weight: 900;
-}
-
-.exchange {
-    margin-top: 5px;
-
-    color: #9aa8ba;
-
-    font-size: 11px;
-}
-
-.status-area {
-    display: flex;
-    gap: 7px;
-    align-items: center;
-}
-
-.status {
-    padding:
-        8px 10px;
-
-    border-radius: 9px;
-
+.metric-label, .cell-label {
+    color: var(--muted);
     font-size: 12px;
-
-    font-weight: 800;
+    margin-bottom: 8px;
 }
 
-.status.open {
-    color: var(--yellow);
-
-    background:
-        rgba(240, 198, 93, .10);
-
-    border:
-        1px solid
-        rgba(240, 198, 93, .25);
+.metric-value {
+    font-size: clamp(19px, 3vw, 28px);
+    font-weight: 900;
+    overflow-wrap: anywhere;
 }
 
-.status.closed {
-    color: var(--green);
-
-    background:
-        rgba(18, 215, 160, .10);
-
-    border:
-        1px solid
-        rgba(18, 215, 160, .25);
+.number {
+    font-family: Consolas, monospace;
+    font-variant-numeric: tabular-nums;
 }
 
-.expand-icon {
-    width: 30px;
-    height: 30px;
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+.neutral { color: var(--muted); }
+.yellow { color: var(--yellow); }
 
-    border-radius: 8px;
-
-    background:
-        rgba(0,0,0,.18);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
+.note {
+    font-size: 12px;
+    line-height: 1.7;
     color: var(--muted);
-
-    transition: transform .2s ease;
-}
-
-.trade-card.expanded .expand-icon {
-    transform: rotate(180deg);
-}
-
-
-/* =========================
-COLLAPSED QUICK INFO
-========================= */
-
-.quick-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 8px;
-
-    margin-top: 14px;
-}
-
-.quick-item {
-    background:
-        rgba(5, 11, 18, .45);
-
-    border:
-        1px solid
-        rgba(48, 68, 92, .8);
-
-    border-radius: 9px;
-
-    padding: 10px;
-}
-
-.quick-label {
-    color: var(--muted);
-
-    font-size: 9px;
-
-    margin-bottom: 5px;
-}
-
-.quick-value {
-    font-family:
-        Consolas,
-        monospace;
-
-    font-size: 13px;
-
-    font-weight: 800;
-}
-
-.quick-value.profit {
-    color: var(--green);
-}
-
-
-/* =========================
-EXPANDED CONTENT
-========================= */
-
-.trade-details {
-    max-height: 0;
-
-    overflow: hidden;
-
-    opacity: 0;
-
-    transition:
-        max-height .35s ease,
-        opacity .25s ease;
-}
-
-.trade-card.expanded
-.trade-details {
-    max-height: 1500px;
-
-    opacity: 1;
-}
-
-.trade-details-inner {
-    padding:
-        0 16px
-        16px;
-
-    border-top:
-        1px solid
-        rgba(47, 68, 94, .75);
-}
-
-
-/* =========================
-CURRENT PRICE
-========================= */
-
-.current-block {
-    margin-top: 14px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #003927,
-            #013323
-        );
-
-    border-radius: 11px;
-
-    padding:
-        15px 17px;
-}
-
-.block-top {
-    display: flex;
-    justify-content: space-between;
-
-    color: var(--green);
-
-    font-size: 13px;
-
-    font-weight: 800;
-}
-
-.price-time {
-    color: var(--yellow);
-}
-
-.current-price {
     margin-top: 10px;
-
-    font-size: 30px;
-
-    font-family:
-        Consolas,
-        monospace;
-
-    font-weight: 900;
-
-    color: var(--green);
 }
 
-
-/* =========================
-PNL
-========================= */
-
-.pnl-block {
-    margin-top: 10px;
-
-    border-radius: 11px;
-
-    padding:
-        15px 17px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #063a2d,
-            #073126
-        );
-}
-
-.pnl-label {
-    color: var(--green);
-
-    font-size: 13px;
-
-    font-weight: 800;
-}
-
-.pnl-value {
-    margin-top: 9px;
-
-    color: var(--green);
-
-    font-size: 30px;
-
-    font-family:
-        Consolas,
-        monospace;
-
-    font-weight: 900;
-}
-
-.pnl-sub {
-    margin-top: 6px;
-
-    color: #9cb3a9;
-
-    font-size: 11px;
-}
-
-
-/* =========================
-LEVEL GRID
-========================= */
-
-.level-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
-    gap: 9px;
-
-    margin-top: 11px;
-}
-
-.level {
-    min-height: 108px;
-
-    border-radius: 11px;
-
-    padding: 14px 15px;
-}
-
-.level.entry {
-    background: var(--entry-bg);
-}
-
-.level.sl {
-    background: var(--sl-bg);
-}
-
-.level.tp {
-    background: var(--tp-bg);
-}
-
-.level-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    font-size: 12px;
-
-    font-weight: 800;
-}
-
-.level.entry .level-head {
-    color: #899bb5;
-}
-
-.level.sl .level-head {
-    color: var(--red);
-}
-
-.level.tp .level-head {
-    color: var(--green);
-}
-
-.level-price {
-    margin-top: 19px;
-
-    font-family:
-        Consolas,
-        monospace;
-
-    font-size: 28px;
-
-    font-weight: 900;
-}
-
-
-/* =========================
-RISK
-========================= */
-
-.risk-info {
-    margin-top: 12px;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, 1fr);
-
-    gap: 8px;
-}
-
-.risk-mini {
-    background:
-        rgba(4, 10, 17, .5);
-
-    border:
-        1px solid
-        #26384f;
-
-    border-radius: 9px;
-
-    padding: 10px;
-}
-
-.risk-mini-label {
-    color: var(--muted);
-
-    font-size: 9px;
-
-    margin-bottom: 5px;
-}
-
-.risk-mini-value {
-    font-size: 12px;
-
-    font-family:
-        Consolas,
-        monospace;
-
-    font-weight: 800;
-}
-
-
-/* =========================
-CLOSED RESULT
-========================= */
-
-.closed-result {
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 9px;
-
-    margin-top: 12px;
-}
-
-.closed-item {
-    background:
-        #090f16;
-
-    border:
-        1px solid
-        #263343;
-
+.notice {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: #30263a;
+    border: 1px solid #71536b;
     border-radius: 10px;
-
-    padding: 13px;
+    font-size: 13px;
+    line-height: 1.6;
 }
 
-.closed-label {
+.section-head { margin: 28px 0 16px; flex-wrap: wrap; }
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-bottom: 16px;
+}
+
+.filters select { width: auto; flex: 0 1 170px; }
+.filters input { flex: 1 1 180px; }
+
+.trade-card {
+    margin-bottom: 12px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #304c70;
+    background: linear-gradient(150deg, #152942, #101d30);
+}
+
+.trade-card.closed {
+    background: linear-gradient(150deg, #171f2a, #10161f);
+    border-color: #35404e;
+}
+
+.trade-toggle {
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
+    padding: 16px;
+    display: block;
+}
+
+.trade-toggle:hover { background: rgba(255,255,255,.025); }
+
+.symbol { font-size: 20px; font-weight: 900; }
+
+.badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.badge {
+    padding: 6px 8px;
+    border: 1px solid #56616f;
+    border-radius: 7px;
+    font-size: 11px;
+}
+
+.badge.open {
+    color: var(--yellow);
+    background: #f0c65d10;
+    border-color: #f0c65d55;
+}
+
+.arrow { color: var(--muted); }
+[aria-expanded="true"] .arrow { transform: rotate(180deg); }
+
+.quick-grid, .detail-grid, .result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.quick-grid.closed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.cell {
+    background: #080f1980;
+    padding: 12px;
+    border-radius: 9px;
+    min-width: 0;
+}
+
+.cell-value {
+    font-size: 15px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.cell-label { font-size: 11px; font-weight: 400; }
+
+.trade-details {
+    padding: 16px;
+    border-top: 1px solid #304460;
+}
+
+.trade-details .detail-grid { margin-top: 0; }
+
+.level.sl { background: #392638; }
+.level.tp { background: #0c3637; }
+
+.trade-details .actions { margin-top: 16px; }
+
+.trade-note {
+    margin-top: 16px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: #c3cedd;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.history {
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+}
+
+.history-item {
+    margin-top: 9px;
+    padding: 11px;
+    background: #080f1970;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.panel { margin-top: 18px; }
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.form-grid.calc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.span-all { grid-column: 1 / -1; }
+
+.error {
+    color: #ff9caf;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 12px;
+}
+
+.empty {
+    text-align: center;
     color: var(--muted);
-
-    font-size: 10px;
-
-    margin-bottom: 7px;
+    padding: 40px 14px;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
 }
 
-.closed-value {
-    font-family:
-        Consolas,
-        monospace;
-
-    font-size: 16px;
-
-    font-weight: 900;
+dialog {
+    width: min(620px, calc(100% - 24px));
+    max-height: calc(100dvh - 36px);
+    overflow: auto;
+    background: #111b29;
+    border: 1px solid #435873;
+    border-radius: 16px;
+    color: var(--text);
+    padding: 22px;
 }
 
+dialog::backdrop { background: #000a; }
 
-/* =========================
-RESPONSIVE
-========================= */
-
-@media (max-width: 700px) {
-
-    .app {
-        width:
-            min(
-                100% - 18px,
-                820px
-            );
-    }
-
-    .brand-name {
-        font-size: 18px;
-    }
-
-    .logo {
-        width: 46px;
-        height: 46px;
-    }
-
-    .action-btn {
-        width: 42px;
-        height: 42px;
-    }
-
-    .calc-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-    .calc-result {
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-    .result-main {
-        grid-column:
-            span 2;
-    }
-
-    .risk-info {
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-    .closed-result {
-        grid-template-columns:
-            1fr;
-    }
+.dialog-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 22px;
 }
 
-@media (max-width: 450px) {
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100% - 32px);
+    border: 1px solid #547291;
+    background: #1a2e45;
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px #0007;
+    z-index: 100;
+    font-size: 13px;
+}
 
-    .summary-grid {
-        grid-template-columns:
-            repeat(3, 1fr);
+@media (max-width: 620px) {
+    .app { width: calc(100% - 20px); padding-top: 16px; }
+    .summary-card { padding: 12px 10px; }
+    .metric-label { font-size: 10px; }
+    .quick-grid, .detail-grid, .result-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .summary-value {
-        font-size: 18px;
+    .quick-grid.closed-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .page-title h1 {
-        font-size: 30px;
-    }
-
-    .symbol {
-        font-size: 19px;
-    }
-
-    .quick-grid {
-        grid-template-columns:
-            repeat(3, 1fr);
-    }
-
-    .quick-value {
-        font-size: 12px;
-    }
-
-    .level-price {
-        font-size: 24px;
-    }
+    .closed-grid .cell:last-child { grid-column: 1 / -1; }
+    .form-grid.calc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .symbol { font-size: 18px; }
+    .trade-toggle, .trade-details { padding: 13px; }
+    dialog { padding: 17px; }
 }
 </style>
 </head>
 
 <body>
-
-<div class="app">
-
-
-    <!-- HEADER -->
-
+<main class="app">
     <header class="header">
-
         <div class="brand">
-
-            <div class="logo">
-                TD
+            <div class="logo">BS</div>
+            <div>
+                <strong>Bryce Strategy</strong>
+                <div class="subtitle">個人交易紀錄 · USDT</div>
             </div>
-
-            <div class="brand-name">
-                Bryce Strategy
-            </div>
-
         </div>
-
-
-        <div class="header-actions">
-
-            <button
-                class="action-btn"
-                onclick="toggleCalculator()"
-                title="倉位計算器"
-            >
-                %
-            </button>
-
+        <div class="actions">
+            <button id="calcToggle" aria-expanded="false"
+                    aria-controls="calculator">倉位計算器</button>
+            <button id="addTrade" class="primary">＋ 新增交易</button>
         </div>
-
     </header>
 
+    <div id="storageWarning" class="notice" role="alert" hidden></div>
 
-
-    <!-- SUMMARY -->
-
-    <section class="summary-grid">
-
+    <section class="summary-grid" aria-label="交易統計">
         <div class="summary-card">
-
-            <div class="summary-label">
-                持倉中
-            </div>
-
-            <div class="summary-value yellow">
-                1
-            </div>
-
+            <div class="metric-label">持倉中</div>
+            <div id="openCount" class="metric-value number yellow">0</div>
         </div>
-
-
         <div class="summary-card">
-
-            <div class="summary-label">
-                已完成
-            </div>
-
-            <div class="summary-value">
-                1
-            </div>
-
+            <div class="metric-label">未實現盈虧 · U</div>
+            <div id="floatingTotal" class="metric-value number">—</div>
         </div>
-
-
         <div class="summary-card">
-
-            <div class="summary-label">
-                已實現盈虧
-            </div>
-
-            <div class="summary-value green">
-                +1.2933
-            </div>
-
+            <div class="metric-label">已實現淨盈虧 · U</div>
+            <div id="realizedTotal" class="metric-value number">0</div>
         </div>
+    </section>
+    <p id="summaryNote" class="note"></p>
 
+    <section id="calculator" class="panel" hidden>
+        <div class="row">
+            <h2>開倉倉位計算器</h2>
+            <button id="calcClose" aria-label="關閉計算器">×</button>
+        </div>
+        <p class="note">
+            以進場價與初始止損估算倉位。持倉移動止損請在交易卡片編輯。
+        </p>
+
+        <form id="calcForm" class="form-grid calc-grid" novalidate>
+            <label>方向
+                <select name="side">
+                    <option value="short">SHORT · 做空</option>
+                    <option value="long">LONG · 做多</option>
+                </select>
+            </label>
+            <label>總資金 · U
+                <input name="balance" type="number" step="any" value="60">
+            </label>
+            <label>單筆風險 · %
+                <input name="risk" type="number" step="any" value="2">
+            </label>
+            <label>槓桿 · 倍
+                <input name="leverage" type="number" step="any" value="10">
+            </label>
+            <label>進場價
+                <input name="entry" type="number" step="any" placeholder="請輸入">
+            </label>
+            <label>初始止損價
+                <input name="sl" type="number" step="any" placeholder="請輸入">
+            </label>
+        </form>
+
+        <div id="calcError" class="error" role="status"></div>
+        <div id="calcResults" class="result-grid"></div>
+        <p class="note">
+            結果未計入手續費、資金費、滑價與交易所數量限制。
+            保證金為簡化估算，未驗證強平價或交易所可用槓桿。
+        </p>
     </section>
 
-
-
-    <!-- CALCULATOR -->
-
-    <section
-        id="calculator"
-        class="calculator"
-    >
-
-        <div class="calc-header">
-
-            <div class="calc-title">
-                倉位風險計算器
-            </div>
-
-            <button
-                class="calc-close"
-                onclick="toggleCalculator()"
-            >
-                ×
-            </button>
-
+    <div class="section-head">
+        <div>
+            <h1>交易紀錄 <span id="recordCount" class="muted"></span></h1>
+            <p id="dataInfo" class="note"></p>
         </div>
-
-
-        <div class="direction">
-
-            <button
-                id="longBtn"
-                class="long"
-                onclick="setDirection('long')"
-            >
-                LONG
-            </button>
-
-
-            <button
-                id="shortBtn"
-                class="short active"
-                onclick="setDirection('short')"
-            >
-                SHORT
-            </button>
-
+        <div class="actions">
+            <button id="exportBtn">匯出備份</button>
+            <button id="importBtn">匯入備份</button>
+            <input id="importFile" type="file" accept=".json,application/json" hidden>
         </div>
-
-
-        <div class="calc-grid">
-
-            <div class="field">
-
-                <label>
-                    總資金
-                </label>
-
-                <input
-                    id="balance"
-                    type="number"
-                    value="60"
-                    oninput="calculate()"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                    最大風險 %
-                </label>
-
-                <input
-                    id="risk"
-                    type="number"
-                    value="10"
-                    oninput="calculate()"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                    槓桿
-                </label>
-
-                <input
-                    id="leverage"
-                    type="number"
-                    value="300"
-                    oninput="calculate()"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                    Entry
-                </label>
-
-                <input
-                    id="entry"
-                    type="number"
-                    value="0.4212"
-                    step="any"
-                    oninput="calculate()"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                    Stop Loss
-                </label>
-
-                <input
-                    id="sl"
-                    type="number"
-                    value="0.4262"
-                    step="any"
-                    oninput="calculate()"
-                >
-
-            </div>
-
-        </div>
-
-
-        <div class="calc-result">
-
-            <div class="result-box result-main">
-
-                <div class="result-label">
-                    建議保證金
-                </div>
-
-                <div
-                    id="margin"
-                    class="result-value"
-                >
-                    --
-                </div>
-
-            </div>
-
-
-            <div class="result-box">
-
-                <div class="result-label">
-                    占本金
-                </div>
-
-                <div
-                    id="marginPercent"
-                    class="result-value"
-                >
-                    --
-                </div>
-
-            </div>
-
-
-            <div class="result-box">
-
-                <div class="result-label">
-                    名義倉位
-                </div>
-
-                <div
-                    id="notional"
-                    class="result-value"
-                >
-                    --
-                </div>
-
-            </div>
-
-
-            <div class="result-box">
-
-                <div class="result-label">
-                    SL 距離
-                </div>
-
-                <div
-                    id="slDistance"
-                    class="result-value"
-                >
-                    --
-                </div>
-
-            </div>
-
-
-            <div class="result-box">
-
-                <div class="result-label">
-                    最大虧損
-                </div>
-
-                <div
-                    id="riskAmount"
-                    class="result-value"
-                >
-                    --
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- TITLE -->
-
-    <div class="page-title">
-
-        <h1>
-            全部訊號
-        </h1>
-
-        <div class="page-count">
-            ( 2 )
-        </div>
-
     </div>
 
-
-
-    <!-- FILTER -->
-
-    <div class="filter-row">
-
-        <select
-            id="statusFilter"
-            class="filter-select"
-            onchange="filterTrades()"
-        >
-
-            <option value="all">
-                全部
-            </option>
-
-            <option value="open">
-                持倉中
-            </option>
-
-            <option value="closed">
-                已平倉
-            </option>
-
+    <div class="filters">
+        <select id="statusFilter" aria-label="交易狀態">
+            <option value="all">全部狀態</option>
+            <option value="open">持倉中</option>
+            <option value="closed">已平倉</option>
         </select>
-
-
-        <button
-            class="update-btn"
-            onclick="refreshData()"
-        >
-            更新
-        </button>
-
+        <input id="searchInput" type="search" placeholder="搜尋幣種或交易所"
+               aria-label="搜尋幣種或交易所">
     </div>
 
+    <div id="tradeList"></div>
 
+    <p class="note">
+        手動紀錄模式。畫面不會自動取得行情，也不會向交易所送出訂單。
+        本機資料不會跨裝置同步，請定期匯出備份。
+    </p>
+</main>
 
-    <!-- =========================
-    WLD
-    ========================= -->
-
-    <section
-        class="trade-card"
-        data-status="open"
-        onclick="toggleTradeCard(this)"
-    >
-
-        <div class="trade-summary">
-
-            <div class="trade-top">
-
-                <div class="coin-area">
-
-                    <div class="coin-icon">
-                        WLD
-                    </div>
-
-                    <div>
-
-                        <div class="symbol">
-                            WLDUSDT
-                        </div>
-
-                        <div class="exchange">
-                            BingX · SHORT · 300X
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="status-area">
-
-                    <div class="status open">
-                        持倉中
-                    </div>
-
-                    <div class="expand-icon">
-                        ▼
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <div class="quick-grid">
-
-                <div class="quick-item">
-
-                    <div class="quick-label">
-                        ENTRY
-                    </div>
-
-                    <div class="quick-value">
-                        0.4212
-                    </div>
-
-                </div>
-
-
-                <div class="quick-item">
-
-                    <div class="quick-label">
-                        CURRENT
-                    </div>
-
-                    <div class="quick-value">
-                        0.4114
-                    </div>
-
-                </div>
-
-
-                <div class="quick-item">
-
-                    <div class="quick-label">
-                        FLOATING PNL
-                    </div>
-
-                    <div class="quick-value profit">
-                        +84.05 U
-                    </div>
-
-                </div>
-
-            </div>
-
+<dialog id="tradeDialog">
+    <form id="tradeForm">
+        <div class="dialog-head">
+            <h2 id="tradeDialogTitle">新增交易</h2>
+            <button type="button" data-close="tradeDialog" aria-label="關閉">×</button>
         </div>
 
-
-
-        <div class="trade-details">
-
-            <div class="trade-details-inner">
-
-
-                <div class="current-block">
-
-                    <div class="block-top">
-
-                        <span>
-                            CURRENT PRICE
-                        </span>
-
-                        <span class="price-time">
-                            LIVE
-                        </span>
-
-                    </div>
-
-                    <div class="current-price">
-                        0.4114
-                    </div>
-
-                </div>
-
-
-
-                <div class="pnl-block">
-
-                    <div class="pnl-label">
-                        未實現盈虧
-                    </div>
-
-                    <div class="pnl-value">
-                        +84.05 U
-                    </div>
-
-                    <div class="pnl-sub">
-                        目前為手動資料
-                    </div>
-
-                </div>
-
-
-
-                <div class="level-grid">
-
-                    <div class="level entry">
-
-                        <div class="level-head">
-                            ENTRY
-                        </div>
-
-                        <div class="level-price">
-                            0.4212
-                        </div>
-
-                    </div>
-
-
-                    <div class="level sl">
-
-                        <div class="level-head">
-                            CURRENT SL
-                        </div>
-
-                        <div class="level-price">
-                            0.4205
-                        </div>
-
-                    </div>
-
-
-                    <div class="level tp">
-
-                        <div class="level-head">
-                            TP1
-                        </div>
-
-                        <div class="level-price">
-                            0.4100
-                        </div>
-
-                    </div>
-
-
-                    <div class="level tp">
-
-                        <div class="level-head">
-                            TP2
-                        </div>
-
-                        <div class="level-price">
-                            0.4000
-                        </div>
-
-                    </div>
-
-
-                    <div class="level tp">
-
-                        <div class="level-head">
-                            TP3
-                        </div>
-
-                        <div class="level-price">
-                            0.3900
-                        </div>
-
-                    </div>
-
-
-                    <div class="level tp">
-
-                        <div class="level-head">
-                            FTP
-                        </div>
-
-                        <div class="level-price">
-                            0.3800
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <div class="risk-info">
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            SIDE
-                        </div>
-
-                        <div class="risk-mini-value">
-                            SHORT
-                        </div>
-
-                    </div>
-
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            LEVERAGE
-                        </div>
-
-                        <div class="risk-mini-value">
-                            300X
-                        </div>
-
-                    </div>
-
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            NOTIONAL
-                        </div>
-
-                        <div class="risk-mini-value">
-                            ≈ 3,614 U
-                        </div>
-
-                    </div>
-
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            STATUS
-                        </div>
-
-                        <div class="risk-mini-value">
-                            RUNNING
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+        <div class="form-grid">
+            <label>交易對
+                <input name="symbol" required maxlength="40" placeholder="WLDUSDT">
+            </label>
+            <label>交易所
+                <input name="exchange" required maxlength="40" value="BingX">
+            </label>
+            <label>方向
+                <select name="side">
+                    <option value="short">SHORT · 做空</option>
+                    <option value="long">LONG · 做多</option>
+                </select>
+            </label>
+            <label>槓桿 · 倍
+                <input name="leverage" type="number" step="any" min="1" required>
+            </label>
+            <label>進場均價
+                <input name="entry" type="number" step="any" min="0" required>
+            </label>
+            <label>現價（選填）
+                <input name="current" type="number" step="any" min="0">
+            </label>
+            <label>剩餘持倉數量（幣，選填）
+                <input name="quantity" type="number" step="any" min="0">
+            </label>
+            <label>手動浮盈 · U（無數量時使用）
+                <input name="manualPnl" type="number" step="any">
+            </label>
+            <label>目前 SL（選填）
+                <input name="sl" type="number" step="any" min="0">
+            </label>
+            <label>開倉時間（選填，本地時間）
+                <input name="openedAt" type="datetime-local">
+            </label>
+            <label class="span-all">TP 價格（選填，以逗號分隔）
+                <input name="targets" placeholder="0.4100, 0.4000, 0.3900, 0.3800">
+            </label>
+            <label class="span-all">進場理由／交易備註
+                <textarea name="note" maxlength="3000"></textarea>
+            </label>
         </div>
 
-    </section>
+        <p class="note">
+            填入數量與現價後，浮盈按價差自動估算；未計入費用。
+            SL／TP 僅記錄計畫，不會修改交易所訂單。
+        </p>
+        <p id="editHistoryNote" class="note" hidden>
+            此交易已有平倉紀錄，方向與進場均價已鎖定。
+        </p>
+        <div id="tradeError" class="error" role="alert"></div>
 
+        <div class="dialog-foot">
+            <button type="button" data-close="tradeDialog">取消</button>
+            <button type="submit" class="primary">儲存交易</button>
+        </div>
+    </form>
+</dialog>
 
+<dialog id="closeDialog">
+    <form id="closeForm">
+        <div class="dialog-head">
+            <h2>記錄平倉</h2>
+            <button type="button" data-close="closeDialog" aria-label="關閉">×</button>
+        </div>
+        <p id="closeTradeInfo" class="note"></p>
 
-    <!-- =========================
-    ARB
-    ========================= -->
-
-    <section
-        class="trade-card closed"
-        data-status="closed"
-        onclick="toggleTradeCard(this)"
-    >
-
-        <div class="trade-summary">
-
-            <div class="trade-top">
-
-                <div class="coin-area">
-
-                    <div class="coin-icon">
-                        ARB
-                    </div>
-
-                    <div>
-
-                        <div class="symbol">
-                            ARBUSDT
-                        </div>
-
-                        <div class="exchange">
-                            BingX · SHORT · 75X
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="status-area">
-
-                    <div class="status closed">
-                        已平倉
-                    </div>
-
-                    <div class="expand-icon">
-                        ▼
-                    </div>
-
-                </div>
-
+        <div class="form-grid">
+            <label>平倉方式
+                <select name="mode">
+                    <option value="full">全部平倉</option>
+                    <option value="partial">部分平倉</option>
+                </select>
+            </label>
+            <label>平倉時間（本地時間）
+                <input name="at" type="datetime-local" required>
+            </label>
+            <label>平倉價格（選填）
+                <input name="price" type="number" step="any" min="0">
+            </label>
+            <label>本次平倉數量
+                <input name="quantity" type="number" step="any" min="0">
+            </label>
+            <label>本次平倉盈虧 · U
+                <input name="gross" type="number" step="any" required>
+            </label>
+            <label>分攤手續費 · U（正數）
+                <input name="fees" type="number" step="any" min="0" value="0" required>
+            </label>
+            <label>分攤資金費 · U（收入正／支出負）
+                <input name="funding" type="number" step="any" value="0" required>
+            </label>
+            <div class="cell">
+                <div class="cell-label">本次淨盈虧</div>
+                <div id="closeNet" class="cell-value number">—</div>
             </div>
-
-
-
-            <div class="quick-grid">
-
-                <div class="quick-item">
-
-                    <div class="quick-label">
-                        ENTRY
-                    </div>
-
-                    <div class="quick-value">
-                        0.19075
-                    </div>
-
-                </div>
-
-
-                <div class="quick-item">
-
-                    <div class="quick-label">
-                        CLOSED PNL
-                    </div>
-
-                    <div class="quick-value profit">
-                        +1.7255 U
-                    </div>
-
-                </div>
-
-
-                <div class="quick-item">
-
-                    <div class="quick-label">
-                        REALIZED
-                    </div>
-
-                    <div class="quick-value profit">
-                        +1.2933 U
-                    </div>
-
-                </div>
-
-            </div>
-
         </div>
 
-
-
-        <div class="trade-details">
-
-            <div class="trade-details-inner">
-
-
-                <div class="pnl-block">
-
-                    <div class="pnl-label">
-                        最終實現盈虧
-                    </div>
-
-                    <div class="pnl-value">
-                        +1.2933 U
-                    </div>
-
-                    <div class="pnl-sub">
-                        交易已結束
-                    </div>
-
-                </div>
-
-
-
-                <div class="closed-result">
-
-                    <div class="closed-item">
-
-                        <div class="closed-label">
-                            平倉盈虧
-                        </div>
-
-                        <div class="closed-value green">
-                            +1.7255 U
-                        </div>
-
-                    </div>
-
-
-                    <div class="closed-item">
-
-                        <div class="closed-label">
-                            實現盈虧
-                        </div>
-
-                        <div class="closed-value green">
-                            +1.2933 U
-                        </div>
-
-                    </div>
-
-
-                    <div class="closed-item">
-
-                        <div class="closed-label">
-                            手續費 / 費用差額
-                        </div>
-
-                        <div class="closed-value yellow">
-                            -0.4322 U
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <div class="level-grid">
-
-                    <div class="level entry">
-
-                        <div class="level-head">
-                            ENTRY
-                        </div>
-
-                        <div class="level-price">
-                            0.19075
-                        </div>
-
-                    </div>
-
-
-                    <div class="level sl">
-
-                        <div class="level-head">
-                            ORIGINAL SL
-                        </div>
-
-                        <div class="level-price">
-                            0.19412
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <div class="risk-info">
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            SIDE
-                        </div>
-
-                        <div class="risk-mini-value">
-                            SHORT
-                        </div>
-
-                    </div>
-
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            LEVERAGE
-                        </div>
-
-                        <div class="risk-mini-value">
-                            75X
-                        </div>
-
-                    </div>
-
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            RESULT
-                        </div>
-
-                        <div class="risk-mini-value green">
-                            PROFIT
-                        </div>
-
-                    </div>
-
-
-                    <div class="risk-mini">
-
-                        <div class="risk-mini-label">
-                            STATUS
-                        </div>
-
-                        <div class="risk-mini-value">
-                            CLOSED
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+        <div class="actions" style="margin-top:14px">
+            <button id="estimateGross" type="button">依價差帶入平倉盈虧</button>
         </div>
+        <p class="note">
+            請優先填入交易所實際成交數據。淨盈虧＝平倉盈虧－手續費＋資金費。
+            每次只填本次分攤的費用，避免重複計入。
+        </p>
+        <div id="closeError" class="error" role="alert"></div>
 
-    </section>
+        <div class="dialog-foot">
+            <button type="button" data-close="closeDialog">取消</button>
+            <button type="submit" class="primary">儲存平倉紀錄</button>
+        </div>
+    </form>
+</dialog>
 
-
-</div>
-
-
+<div id="toast" class="toast" role="status" hidden></div>
 
 <script>
+"use strict";
 
-let direction = "short";
+const STORAGE_KEY = "bryce-trading-dashboard-v2";
+const $ = id => document.getElementById(id);
+const expanded = new Set();
 
+let editingId = null;
+let closingId = null;
+let toastTimer;
+let storageBlocked = false;
 
-/* =========================
-CARD COLLAPSE
-========================= */
+const initialState = {
+    version: 2,
+    savedAt: null,
+    trades: [
+        {
+            id: "seed-wld",
+            symbol: "WLDUSDT",
+            exchange: "BingX",
+            side: "short",
+            leverage: 300,
+            status: "open",
+            entry: 0.4212,
+            current: 0.4114,
+            quantity: null,
+            manualPnl: 84.05,
+            sl: 0.4205,
+            targets: [0.4100, 0.4000, 0.3900, 0.3800],
+            openedAt: null,
+            updatedAt: null,
+            note: "沿用原始 HTML 的手動快照，並非即時行情。持倉數量未提供。",
+            exits: []
+        },
+        {
+            id: "seed-arb",
+            symbol: "ARBUSDT",
+            exchange: "BingX",
+            side: "short",
+            leverage: 75,
+            status: "closed",
+            entry: 0.19075,
+            current: null,
+            quantity: null,
+            manualPnl: null,
+            sl: 0.19412,
+            targets: [],
+            openedAt: null,
+            updatedAt: null,
+            note: "原始止損 0.19412。依原始資料記錄費用差額 0.4322 U。",
+            exits: [
+                {
+                    id: "seed-arb-exit",
+                    at: null,
+                    price: null,
+                    quantity: null,
+                    gross: 1.7255,
+                    fees: 0.4322,
+                    funding: 0
+                }
+            ]
+        }
+    ]
+};
 
-function toggleTradeCard(card) {
-
-    card.classList.toggle("expanded");
-
+function clone(value) {
+    return JSON.parse(JSON.stringify(value));
 }
 
-
-
-/* =========================
-CALCULATOR
-========================= */
-
-function toggleCalculator() {
-
-    document
-        .getElementById("calculator")
-        .classList
-        .toggle("open");
-
+function uid() {
+    return globalThis.crypto?.randomUUID?.()
+        || Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
 
+function number(value, digits = 4) {
+    if (!Number.isFinite(value)) return "—";
+    return value.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: digits
+    });
+}
 
-function setDirection(type) {
+function signed(value) {
+    if (!Number.isFinite(value)) return "—";
+    return `${value > 0 ? "+" : ""}${number(value, 4)}`;
+}
 
-    direction = type;
+function tone(value) {
+    return value > 0 ? "positive" : value < 0 ? "negative" : "neutral";
+}
 
+function price(value) {
+    return number(value, 8);
+}
 
-    const longBtn =
-        document.getElementById("longBtn");
+function dateText(value) {
+    if (!value) return "未記錄";
+    return new Date(value).toLocaleString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
 
-    const shortBtn =
-        document.getElementById("shortBtn");
+function localInput(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+}
 
+function optionalNumber(value) {
+    if (String(value).trim() === "") return null;
+    const result = Number(value);
+    if (!Number.isFinite(result)) throw new Error("數值格式不正確。");
+    return result;
+}
 
-    longBtn.classList.remove("active");
-    shortBtn.classList.remove("active");
+function positiveNumber(value, label, optional = false) {
+    const result = optionalNumber(value);
+    if (optional && result === null) return null;
+    if (result === null || result <= 0) {
+        throw new Error(`${label}必須大於 0。`);
+    }
+    return result;
+}
 
+function netExit(exit) {
+    return exit.gross - exit.fees + exit.funding;
+}
 
-    if (type === "long") {
+function realized(trade) {
+    return trade.exits.reduce((total, exit) => total + netExit(exit), 0);
+}
 
-        longBtn.classList.add("active");
+function floating(trade) {
+    if (trade.status === "closed") return 0;
+    if (trade.quantity !== null && trade.current !== null) {
+        const sign = trade.side === "long" ? 1 : -1;
+        return (trade.current - trade.entry) * trade.quantity * sign;
+    }
+    return trade.manualPnl;
+}
 
-    } else {
+function payoff(trade, target) {
+    if (trade.quantity === null || target === null) return null;
+    return (target - trade.entry) * trade.quantity *
+        (trade.side === "long" ? 1 : -1);
+}
 
-        shortBtn.classList.add("active");
+function toast(message) {
+    clearTimeout(toastTimer);
+    $("toast").textContent = message;
+    $("toast").hidden = false;
+    toastTimer = setTimeout(() => $("toast").hidden = true, 3500);
+}
 
+function warning(message) {
+    $("storageWarning").textContent = message;
+    $("storageWarning").hidden = false;
+}
+
+function validateState(data) {
+    const assert = (condition, message) => {
+        if (!condition) throw new Error(message);
+    };
+    const finite = value =>
+        typeof value === "number" && Number.isFinite(value);
+    const nullablePositive = value =>
+        value === null || (finite(value) && value > 0);
+    const validDate = value =>
+        value === null ||
+        (typeof value === "string" && Number.isFinite(Date.parse(value)));
+
+    assert(data && data.version === 2, "備份版本不支援。");
+    assert(validDate(data.savedAt), "備份儲存時間無效。");
+    assert(Array.isArray(data.trades) && data.trades.length <= 5000,
+        "交易清單無效或超過 5,000 筆。");
+
+    const ids = new Set();
+
+    for (const trade of data.trades) {
+        assert(trade && typeof trade.id === "string" &&
+            trade.id.length > 0 && trade.id.length <= 100 &&
+            !ids.has(trade.id), "交易 ID 無效或重複。");
+        ids.add(trade.id);
+
+        for (const key of ["symbol", "exchange"]) {
+            assert(typeof trade[key] === "string" &&
+                trade[key].trim().length > 0 &&
+                trade[key].length <= 40, "交易名稱格式無效。");
+        }
+
+        assert(["long", "short"].includes(trade.side), "交易方向無效。");
+        assert(["open", "closed"].includes(trade.status), "交易狀態無效。");
+        assert(finite(trade.entry) && trade.entry > 0, "進場價無效。");
+        assert(finite(trade.leverage) && trade.leverage >= 1, "槓桿無效。");
+        assert(nullablePositive(trade.current), "現價無效。");
+        assert(nullablePositive(trade.sl), "止損價無效。");
+        assert(trade.quantity === null ||
+            (finite(trade.quantity) &&
+             (trade.status === "open" ? trade.quantity > 0 : trade.quantity === 0)),
+            "剩餘持倉數量無效。");
+        assert(trade.manualPnl === null || finite(trade.manualPnl), "浮盈無效。");
+        assert(Array.isArray(trade.targets) && trade.targets.length <= 8 &&
+            trade.targets.every(v => finite(v) && v > 0), "TP 格式無效。");
+        assert(validDate(trade.openedAt) && validDate(trade.updatedAt), "時間格式無效。");
+        assert(typeof trade.note === "string" && trade.note.length <= 3000,
+            "備註格式無效。");
+        assert(Array.isArray(trade.exits) && trade.exits.length <= 1000,
+            "平倉紀錄無效。");
+        assert(trade.status !== "closed" || trade.exits.length > 0,
+            "已平倉交易缺少平倉紀錄。");
+
+        for (const exit of trade.exits) {
+            assert(exit && typeof exit.id === "string" && validDate(exit.at),
+                "平倉紀錄格式無效。");
+            assert(nullablePositive(exit.price) && nullablePositive(exit.quantity),
+                "平倉價格或數量無效。");
+            assert(finite(exit.gross) && finite(exit.fees) &&
+                exit.fees >= 0 && finite(exit.funding), "平倉金額無效。");
+            assert(Number.isFinite(netExit(exit)), "平倉金額超出計算範圍。");
+        }
+
+        const pnl = floating(trade);
+        assert(pnl === null || Number.isFinite(pnl), "浮盈超出計算範圍。");
+        assert(Number.isFinite(realized(trade)), "已實現盈虧超出計算範圍。");
     }
 
-
-    calculate();
+    const sums = data.trades.reduce((result, trade) => {
+        result[0] += floating(trade) ?? 0;
+        result[1] += realized(trade);
+        return result;
+    }, [0, 0]);
+    assert(sums.every(Number.isFinite), "統計金額超出計算範圍。");
+    return data;
 }
 
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw !== null) return validateState(JSON.parse(raw));
+    } catch (error) {
+        storageBlocked = true;
+        warning(
+            "本機資料無法讀取，目前顯示原始快照，尚未覆蓋舊資料。" +
+            "請先匯出或保留現有資料，再匯入有效備份。原因：" + error.message
+        );
+    }
+    return clone(initialState);
+}
 
+let state = loadState();
+
+function commit(next, importing = false) {
+    next.savedAt = new Date().toISOString();
+    validateState(next);
+
+    if (storageBlocked && !importing) {
+        throw new Error("本機資料讀取異常，已停止覆寫。請先匯入有效備份。");
+    }
+
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+        throw new Error("無法儲存：瀏覽器可能禁止本機儲存或空間不足。此次修改未套用。");
+    }
+
+    state = next;
+    storageBlocked = false;
+    $("storageWarning").hidden = true;
+    render();
+}
+
+function cell(label, value, className = "") {
+    return `
+        <div class="cell ${className}">
+            <div class="cell-label">${escapeHtml(label)}</div>
+            <div class="cell-value number">${escapeHtml(value)}</div>
+        </div>`;
+}
+
+function pnlCell(label, value) {
+    return cell(label,
+        value === null ? "未填寫" : `${signed(value)} U`,
+        tone(value));
+}
+
+function renderCard(trade) {
+    const isOpen = trade.status === "open";
+    const isExpanded = expanded.has(trade.id);
+    const pnl = floating(trade);
+    const lastExit = trade.exits.at(-1);
+    const autoPnl = trade.quantity !== null && trade.current !== null;
+    const slPnl = payoff(trade, trade.sl);
+    const id = escapeHtml(trade.id);
+
+    const quick = isOpen
+        ? cell("現價", price(trade.current)) +
+          pnlCell("未實現盈虧", pnl) +
+          cell("目前 SL", price(trade.sl)) +
+          cell("剩餘數量", number(trade.quantity, 8))
+        : pnlCell("已實現淨盈虧", realized(trade)) +
+          cell("進場均價", price(trade.entry)) +
+          cell("最後平倉時間", dateText(lastExit?.at));
+
+    const targetCells = trade.targets.map((target, index) =>
+        cell(`TP${index + 1}`, price(target), "level tp")
+    ).join("");
+
+    const history = trade.exits.length
+        ? `<div class="history">
+            <h3>平倉紀錄</h3>
+            ${trade.exits.map(exit => `
+                <div class="history-item">
+                    <div class="row">
+                        <span>${escapeHtml(dateText(exit.at))}</span>
+                        <strong class="number ${tone(netExit(exit))}">
+                            ${signed(netExit(exit))} U
+                        </strong>
+                    </div>
+                    <div class="muted">
+                        價格 ${price(exit.price)} · 數量 ${number(exit.quantity, 8)}
+                    </div>
+                    <div class="muted">
+                        平倉盈虧 ${signed(exit.gross)} U ·
+                        手續費 ${number(exit.fees)} U ·
+                        資金費 ${signed(exit.funding)} U
+                    </div>
+                </div>
+            `).join("")}
+          </div>`
+        : "";
+
+    return `
+        <article class="trade-card ${isOpen ? "" : "closed"}">
+            <button class="trade-toggle"
+                    data-action="toggle" data-id="${id}"
+                    aria-expanded="${isExpanded}"
+                    aria-controls="details-${id}">
+                <div class="row">
+                    <div>
+                        <div class="symbol">${escapeHtml(trade.symbol)}</div>
+                        <div class="subtitle">
+                            ${escapeHtml(trade.exchange)} ·
+                            <span class="${trade.side === "long" ? "positive" : "negative"}">
+                                ${trade.side.toUpperCase()}
+                            </span>
+                            · ${number(trade.leverage)}X
+                        </div>
+                    </div>
+                    <div class="badges">
+                        <span class="badge ${isOpen ? "open" : ""}">
+                            ${isOpen ? "持倉中" : "已平倉"}
+                        </span>
+                        <span class="arrow" aria-hidden="true">▾</span>
+                    </div>
+                </div>
+                <div class="quick-grid ${isOpen ? "" : "closed-grid"}">
+                    ${quick}
+                </div>
+            </button>
+
+            <div id="details-${id}" class="trade-details"
+                 ${isExpanded ? "" : "hidden"}>
+                <div class="detail-grid">
+                    ${cell("進場均價", price(trade.entry))}
+                    ${cell(isOpen ? "目前 SL" : "保留的 SL 紀錄", price(trade.sl), "level sl")}
+                    ${isOpen ? cell("進場名義價值 · U",
+                        trade.quantity === null
+                            ? "數量未填"
+                            : number(trade.entry * trade.quantity, 2)) : ""}
+                    ${pnlCell("累計已實現淨盈虧", realized(trade))}
+                    ${isOpen ? pnlCell("剩餘倉位於 SL 成交的毛盈虧", slPnl) : ""}
+                    ${targetCells}
+                </div>
+
+                <p class="note">
+                    手動資料 · 最後編輯：${escapeHtml(dateText(trade.updatedAt))}
+                    <br>開倉時間：${escapeHtml(dateText(trade.openedAt))}
+                    ${isOpen ? `<br>浮盈來源：${autoPnl
+                        ? "剩餘數量 × 手動現價價差，未扣費用"
+                        : "手動填寫，未與現價自動連動"}` : ""}
+                    ${isOpen && slPnl !== null
+                        ? "<br>SL 毛盈虧假設全數於指定價成交，不代表保證成交金額。"
+                        : ""}
+                </p>
+
+                ${trade.note
+                    ? `<div class="trade-note">${escapeHtml(trade.note)}</div>`
+                    : ""}
+
+                ${isOpen ? `
+                    <div class="actions">
+                        <button data-action="edit" data-id="${id}">編輯資料／SL／TP</button>
+                        <button data-action="close" data-id="${id}" class="primary">
+                            記錄平倉
+                        </button>
+                    </div>
+                ` : ""}
+
+                ${history}
+            </div>
+        </article>`;
+}
+
+function render() {
+    const openTrades = state.trades.filter(trade => trade.status === "open");
+    const knownPnl = openTrades.map(floating).filter(value => value !== null);
+    const missing = openTrades.length - knownPnl.length;
+    const totalFloating = knownPnl.reduce((sum, value) => sum + value, 0);
+    const totalRealized = state.trades.reduce((sum, trade) => sum + realized(trade), 0);
+
+    $("openCount").textContent = openTrades.length;
+    $("floatingTotal").textContent =
+        missing && knownPnl.length === 0 ? "—" : signed(totalFloating);
+    $("floatingTotal").className = `metric-value number ${tone(totalFloating)}`;
+    $("realizedTotal").textContent = signed(totalRealized);
+    $("realizedTotal").className = `metric-value number ${tone(totalRealized)}`;
+
+    $("summaryNote").textContent =
+        `統計包含全部紀錄與部分平倉。已完成 ${state.trades.length - openTrades.length} 筆。` +
+        (missing ? ` 未實現盈虧有 ${missing} 筆缺資料，僅加總已知金額。` : "");
+
+    $("dataInfo").textContent = state.savedAt
+        ? `本機儲存：${dateText(state.savedAt)} · 行情為手動資料`
+        : "原始手動快照 · 尚未儲存更新";
+
+    const filter = $("statusFilter").value;
+    const search = $("searchInput").value.trim().toLowerCase();
+
+    const visible = state.trades.filter(trade =>
+        (filter === "all" || trade.status === filter) &&
+        `${trade.symbol} ${trade.exchange}`.toLowerCase().includes(search)
+    ).sort((a, b) =>
+        Number(b.status === "open") - Number(a.status === "open") ||
+        (Date.parse(b.updatedAt || "") || 0) - (Date.parse(a.updatedAt || "") || 0)
+    );
+
+    $("recordCount").textContent = `(${visible.length} / ${state.trades.length})`;
+    $("tradeList").innerHTML = visible.length
+        ? visible.map(renderCard).join("")
+        : '<div class="empty">沒有符合條件的交易。</div>';
+}
+
+function openTradeEditor(id = null) {
+    editingId = id;
+    const form = $("tradeForm");
+    form.reset();
+    $("tradeError").textContent = "";
+
+    const trade = id ? state.trades.find(item => item.id === id) : null;
+    $("tradeDialogTitle").textContent = trade ? "編輯交易" : "新增交易";
+
+    const values = trade || {
+        symbol: "",
+        exchange: "BingX",
+        side: "short",
+        leverage: 10,
+        entry: "",
+        current: "",
+        quantity: "",
+        manualPnl: "",
+        sl: "",
+        note: ""
+    };
+
+    for (const key of [
+        "symbol", "exchange", "side", "leverage", "entry",
+        "current", "quantity", "manualPnl", "sl", "note"
+    ]) {
+        form.elements[key].value = values[key] ?? "";
+    }
+
+    form.elements.targets.value = trade?.targets.join(", ") || "";
+    form.elements.openedAt.value = localInput(trade?.openedAt);
+    const locked = Boolean(trade?.exits.length);
+    form.elements.side.disabled = locked;
+    form.elements.entry.readOnly = locked;
+    $("editHistoryNote").hidden = !locked;
+    $("tradeDialog").showModal();
+}
+
+$("tradeForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const value = name => form.elements[name].value;
+
+    try {
+        const next = clone(state);
+        const existing = next.trades.find(trade => trade.id === editingId);
+        const targets = value("targets").trim()
+            ? value("targets").split(/[,，]/).map(item =>
+                positiveNumber(item.trim(), "TP"))
+            : [];
+
+        if (targets.length > 8) throw new Error("最多可填 8 個 TP。");
+
+        const trade = {
+            id: existing?.id || uid(),
+            symbol: value("symbol").trim().toUpperCase(),
+            exchange: value("exchange").trim(),
+            side: existing?.exits.length ? existing.side : value("side"),
+            leverage: positiveNumber(value("leverage"), "槓桿"),
+            status: "open",
+            entry: existing?.exits.length
+                ? existing.entry
+                : positiveNumber(value("entry"), "進場價"),
+            current: positiveNumber(value("current"), "現價", true),
+            quantity: positiveNumber(value("quantity"), "持倉數量", true),
+            manualPnl: optionalNumber(value("manualPnl")),
+            sl: positiveNumber(value("sl"), "止損價", true),
+            targets,
+            openedAt: value("openedAt")
+                ? new Date(value("openedAt")).toISOString()
+                : null,
+            updatedAt: new Date().toISOString(),
+            note: value("note").trim(),
+            exits: existing?.exits || []
+        };
+
+        if (existing) {
+            next.trades[next.trades.findIndex(item => item.id === existing.id)] = trade;
+        } else {
+            next.trades.push(trade);
+        }
+
+        commit(next);
+        $("tradeDialog").close();
+        toast("交易已儲存");
+    } catch (error) {
+        $("tradeError").textContent = error.message;
+    }
+});
+
+function openCloseEditor(id) {
+    closingId = id;
+    const trade = state.trades.find(item => item.id === id);
+    const form = $("closeForm");
+
+    form.reset();
+    $("closeError").textContent = "";
+    $("closeTradeInfo").textContent =
+        `${trade.symbol} · ${trade.side.toUpperCase()} · 剩餘數量 ${number(trade.quantity, 8)}`;
+
+    form.elements.at.value = localInput(new Date().toISOString());
+    form.elements.price.value = trade.current ?? "";
+    form.elements.mode.querySelector('[value="partial"]').disabled =
+        trade.quantity === null;
+
+    updateCloseMode();
+    updateCloseNet();
+    $("closeDialog").showModal();
+}
+
+function updateCloseMode() {
+    const trade = state.trades.find(item => item.id === closingId);
+    if (!trade) return;
+
+    const form = $("closeForm");
+    const full = form.elements.mode.value === "full";
+    form.elements.quantity.readOnly = full;
+    form.elements.quantity.value = full ? trade.quantity ?? "" : "";
+    form.elements.gross.value = "";
+    $("closeError").textContent = "";
+    updateCloseNet();
+}
+
+function updateCloseNet() {
+    const form = $("closeForm");
+
+    try {
+        const gross = optionalNumber(form.elements.gross.value);
+        const fees = optionalNumber(form.elements.fees.value);
+        const funding = optionalNumber(form.elements.funding.value);
+        const net = gross === null || fees === null || funding === null || fees < 0
+            ? null : gross - fees + funding;
+
+        $("closeNet").textContent = net === null ? "—" : `${signed(net)} U`;
+        $("closeNet").className = `cell-value number ${tone(net)}`;
+    } catch {
+        $("closeNet").textContent = "—";
+    }
+}
+
+$("closeForm").elements.mode.addEventListener("change", updateCloseMode);
+$("closeForm").addEventListener("input", updateCloseNet);
+
+$("estimateGross").addEventListener("click", () => {
+    const form = $("closeForm");
+    const trade = state.trades.find(item => item.id === closingId);
+
+    try {
+        const exitPrice = positiveNumber(form.elements.price.value, "平倉價");
+        const quantity = positiveNumber(form.elements.quantity.value, "平倉數量");
+        const gross = (exitPrice - trade.entry) * quantity *
+            (trade.side === "long" ? 1 : -1);
+
+        if (!Number.isFinite(gross)) throw new Error("數值超出計算範圍。");
+        form.elements.gross.value = Number(gross.toFixed(8));
+        $("closeError").textContent = "";
+        updateCloseNet();
+    } catch (error) {
+        $("closeError").textContent = error.message;
+    }
+});
+
+$("closeForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+
+    try {
+        const next = clone(state);
+        const trade = next.trades.find(item => item.id === closingId);
+        if (!trade || trade.status !== "open") throw new Error("交易已非持倉狀態。");
+
+        const full = form.elements.mode.value === "full";
+        const quantity = full
+            ? trade.quantity
+            : positiveNumber(form.elements.quantity.value, "平倉數量");
+
+        if (!full && (trade.quantity === null || quantity >= trade.quantity)) {
+            throw new Error("部分平倉數量須小於已知剩餘數量；全數出場請選全部平倉。");
+        }
+
+        const gross = optionalNumber(form.elements.gross.value);
+        const fees = optionalNumber(form.elements.fees.value);
+        const funding = optionalNumber(form.elements.funding.value);
+
+        if (gross === null || fees === null || fees < 0 || funding === null) {
+            throw new Error("請填寫平倉盈虧、非負手續費與資金費。");
+        }
+
+        const at = new Date(form.elements.at.value).toISOString();
+        if (trade.openedAt && Date.parse(at) < Date.parse(trade.openedAt)) {
+            throw new Error("平倉時間不能早於開倉時間。");
+        }
+
+        const previousExit = trade.exits.at(-1);
+        if (previousExit?.at && Date.parse(at) < Date.parse(previousExit.at)) {
+            throw new Error("請依時間順序記錄平倉。");
+        }
+
+        const exitPrice = positiveNumber(form.elements.price.value, "平倉價", true);
+
+        trade.exits.push({
+            id: uid(),
+            at,
+            price: exitPrice,
+            quantity,
+            gross,
+            fees,
+            funding
+        });
+
+        trade.updatedAt = new Date().toISOString();
+
+        if (full) {
+            trade.status = "closed";
+            trade.quantity = trade.quantity === null ? null : 0;
+            trade.manualPnl = null;
+        } else {
+            trade.quantity -= quantity;
+            trade.manualPnl = null;
+        }
+
+        if (exitPrice !== null) trade.current = exitPrice;
+
+        commit(next);
+        $("closeDialog").close();
+        toast(full ? "已記錄全部平倉" : "已記錄部分平倉，剩餘數量已更新");
+    } catch (error) {
+        $("closeError").textContent = error.message;
+    }
+});
 
 function calculate() {
+    const form = $("calcForm");
+    $("calcResults").innerHTML = "";
+    $("calcError").textContent = "";
 
-    const balance =
-        parseFloat(
-            document.getElementById("balance").value
-        );
+    try {
+        const balance = positiveNumber(form.elements.balance.value, "總資金");
+        const risk = positiveNumber(form.elements.risk.value, "風險比例");
+        const leverage = positiveNumber(form.elements.leverage.value, "槓桿");
+        const entry = positiveNumber(form.elements.entry.value, "進場價");
+        const sl = positiveNumber(form.elements.sl.value, "初始止損價");
+        const side = form.elements.side.value;
 
-
-    const risk =
-        parseFloat(
-            document.getElementById("risk").value
-        );
-
-
-    const leverage =
-        parseFloat(
-            document.getElementById("leverage").value
-        );
-
-
-    const entry =
-        parseFloat(
-            document.getElementById("entry").value
-        );
-
-
-    const sl =
-        parseFloat(
-            document.getElementById("sl").value
-        );
-
-
-    if (
-        !balance ||
-        !risk ||
-        !leverage ||
-        !entry ||
-        !sl
-    ) {
-        return;
-    }
-
-
-    if (
-        direction === "long"
-        &&
-        sl >= entry
-    ) {
-        return;
-    }
-
-
-    if (
-        direction === "short"
-        &&
-        sl <= entry
-    ) {
-        return;
-    }
-
-
-    const slDistance =
-        Math.abs(entry - sl)
-        /
-        entry;
-
-
-    const riskAmount =
-        balance
-        *
-        (
-            risk / 100
-        );
-
-
-    const notional =
-        riskAmount
-        /
-        slDistance;
-
-
-    const margin =
-        notional
-        /
-        leverage;
-
-
-    const marginPercent =
-        margin
-        /
-        balance
-        *
-        100;
-
-
-    document
-        .getElementById("margin")
-        .textContent =
-        format(
-            margin,
-            2
-        )
-        +
-        " U";
-
-
-    document
-        .getElementById("marginPercent")
-        .textContent =
-        format(
-            marginPercent,
-            2
-        )
-        +
-        "%";
-
-
-    document
-        .getElementById("notional")
-        .textContent =
-        format(
-            notional,
-            2
-        )
-        +
-        " U";
-
-
-    document
-        .getElementById("slDistance")
-        .textContent =
-        format(
-            slDistance * 100,
-            3
-        )
-        +
-        "%";
-
-
-    document
-        .getElementById("riskAmount")
-        .textContent =
-        format(
-            riskAmount,
-            2
-        )
-        +
-        " U";
-}
-
-
-
-/* =========================
-FILTER
-========================= */
-
-function filterTrades() {
-
-    const filter =
-        document
-            .getElementById("statusFilter")
-            .value;
-
-
-    const trades =
-        document
-            .querySelectorAll(".trade-card");
-
-
-    trades.forEach(
-        trade => {
-
-            const status =
-                trade.dataset.status;
-
-
-            trade.style.display =
-                (
-                    filter === "all"
-                    ||
-                    filter === status
-                )
-                ?
-                "block"
-                :
-                "none";
-
+        if (risk > 100) throw new Error("風險比例不能超過 100%。");
+        if (leverage < 1) throw new Error("槓桿須至少為 1 倍。");
+        if (side === "long" && sl >= entry) {
+            throw new Error("做多開倉計算：初始止損必須低於進場價。");
         }
-    );
+        if (side === "short" && sl <= entry) {
+            throw new Error("做空開倉計算：初始止損必須高於進場價。");
+        }
 
+        const distance = Math.abs(entry - sl);
+        const riskAmount = balance * risk / 100;
+        const quantity = riskAmount / distance;
+        const notional = quantity * entry;
+        const margin = notional / leverage;
+        const marginPercent = margin / balance * 100;
+        const distancePercent = distance / entry * 100;
+
+        if (![riskAmount, quantity, notional, margin, marginPercent, distancePercent]
+            .every(Number.isFinite)) {
+            throw new Error("輸入超出計算範圍，請調整數值。");
+        }
+
+        if (margin > balance) {
+            throw new Error(
+                `此組參數估計需要 ${number(margin, 2)} U 保證金，超過所填總資金。`
+            );
+        }
+
+        $("calcResults").innerHTML =
+            cell("預估止損損失", `${number(riskAmount, 4)} U`, "yellow") +
+            cell("估算持倉數量", number(quantity, 8)) +
+            cell("名義倉位", `${number(notional, 2)} U`) +
+            cell("估算保證金", `${number(margin, 4)} U`) +
+            cell("保證金占資金", `${number(marginPercent, 2)}%`) +
+            cell("止損距離", `${number(distancePercent, 4)}%`);
+    } catch (error) {
+        $("calcError").textContent = error.message;
+    }
 }
 
-
-
-/* =========================
-REFRESH
-========================= */
-
-function refreshData() {
-
-    alert(
-        "目前使用手動資料。之後串 BingX API 後可自動更新。"
-    );
-
+function toggleCalculator(force) {
+    const open = typeof force === "boolean" ? force : $("calculator").hidden;
+    $("calculator").hidden = !open;
+    $("calcToggle").setAttribute("aria-expanded", String(open));
+    if (open) calculate();
 }
 
+$("calcToggle").addEventListener("click", () => toggleCalculator());
+$("calcClose").addEventListener("click", () => toggleCalculator(false));
+$("calcForm").addEventListener("input", calculate);
+$("calcForm").addEventListener("change", calculate);
+$("calcForm").addEventListener("submit", event => event.preventDefault());
 
+$("addTrade").addEventListener("click", () => openTradeEditor());
+$("statusFilter").addEventListener("change", render);
+$("searchInput").addEventListener("input", render);
 
-/* =========================
-FORMAT
-========================= */
+$("tradeList").addEventListener("click", event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
 
-function format(number, digits) {
+    const id = button.dataset.id;
 
-    return Number(number)
-        .toLocaleString(
-            "en-US",
-            {
-                minimumFractionDigits:
-                    digits,
+    if (button.dataset.action === "toggle") {
+        const open = !expanded.has(id);
+        if (open) expanded.add(id);
+        else expanded.delete(id);
+        button.setAttribute("aria-expanded", String(open));
+        document.getElementById(`details-${id}`).hidden = !open;
+    } else if (button.dataset.action === "edit") {
+        openTradeEditor(id);
+    } else if (button.dataset.action === "close") {
+        openCloseEditor(id);
+    }
+});
 
-                maximumFractionDigits:
-                    digits
-            }
-        );
-}
+document.querySelectorAll("[data-close]").forEach(button => {
+    button.addEventListener("click", () => $(button.dataset.close).close());
+});
 
+$("exportBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], {
+        type: "application/json"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `bryce-trades-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast("已產生 JSON 備份");
+});
 
+$("importBtn").addEventListener("click", () => $("importFile").click());
 
-/* INIT */
+$("importFile").addEventListener("change", async event => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-calculate();
+    try {
+        if (file.size > 5 * 1024 * 1024) throw new Error("備份檔不能超過 5 MB。");
+        const imported = validateState(JSON.parse(await file.text()));
 
+        if (!confirm(
+            `備份包含 ${imported.trades.length} 筆交易。\n` +
+            "匯入會取代目前所有紀錄，建議先匯出目前資料。是否繼續？"
+        )) return;
+
+        commit(clone(imported), true);
+        expanded.clear();
+        render();
+        toast("備份已匯入");
+    } catch (error) {
+        toast(`匯入失敗：${error.message}`);
+    } finally {
+        event.target.value = "";
+    }
+});
+
+window.addEventListener("storage", event => {
+    if (event.key !== STORAGE_KEY) return;
+    storageBlocked = true;
+    warning("另一個分頁已修改或清除資料。為避免覆蓋，請重新整理本頁後再編輯。");
+});
+
+render();
 </script>
-
 </body>
 </html>
