@@ -362,7 +362,10 @@ h3 {
     transform: rotate(180deg);
 }
 
-/* 收合卡片固定只顯示三個價格欄位 */
+/*
+持倉中：進場價／現價／目前 SL
+已平倉：進場價／現價／累計已實現盈虧
+*/
 
 .quick-grid {
     display: grid;
@@ -395,6 +398,7 @@ h3 {
 .cell-label {
     font-size: 11px;
     font-weight: 400;
+    line-height: 1.5;
 }
 
 .trade-details {
@@ -1151,7 +1155,7 @@ const initialState = {
             targets: [],
             openedAt: null,
             updatedAt: null,
-            note: "原始止損 0.19412。依原始資料記錄費用差額 0.4322 U；已平倉卡片的 SL 為保留紀錄。",
+            note: "原始止損 0.19412。依原始資料記錄費用差額 0.4322 U；已平倉交易的 SL 為保留紀錄。",
             exits: [
                 {
                     id: "seed-arb-exit",
@@ -1266,6 +1270,11 @@ function positiveNumber(value, label, optional = false) {
 function netExit(exit) {
     return exit.gross - exit.fees + exit.funding;
 }
+
+/*
+累計已實現盈虧：
+加總這筆交易所有部分平倉與最終平倉的淨盈虧。
+*/
 
 function realized(trade) {
     return trade.exits.reduce(
@@ -1608,11 +1617,23 @@ function renderCard(trade, index) {
     const id = escapeHtml(trade.id);
     const detailsId = `trade-details-${index}`;
 
-    /* 收合時的數值資訊僅保留進場價、現價、目前 SL */
+    /*
+    收合卡片：
+    持倉中 → 進場價／現價／目前 SL
+    已平倉 → 進場價／現價／累計已實現盈虧
+
+    部分平倉仍屬持倉中，因此繼續顯示目前 SL。
+    全部平倉後才切換成累計已實現盈虧。
+    */
+
     const quick =
         cell("進場價", price(trade.entry)) +
         cell("現價", price(trade.current)) +
-        cell("目前 SL", price(trade.sl));
+        (
+            isOpen
+                ? cell("目前 SL", price(trade.sl))
+                : pnlCell("累計已實現盈虧", realized(trade))
+        );
 
     const targetCells = trade.targets.map((target, targetIndex) =>
         cell(
@@ -1728,7 +1749,7 @@ function renderCard(trade, index) {
 
                     ${isOpen
                         ? cell(
-                            "进場名義價值 · U".replace("进", "進"),
+                            "進場名義價值 · U",
                             trade.quantity === null
                                 ? "數量未填"
                                 : number(
@@ -1775,7 +1796,8 @@ function renderCard(trade, index) {
                         `
                         : `
                             <br>
-                            已平倉卡片的現價與 SL 為保留資料，不代表有效掛單。
+                            已平倉卡片的現價為保留資料，並非即時行情；
+                            SL 僅保留於詳情，不代表有效掛單。
                         `
                     }
 
@@ -1859,7 +1881,7 @@ function render() {
         `metric-value number ${tone(totalRealized)}`;
 
     $("summaryNote").textContent =
-        `統計包含全部紀錄與部分平倉。` +
+        "統計包含全部紀錄與部分平倉。" +
         `已完成 ${state.trades.length - openTrades.length} 筆。` +
         (
             missing
