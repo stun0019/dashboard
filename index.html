@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Trading Strategy Dashboard</title>
+<title>Trading Dashboard</title>
 
 <style>
 * {
@@ -14,25 +14,29 @@
 :root {
     --bg: #070b10;
     --panel: #0e151f;
-    --panel-light: #142238;
     --border: #26364a;
 
     --text: #f3f6fb;
     --muted: #8491a7;
 
     --green: #12d7a0;
-    --green-bg: #003c2d;
-
     --red: #ff5a7c;
-    --red-bg: #3b243d;
-
     --yellow: #f0c65d;
+    --blue: #4c8dff;
 
-    --blue-card: #142640;
+    --trade-card: #142640;
+    --trade-border: #294366;
+
+    --entry-bg: #070c12;
+    --sl-bg: #39243c;
+    --tp-bg: #0d4c4d;
+
+    --closed-bg: #151b25;
 }
 
 body {
     margin: 0;
+    min-height: 100vh;
 
     background:
         linear-gradient(
@@ -47,12 +51,11 @@ body {
         Arial,
         "Noto Sans TC",
         sans-serif;
-
-    min-height: 100vh;
 }
 
 .app {
     width: min(100% - 24px, 820px);
+
     margin: 0 auto;
 
     padding:
@@ -82,7 +85,6 @@ HEADER
 .brand {
     display: flex;
     align-items: center;
-
     gap: 12px;
 }
 
@@ -99,16 +101,16 @@ HEADER
             #29486e
         );
 
+    border:
+        1px solid
+        #304763;
+
     display: flex;
     justify-content: center;
     align-items: center;
 
-    font-weight: 900;
     font-size: 18px;
-
-    border:
-        1px solid
-        #304763;
+    font-weight: 900;
 }
 
 .brand-name {
@@ -136,19 +138,28 @@ HEADER
 
     color: var(--text);
 
-    font-size: 20px;
+    font-size: 18px;
 
     cursor: pointer;
 }
 
 
 /* =========================
-SUMMARY BAR
+SUMMARY
 ========================= */
 
-.summary {
-    margin-top: 14px;
+.summary-grid {
+    display: grid;
 
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 10px;
+
+    margin-top: 14px;
+}
+
+.summary-card {
     border:
         1px solid
         var(--border);
@@ -158,27 +169,19 @@ SUMMARY BAR
 
     border-radius: 13px;
 
-    padding: 15px 16px;
-}
-
-.summary-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+    padding: 14px 15px;
 }
 
 .summary-label {
     color: var(--muted);
 
-    font-size: 12px;
+    font-size: 11px;
 
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .summary-value {
-    color: var(--green);
-
-    font-size: 25px;
+    font-size: 23px;
 
     font-weight: 900;
 
@@ -187,120 +190,12 @@ SUMMARY BAR
         monospace;
 }
 
-.summary-count {
-    color: var(--muted);
-
-    font-size: 11px;
+.summary-value.green {
+    color: var(--green);
 }
 
-.summary-track {
-    margin-top: 12px;
-
-    height: 5px;
-
-    background: #172232;
-
-    border-radius: 999px;
-
-    overflow: hidden;
-}
-
-.summary-fill {
-    width: 14.5%;
-    height: 100%;
-
-    background: var(--green);
-}
-
-
-/* =========================
-PAGE TITLE
-========================= */
-
-.page-title {
-    display: flex;
-    align-items: baseline;
-
-    gap: 10px;
-
-    margin:
-        26px 0
-        20px;
-}
-
-.page-title h1 {
-    margin: 0;
-
-    font-size: 34px;
-
-    letter-spacing: -1px;
-}
-
-.page-count {
-    color: var(--muted);
-
-    font-size: 18px;
-
-    font-weight: 700;
-}
-
-
-/* =========================
-FILTER AREA
-========================= */
-
-.filter-row {
-    display: flex;
-    gap: 12px;
-
-    margin-bottom: 22px;
-}
-
-.filter-select {
-    width: 190px;
-
-    height: 50px;
-
-    background:
-        #111a28;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 11px;
-
-    color: var(--text);
-
-    padding: 0 14px;
-
-    font-size: 15px;
-
-    font-weight: 700;
-}
-
-.update-btn {
-    height: 50px;
-
-    padding:
-        0 25px;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 11px;
-
-    background:
-        #111a28;
-
-    color: var(--text);
-
-    font-size: 15px;
-
-    font-weight: 700;
-
-    cursor: pointer;
+.summary-value.yellow {
+    color: var(--yellow);
 }
 
 
@@ -311,7 +206,7 @@ CALCULATOR
 .calculator {
     display: none;
 
-    margin-bottom: 20px;
+    margin-top: 16px;
 
     background:
         var(--panel);
@@ -344,6 +239,7 @@ CALCULATOR
 
 .calc-close {
     border: 0;
+
     background: transparent;
 
     color: var(--muted);
@@ -355,7 +251,9 @@ CALCULATOR
 
 .direction {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+
+    grid-template-columns:
+        1fr 1fr;
 
     gap: 8px;
 
@@ -371,7 +269,8 @@ CALCULATOR
         1px solid
         var(--border);
 
-    background: #0b111a;
+    background:
+        #0b111a;
 
     color: var(--muted);
 
@@ -446,6 +345,7 @@ CALCULATOR
         1.4fr
         1fr
         1fr
+        1fr
         1fr;
 
     gap: 8px;
@@ -479,7 +379,7 @@ CALCULATOR
         Consolas,
         monospace;
 
-    font-size: 16px;
+    font-size: 15px;
 
     font-weight: 800;
 }
@@ -488,6 +388,97 @@ CALCULATOR
     color: var(--yellow);
 
     font-size: 21px;
+}
+
+
+/* =========================
+PAGE TITLE
+========================= */
+
+.page-title {
+    display: flex;
+    align-items: baseline;
+
+    gap: 10px;
+
+    margin:
+        28px 0
+        18px;
+}
+
+.page-title h1 {
+    margin: 0;
+
+    font-size: 34px;
+
+    letter-spacing: -1px;
+}
+
+.page-count {
+    color: var(--muted);
+
+    font-size: 18px;
+
+    font-weight: 700;
+}
+
+
+/* =========================
+FILTER
+========================= */
+
+.filter-row {
+    display: flex;
+
+    gap: 12px;
+
+    margin-bottom: 22px;
+}
+
+.filter-select {
+    width: 190px;
+    height: 50px;
+
+    background:
+        #111a28;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 11px;
+
+    color: var(--text);
+
+    padding: 0 14px;
+
+    font-size: 15px;
+
+    font-weight: 700;
+}
+
+.update-btn {
+    height: 50px;
+
+    padding:
+        0 25px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 11px;
+
+    background:
+        #111a28;
+
+    color: var(--text);
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
 }
 
 
@@ -505,7 +496,7 @@ TRADE CARD
 
     border:
         1px solid
-        #294366;
+        var(--trade-border);
 
     border-radius: 13px;
 
@@ -514,8 +505,21 @@ TRADE CARD
     margin-bottom: 18px;
 }
 
+.trade-card.closed {
+    background:
+        linear-gradient(
+            180deg,
+            #151b25,
+            #10151d
+        );
+
+    border-color:
+        #303b49;
+}
+
 .trade-header {
     display: flex;
+
     justify-content: space-between;
     align-items: flex-start;
 
@@ -524,7 +528,6 @@ TRADE CARD
 
 .coin-area {
     display: flex;
-
     gap: 11px;
 }
 
@@ -556,8 +559,6 @@ TRADE CARD
     font-size: 24px;
 
     font-weight: 900;
-
-    letter-spacing: .5px;
 }
 
 .exchange {
@@ -593,38 +594,32 @@ TRADE CARD
 
     border-radius: 9px;
 
-    background:
-        #101a2a;
-
     font-size: 13px;
 
     font-weight: 800;
 }
 
-.like {
-    min-width: 60px;
-
-    padding:
-        9px 10px;
-
-    border-radius: 9px;
+.status.open {
+    color: var(--yellow);
 
     background:
-        #101a2a;
+        rgba(240, 198, 93, .10);
 
     border:
         1px solid
-        #293950;
-
-    text-align: center;
-
-    font-size: 15px;
+        rgba(240, 198, 93, .25);
 }
 
+.status.closed {
+    color: var(--green);
 
-/* =========================
-TIME
-========================= */
+    background:
+        rgba(18, 215, 160, .10);
+
+    border:
+        1px solid
+        rgba(18, 215, 160, .25);
+}
 
 .trade-time {
     margin-top: 15px;
@@ -636,13 +631,11 @@ TIME
         monospace;
 
     font-size: 13px;
-
-    letter-spacing: .5px;
 }
 
 
 /* =========================
-PRICE BLOCK
+CURRENT PRICE
 ========================= */
 
 .current-block {
@@ -706,13 +699,13 @@ PNL
     background:
         linear-gradient(
             135deg,
-            #3b243d,
-            #33243c
+            #063a2d,
+            #073126
         );
 }
 
 .pnl-label {
-    color: var(--red);
+    color: var(--green);
 
     font-size: 13px;
 
@@ -722,11 +715,24 @@ PNL
 .pnl-value {
     margin-top: 9px;
 
-    color: var(--red);
+    color: var(--green);
 
     font-size: 30px;
 
+    font-family:
+        Consolas,
+        monospace;
+
     font-weight: 900;
+}
+
+.pnl-sub {
+    margin-top: 6px;
+
+    color:
+        #9cb3a9;
+
+    font-size: 11px;
 }
 
 
@@ -755,21 +761,22 @@ LEVEL GRID
 
 .level.entry {
     background:
-        #070c12;
+        var(--entry-bg);
 }
 
 .level.sl {
     background:
-        #39243c;
+        var(--sl-bg);
 }
 
 .level.tp {
     background:
-        #0d4c4d;
+        var(--tp-bg);
 }
 
 .level-head {
     display: flex;
+
     justify-content: space-between;
     align-items: center;
 
@@ -808,7 +815,7 @@ LEVEL GRID
 
 
 /* =========================
-RISK INFO
+RISK
 ========================= */
 
 .risk-info {
@@ -860,6 +867,61 @@ RISK INFO
 
 
 /* =========================
+CLOSED RESULT
+========================= */
+
+.closed-result {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 9px;
+
+    margin-top: 12px;
+}
+
+.closed-item {
+    background:
+        #090f16;
+
+    border:
+        1px solid
+        #263343;
+
+    border-radius: 10px;
+
+    padding: 13px;
+}
+
+.closed-label {
+    color: var(--muted);
+
+    font-size: 10px;
+
+    margin-bottom: 7px;
+}
+
+.closed-value {
+    font-family:
+        Consolas,
+        monospace;
+
+    font-size: 16px;
+
+    font-weight: 900;
+}
+
+.closed-value.green {
+    color: var(--green);
+}
+
+.closed-value.yellow {
+    color: var(--yellow);
+}
+
+
+/* =========================
 RESPONSIVE
 ========================= */
 
@@ -886,7 +948,12 @@ RESPONSIVE
         width: 42px;
         height: 42px;
 
-        font-size: 17px;
+        font-size: 16px;
+    }
+
+    .summary-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
     }
 
     .calc-grid {
@@ -909,6 +976,10 @@ RESPONSIVE
             repeat(2, 1fr);
     }
 
+    .closed-result {
+        grid-template-columns:
+            1fr;
+    }
 }
 
 @media (max-width: 450px) {
@@ -942,17 +1013,13 @@ RESPONSIVE
             8px 9px;
     }
 
-    .like {
-        min-width: 51px;
-
-        padding:
-            8px;
-    }
-
     .level-price {
-        font-size: 25px;
+        font-size: 24px;
     }
 
+    .summary-value {
+        font-size: 19px;
+    }
 }
 </style>
 </head>
@@ -962,7 +1029,10 @@ RESPONSIVE
 
 <div class="app">
 
-    <!-- HEADER -->
+
+    <!-- =========================
+    HEADER
+    ========================= -->
 
     <header class="header">
 
@@ -973,7 +1043,7 @@ RESPONSIVE
             </div>
 
             <div class="brand-name">
-                Bryce 策略
+                Bryce Strategy
             </div>
 
         </div>
@@ -986,28 +1056,14 @@ RESPONSIVE
                 onclick="toggleCalculator()"
                 title="倉位計算器"
             >
-                📌
+                %
             </button>
 
             <button
                 class="action-btn"
                 title="交易紀錄"
             >
-                📚
-            </button>
-
-            <button
-                class="action-btn"
-                title="通知"
-            >
-                📢
-            </button>
-
-            <button
-                class="action-btn"
-                title="提醒"
-            >
-                🔔
+                ≡
             </button>
 
         </div>
@@ -1016,34 +1072,47 @@ RESPONSIVE
 
 
 
-    <!-- PERFORMANCE -->
+    <!-- =========================
+    SUMMARY
+    ========================= -->
 
-    <section class="summary">
+    <section class="summary-grid">
 
-        <div class="summary-top">
+        <div class="summary-card">
 
-            <div>
-
-                <div class="summary-label">
-                    FTP觸及機率
-                </div>
-
-                <div class="summary-value">
-                    14.5%
-                </div>
-
+            <div class="summary-label">
+                持倉中
             </div>
 
-            <div class="summary-count">
-                29 / 200 筆
+            <div class="summary-value yellow">
+                1
             </div>
 
         </div>
 
 
-        <div class="summary-track">
+        <div class="summary-card">
 
-            <div class="summary-fill"></div>
+            <div class="summary-label">
+                已完成
+            </div>
+
+            <div class="summary-value">
+                1
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                已實現盈虧
+            </div>
+
+            <div class="summary-value green">
+                +1.2933
+            </div>
 
         </div>
 
@@ -1051,7 +1120,9 @@ RESPONSIVE
 
 
 
-    <!-- CALCULATOR -->
+    <!-- =========================
+    CALCULATOR
+    ========================= -->
 
     <section
         id="calculator"
@@ -1084,6 +1155,7 @@ RESPONSIVE
                 LONG
             </button>
 
+
             <button
                 id="shortBtn"
                 class="short active"
@@ -1100,13 +1172,14 @@ RESPONSIVE
             <div class="field">
 
                 <label>
-                    總資金
+                    總資金 USDT
                 </label>
 
                 <input
                     id="balance"
                     type="number"
                     value="60"
+                    step="0.01"
                     oninput="calculate()"
                 >
 
@@ -1123,6 +1196,7 @@ RESPONSIVE
                     id="risk"
                     type="number"
                     value="10"
+                    step="0.1"
                     oninput="calculate()"
                 >
 
@@ -1139,6 +1213,7 @@ RESPONSIVE
                     id="leverage"
                     type="number"
                     value="300"
+                    step="1"
                     oninput="calculate()"
                 >
 
@@ -1154,8 +1229,8 @@ RESPONSIVE
                 <input
                     id="entry"
                     type="number"
-                    step="any"
                     value="0.4212"
+                    step="any"
                     oninput="calculate()"
                 >
 
@@ -1171,8 +1246,8 @@ RESPONSIVE
                 <input
                     id="sl"
                     type="number"
-                    step="any"
                     value="0.4262"
+                    step="any"
                     oninput="calculate()"
                 >
 
@@ -1234,6 +1309,22 @@ RESPONSIVE
             <div class="result-box">
 
                 <div class="result-label">
+                    SL 距離
+                </div>
+
+                <div
+                    id="slDistance"
+                    class="result-value"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div class="result-box">
+
+                <div class="result-label">
                     最大虧損
                 </div>
 
@@ -1252,7 +1343,9 @@ RESPONSIVE
 
 
 
-    <!-- TITLE -->
+    <!-- =========================
+    TITLE
+    ========================= -->
 
     <div class="page-title">
 
@@ -1261,41 +1354,35 @@ RESPONSIVE
         </h1>
 
         <div class="page-count">
-            ( 2 / 2 )
+            ( 2 )
         </div>
 
     </div>
 
 
 
-    <!-- FILTER -->
+    <!-- =========================
+    FILTER
+    ========================= -->
 
     <div class="filter-row">
 
-        <select class="filter-select">
+        <select
+            id="statusFilter"
+            class="filter-select"
+            onchange="filterTrades()"
+        >
 
-            <option>
+            <option value="all">
                 全部
             </option>
 
-            <option>
+            <option value="open">
                 持倉中
             </option>
 
-            <option>
-                已止盈
-            </option>
-
-            <option>
-                已止損
-            </option>
-
-            <option>
-                LONG
-            </option>
-
-            <option>
-                SHORT
+            <option value="closed">
+                已平倉
             </option>
 
         </select>
@@ -1312,9 +1399,14 @@ RESPONSIVE
 
 
 
-    <!-- WLD CARD -->
+    <!-- =========================
+    WLD
+    ========================= -->
 
-    <section class="trade-card">
+    <section
+        class="trade-card"
+        data-status="open"
+    >
 
         <div class="trade-header">
 
@@ -1331,7 +1423,7 @@ RESPONSIVE
                     </div>
 
                     <div class="exchange">
-                        OKX　永續合約
+                        BingX　USDT PERP　SHORT 300X
                     </div>
 
                 </div>
@@ -1341,12 +1433,8 @@ RESPONSIVE
 
             <div class="status-area">
 
-                <div class="status">
+                <div class="status open">
                     持倉中
-                </div>
-
-                <div class="like">
-                    ❤️ 0
                 </div>
 
             </div>
@@ -1355,7 +1443,7 @@ RESPONSIVE
 
 
         <div class="trade-time">
-            開單時間　09/07 08:30
+            Entry　0.4212
         </div>
 
 
@@ -1365,17 +1453,21 @@ RESPONSIVE
             <div class="block-top">
 
                 <span>
-                    OKX 價格
+                    CURRENT PRICE
                 </span>
 
                 <span class="price-time">
-                    09:02
+                    LIVE
                 </span>
 
             </div>
 
-            <div class="current-price">
-                0.4177
+
+            <div
+                id="wldCurrentPrice"
+                class="current-price"
+            >
+                0.4114
             </div>
 
         </div>
@@ -1385,11 +1477,19 @@ RESPONSIVE
         <div class="pnl-block">
 
             <div class="pnl-label">
-                最終盈虧
+                未實現盈虧
             </div>
 
-            <div class="pnl-value">
-                未結算
+            <div
+                id="wldFloatingPnl"
+                class="pnl-value"
+            >
+                +84.05 U
+            </div>
+
+
+            <div class="pnl-sub">
+                目前為手動資料，之後可串 BingX API 自動更新
             </div>
 
         </div>
@@ -1414,7 +1514,7 @@ RESPONSIVE
             <div class="level sl">
 
                 <div class="level-head">
-                    SL
+                    CURRENT SL
                 </div>
 
                 <div class="level-price">
@@ -1430,10 +1530,6 @@ RESPONSIVE
 
                     <span>
                         TP1
-                    </span>
-
-                    <span class="rr">
-                        1.0R
                     </span>
 
                 </div>
@@ -1453,10 +1549,6 @@ RESPONSIVE
                         TP2
                     </span>
 
-                    <span class="rr">
-                        2.0R
-                    </span>
-
                 </div>
 
                 <div class="level-price">
@@ -1472,10 +1564,6 @@ RESPONSIVE
 
                     <span>
                         TP3
-                    </span>
-
-                    <span class="rr">
-                        5.0R
                     </span>
 
                 </div>
@@ -1495,10 +1583,6 @@ RESPONSIVE
                         FTP
                     </span>
 
-                    <span class="rr">
-                        10.0R
-                    </span>
-
                 </div>
 
                 <div class="level-price">
@@ -1516,6 +1600,19 @@ RESPONSIVE
             <div class="risk-mini">
 
                 <div class="risk-mini-label">
+                    SIDE
+                </div>
+
+                <div class="risk-mini-value">
+                    SHORT
+                </div>
+
+            </div>
+
+
+            <div class="risk-mini">
+
+                <div class="risk-mini-label">
                     LEVERAGE
                 </div>
 
@@ -1529,11 +1626,11 @@ RESPONSIVE
             <div class="risk-mini">
 
                 <div class="risk-mini-label">
-                    MARGIN
+                    NOTIONAL
                 </div>
 
                 <div class="risk-mini-value">
-                    1.68 U
+                    ≈ 3,614 U
                 </div>
 
             </div>
@@ -1542,24 +1639,11 @@ RESPONSIVE
             <div class="risk-mini">
 
                 <div class="risk-mini-label">
-                    MAX RISK
+                    STATUS
                 </div>
 
                 <div class="risk-mini-value">
-                    6 U
-                </div>
-
-            </div>
-
-
-            <div class="risk-mini">
-
-                <div class="risk-mini-label">
-                    RISK %
-                </div>
-
-                <div class="risk-mini-value">
-                    10%
+                    RUNNING
                 </div>
 
             </div>
@@ -1570,9 +1654,14 @@ RESPONSIVE
 
 
 
-    <!-- ARB CARD -->
+    <!-- =========================
+    ARB CLOSED
+    ========================= -->
 
-    <section class="trade-card">
+    <section
+        class="trade-card closed"
+        data-status="closed"
+    >
 
         <div class="trade-header">
 
@@ -1589,7 +1678,7 @@ RESPONSIVE
                     </div>
 
                     <div class="exchange">
-                        OKX　永續合約
+                        BingX　USDT PERP　SHORT 75X
                     </div>
 
                 </div>
@@ -1599,56 +1688,82 @@ RESPONSIVE
 
             <div class="status-area">
 
-                <div class="status">
-                    持倉中
-                </div>
-
-                <div class="like">
-                    ❤️ 0
+                <div class="status closed">
+                    已平倉
                 </div>
 
             </div>
 
         </div>
+
 
 
         <div class="trade-time">
-            開單時間　09/07 08:40
+            Entry　0.19075
         </div>
 
-
-        <div class="current-block">
-
-            <div class="block-top">
-
-                <span>
-                    OKX 價格
-                </span>
-
-                <span class="price-time">
-                    09:02
-                </span>
-
-            </div>
-
-            <div class="current-price">
-                0.18997
-            </div>
-
-        </div>
 
 
         <div class="pnl-block">
 
             <div class="pnl-label">
-                最終盈虧
+                最終實現盈虧
             </div>
 
             <div class="pnl-value">
-                未結算
+                +1.2933 U
+            </div>
+
+            <div class="pnl-sub">
+                交易已結束
             </div>
 
         </div>
+
+
+
+        <div class="closed-result">
+
+            <div class="closed-item">
+
+                <div class="closed-label">
+                    平倉盈虧
+                </div>
+
+                <div class="closed-value green">
+                    +1.7255 U
+                </div>
+
+            </div>
+
+
+            <div class="closed-item">
+
+                <div class="closed-label">
+                    實現盈虧
+                </div>
+
+                <div class="closed-value green">
+                    +1.2933 U
+                </div>
+
+            </div>
+
+
+            <div class="closed-item">
+
+                <div class="closed-label">
+                    手續費 / 費用差額
+                </div>
+
+                <div class="closed-value yellow">
+                    -0.4322 U
+                </div>
+
+            </div>
+
+        </div>
+
 
 
         <div class="level-grid">
@@ -1669,7 +1784,7 @@ RESPONSIVE
             <div class="level sl">
 
                 <div class="level-head">
-                    SL
+                    ORIGINAL SL
                 </div>
 
                 <div class="level-price">
@@ -1678,86 +1793,59 @@ RESPONSIVE
 
             </div>
 
+        </div>
 
-            <div class="level tp">
 
-                <div class="level-head">
 
-                    <span>
-                        TP1
-                    </span>
+        <div class="risk-info">
 
-                    <span class="rr">
-                        1.0R
-                    </span>
+            <div class="risk-mini">
 
+                <div class="risk-mini-label">
+                    SIDE
                 </div>
 
-                <div class="level-price">
-                    0.18800
+                <div class="risk-mini-value">
+                    SHORT
                 </div>
 
             </div>
 
 
-            <div class="level tp">
+            <div class="risk-mini">
 
-                <div class="level-head">
-
-                    <span>
-                        TP2
-                    </span>
-
-                    <span class="rr">
-                        2.0R
-                    </span>
-
+                <div class="risk-mini-label">
+                    LEVERAGE
                 </div>
 
-                <div class="level-price">
-                    0.18500
+                <div class="risk-mini-value">
+                    75X
                 </div>
 
             </div>
 
 
-            <div class="level tp">
+            <div class="risk-mini">
 
-                <div class="level-head">
-
-                    <span>
-                        TP3
-                    </span>
-
-                    <span class="rr">
-                        5.0R
-                    </span>
-
+                <div class="risk-mini-label">
+                    RESULT
                 </div>
 
-                <div class="level-price">
-                    0.18000
+                <div class="risk-mini-value green">
+                    PROFIT
                 </div>
 
             </div>
 
 
-            <div class="level tp">
+            <div class="risk-mini">
 
-                <div class="level-head">
-
-                    <span>
-                        FTP
-                    </span>
-
-                    <span class="rr">
-                        10.0R
-                    </span>
-
+                <div class="risk-mini-label">
+                    STATUS
                 </div>
 
-                <div class="level-price">
-                    0.17500
+                <div class="risk-mini-value">
+                    CLOSED
                 </div>
 
             </div>
@@ -1776,22 +1864,33 @@ RESPONSIVE
 let direction = "short";
 
 
+/* =========================
+CALCULATOR TOGGLE
+========================= */
+
 function toggleCalculator() {
 
     document
         .getElementById("calculator")
         .classList
         .toggle("open");
+
 }
 
 
+
+/* =========================
+DIRECTION
+========================= */
 
 function setDirection(type) {
 
     direction = type;
 
+
     const longBtn =
         document.getElementById("longBtn");
+
 
     const shortBtn =
         document.getElementById("shortBtn");
@@ -1800,6 +1899,7 @@ function setDirection(type) {
     longBtn
         .classList
         .remove("active");
+
 
     shortBtn
         .classList
@@ -1825,6 +1925,10 @@ function setDirection(type) {
 }
 
 
+
+/* =========================
+POSITION CALCULATOR
+========================= */
 
 function calculate() {
 
@@ -1865,6 +1969,7 @@ function calculate() {
         !entry ||
         !sl
     ) {
+
         return;
     }
 
@@ -1874,6 +1979,7 @@ function calculate() {
         &&
         sl >= entry
     ) {
+
         return;
     }
 
@@ -1883,6 +1989,7 @@ function calculate() {
         &&
         sl <= entry
     ) {
+
         return;
     }
 
@@ -1926,7 +2033,10 @@ function calculate() {
     document
         .getElementById("margin")
         .textContent =
-        format(margin, 2)
+        format(
+            margin,
+            2
+        )
         +
         " U";
 
@@ -1954,6 +2064,17 @@ function calculate() {
 
 
     document
+        .getElementById("slDistance")
+        .textContent =
+        format(
+            slDistance * 100,
+            3
+        )
+        +
+        "%";
+
+
+    document
         .getElementById("riskAmount")
         .textContent =
         format(
@@ -1965,6 +2086,70 @@ function calculate() {
 }
 
 
+
+/* =========================
+FILTER
+========================= */
+
+function filterTrades() {
+
+    const filter =
+        document
+            .getElementById("statusFilter")
+            .value;
+
+
+    const trades =
+        document
+            .querySelectorAll(".trade-card");
+
+
+    trades.forEach(
+        trade => {
+
+            const status =
+                trade.dataset.status;
+
+
+            if (
+                filter === "all"
+                ||
+                filter === status
+            ) {
+
+                trade.style.display =
+                    "block";
+
+            } else {
+
+                trade.style.display =
+                    "none";
+
+            }
+
+        }
+    );
+}
+
+
+
+/* =========================
+REFRESH
+========================= */
+
+function refreshData() {
+
+    alert(
+        "目前使用手動資料。之後串接 BingX API 後，這裡會自動更新持倉、價格與浮動盈虧。"
+    );
+
+}
+
+
+
+/* =========================
+FORMAT
+========================= */
 
 function format(
     number,
@@ -1986,13 +2171,9 @@ function format(
 
 
 
-function refreshData() {
-
-    alert("目前為 Demo 資料，之後可接 OKX API 自動更新。");
-
-}
-
-
+/* =========================
+INIT
+========================= */
 
 calculate();
 
