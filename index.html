@@ -395,6 +395,7 @@ h1, h2, p { margin: 0; }
         </div>
 
         <div class="actions">
+            <button id="createOrderBtn" type="button" class="compact-save" disabled>建立下單紀錄</button>
             <button id="saveBtn" type="button" class="primary compact-save" disabled>儲存紀錄</button>
         </div>
     </section>
@@ -501,6 +502,7 @@ function clearResults() {
     lastCalculation = null;
     setText("marginPctResult", "—");
     $("saveBtn").disabled = true;
+    $("createOrderBtn").disabled = true;
 }
 
 function calculate() {
@@ -550,8 +552,10 @@ function calculate() {
         $("error").textContent =
             `此止損距離在 50X 下需要約 ${num(marginPct, 2)}% 總資金作為保證金，超過可用資金。`;
         $("saveBtn").disabled = true;
+        $("createOrderBtn").disabled = true;
     } else {
         $("saveBtn").disabled = false;
+        $("createOrderBtn").disabled = false;
     }
 
     lastCalculation = {
@@ -630,7 +634,7 @@ form.addEventListener("change", calculate);
 $("calcToggle").addEventListener("click", () => toggleCalculator());
 $("calcClose").addEventListener("click", () => toggleCalculator(false));
 
-$("saveBtn").addEventListener("click", () => {
+function saveCurrentRecord() {
     calculate();
     if (!lastCalculation) return;
 
@@ -642,7 +646,10 @@ $("saveBtn").addEventListener("click", () => {
     form.elements.entry.value = "";
     form.elements.sl.value = "";
     clearResults();
-});
+}
+
+$("createOrderBtn").addEventListener("click", saveCurrentRecord);
+$("saveBtn").addEventListener("click", saveCurrentRecord);
 
 $("recordList").addEventListener("click", event => {
     const button = event.target.closest("[data-delete]");
