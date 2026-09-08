@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bryce Strategy · 合約篩選與交易計畫</title>
+<title>Bryce Trading · 交易紀錄與倉位計算</title>
 
 <style>
 :root {
@@ -535,27 +535,6 @@ dialog::backdrop { background: #000a; }
     .quick-grid .cell-label { font-size: 10px; }
 }
 
-/* Strategy workspace */
-.app { width: min(100% - 28px, 1080px); }
-.workspace-tabs { display:flex; gap:8px; margin:20px 0; flex-wrap:wrap; }
-.workspace-tabs button { flex:1; min-width:110px; }
-.workspace-tabs button.active { border-color:var(--yellow); background:#273024; color:var(--yellow); }
-.scan-toolbar { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:16px 0; }
-.scan-toolbar label { font-size:13px; }
-.scan-card { margin:12px 0; border:1px solid #304c70; border-radius:12px; background:#111f30; overflow:hidden; }
-.scan-card summary { cursor:pointer; display:flex; gap:14px; justify-content:space-between; align-items:center; padding:18px; flex-wrap:wrap; }
-.scan-card summary strong { font-size:21px; }
-.scan-card small { color:var(--muted); font-size:13px; }
-.scan-body { padding:0 18px 18px; border-top:1px solid var(--border); }
-.scan-body button { margin-top:14px; }
-.plan-row { display:flex; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); }
-.plan-row button { align-self:center; flex-shrink:0; }
-#scanErrors { white-space:pre-wrap; }
-#scanStatus { color:var(--yellow); margin:14px 0; line-height:1.7; }
-#scanAuto { width:auto; }
-.rule-details { margin:16px 0; color:var(--muted); font-size:13px; line-height:1.8; }
-.rule-details summary { cursor:pointer; }
-@media(max-width:620px) { .scan-toolbar {grid-template-columns:repeat(2,minmax(0,1fr));} .scan-card summary {padding:14px;gap:9px;} .scan-body {padding:0 12px 14px;} }
 
 </style>
 </head>
@@ -567,7 +546,7 @@ dialog::backdrop { background: #000a; }
             <div class="logo">BS</div>
             <div>
                 <strong>Bryce Strategy</strong>
-                <div class="subtitle">選幣 · 計畫 · 交易紀錄 · v3.0</div>
+                <div class="subtitle">交易紀錄 · 倉位計算</div>
             </div>
         </div>
         <button id="calcToggle" type="button" aria-expanded="false"
@@ -591,41 +570,6 @@ dialog::backdrop { background: #000a; }
         <p id="marketNote" class="note"></p>
     </section>
 
-
-    <nav class="workspace-tabs" aria-label="工作區">
-      <button type="button" data-tab="screener">幣種篩選</button>
-      <button type="button" data-tab="trades">交易紀錄</button>
-      <button type="button" data-tab="calculator">計畫與倉位</button>
-    </nav>
-    <section id="screener" data-page="screener" class="panel">
-      <div class="section-head" style="margin:0"><h2>合約幣種篩選</h2><span class="muted">SMA83 + EMA200 · 順勢回測</span></div>
-      <p id="scanContext" class="note"></p>
-      <div class="scan-toolbar">
-        <label>成交額前 N 個<select id="scanLimit"><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="50">50</option></select></label>
-        <label>最低24H成交額約 · 百萬 U<input id="scanVolume" type="number" min="0" step="1" value="5"></label>
-        <label>最大買賣價差 · %<input id="scanSpread" type="number" min="0.001" step="0.01" value="0.15"></label>
-        <label>最低預估淨風報比<input id="scanRR" type="number" min="0.1" step="0.1" value="2"></label>
-        <label>單邊手續費假設 · %<input id="scanFee" type="number" min="0" max="10" step="0.01" value="0.05"></label>
-        <label>單邊滑價假設 · %<input id="scanSlip" type="number" min="0" max="10" step="0.01" value="0.03"></label>
-        <label>持有期資金成本預留 · %<input id="scanFunding" type="number" min="0" max="10" step="0.01" value="0.03"></label>
-        <label>顯示<select id="scanSide"><option value="all">全部</option><option value="long">偏多</option><option value="short">偏空</option><option value="ready">條件已觸發</option><option value="neutral">觀望</option></select></label>
-      </div>
-      <div class="actions"><button id="scanStart" class="primary">開始掃描</button><button id="scanStop" disabled>停止掃描</button><label style="display:flex;align-items:center"><input id="scanAuto" type="checkbox">完成後每15分鐘掃描</label></div>
-      <p id="scanStatus" role="status">尚未掃描</p>
-      <input id="scanSearch" type="search" placeholder="搜尋 BTC、ETH、WLD…" aria-label="篩選幣種">
-      <p id="sectorSummary" class="note"></p>
-      <details class="rule-details"><summary>策略規則與資料範圍</summary>
-        <p>掃描 OKX USDT 線性永續；僅涵蓋本次成交額前 N 個商品。成交額以基礎幣成交量 × 最新價近似，不等於精確成交金額；價差是初篩快照，不保證大額成交深度。</p>
-        <p>H1：最近120根內確認高低點同向，價格／SMA83／EMA200 同向排列；83五根斜率超過0.05 ATR、200同向；兩線距離至少0.15 ATR，近20根交叉不超過一次。H4若明確反向則觀望。</p>
-        <p>M15：最近5根內，回測均線±0.25 ATR與已確認水平區；出現長影拒絕或實體吞沒。後續收線超過訊號K高／低點±0.05 ATR才觸發。SL在訊號K極值外0.2 ATR；現價距觸發價超過0.75 ATR則列延伸。</p>
-        <p>水平區：最近160根的高低點，左右各3根確認，0.5 ATR內聚合且至少2點，外擴0.1 ATR。TP取最近反向H1／H4區；無目標則不判定可進場。這是規則化近似，仍須人工核對。</p>
-        <p>RS＝相對BTC的1H／4H／24H報酬差，權重20%／50%／30%。同方向內排名，不是勝率。板塊使用可在程式SECTORS修改的簡易分類，只統計本次樣本，不宣稱全市場資金流入。</p>
-        <p>成本為輸入假設，不是你的實際費率；資金成本為持有期間總預留，非每期費率。本版未取得即時未平倉量、資金費率或帳戶清算資料。規則尚未經歷史回測驗證。</p>
-      </details>
-      <div id="scanList"></div><p id="scanErrors" class="error"></p>
-    </section>
-    <section id="performance" class="panel" hidden></section>
-
     <section class="summary-grid" aria-label="交易統計">
         <div class="summary-card">
             <div class="metric-label">持倉中</div>
@@ -644,61 +588,50 @@ dialog::backdrop { background: #000a; }
 
     <section id="calculator" class="panel" hidden>
         <div class="row">
-            <h2>交易計畫與倉位計算</h2>
+            <h2>倉位計算器</h2>
             <button id="calcClose" type="button" aria-label="關閉計算器">×</button>
         </div>
-        <div id="planList"></div>
-        <p id="activePlan" class="note"></p>
-        <div class="actions" style="margin-top:12px"><button id="savePlanParams" type="button">儲存計畫參數</button><button id="recordPlan" type="button" class="primary">填寫實際成交</button><button id="detachPlan" type="button">獨立計算</button></div>
+
         <div class="calc-intro">
-            <strong>先決定可承擔損失，再計算倉位。</strong><br>
-            風險比例用來估算止損損失，槓桿用來估算保證金。
-            下列計算適用於以 USDT 計價的線性倉位。
+            <strong>先決定最多願意虧多少，再反推應使用多少總資金作為保證金。</strong><br>
+            改變槓桿時，「建議使用總資金 %」會即時調整；Entry、SL、風險比例不變時，最大風險與名義倉位不變。
         </div>
 
         <form id="calcForm" class="form-grid calc-grid" novalidate>
             <label>方向
                 <select name="side">
-                    <option value="short">SHORT · 做空</option>
                     <option value="long">LONG · 做多</option>
+                    <option value="short">SHORT · 做空</option>
                 </select>
             </label>
             <label>總資金 · U
-                <input name="balance" type="number" step="any" value="100">
+                <input name="balance" type="number" step="any" min="0.00000001" value="72">
             </label>
             <label>單筆風險 · %
-                <input name="risk" type="number" step="any" min="0.1" max="10" value="1">
+                <input name="risk" type="number" step="any" min="0.1" max="100" value="10">
                 <span class="calc-preset-row">
                     <button type="button" class="calc-preset" data-risk-preset="1">1%</button>
                     <button type="button" class="calc-preset" data-risk-preset="2">2%</button>
                     <button type="button" class="calc-preset" data-risk-preset="3">3%</button>
                     <button type="button" class="calc-preset" data-risk-preset="5">5%</button>
-                    <button type="button" class="calc-preset" data-risk-preset="10">10% 自訂上限</button>
+                    <button type="button" class="calc-preset" data-risk-preset="10">10%</button>
                 </span>
             </label>
             <label>槓桿 · 倍
-                <input name="leverage" type="number" step="any" min="1" value="20">
+                <input name="leverage" type="number" step="any" min="1" value="50">
                 <span class="calc-preset-row">
-                    <button type="button" class="calc-preset" data-leverage-preset="10">10X</button>
                     <button type="button" class="calc-preset" data-leverage-preset="20">20X</button>
                     <button type="button" class="calc-preset" data-leverage-preset="50">50X</button>
+                    <button type="button" class="calc-preset" data-leverage-preset="75">75X</button>
                     <button type="button" class="calc-preset" data-leverage-preset="100">100X</button>
-                    <button type="button" class="calc-preset" data-leverage-preset="300">300X</button>
+                    <button type="button" class="calc-preset" data-leverage-preset="200">200X</button>
                 </span>
             </label>
             <label>進場價
-                <input name="entry" type="number" step="any" placeholder="例如 0.4228">
+                <input name="entry" type="number" step="any" min="0.00000001" placeholder="例如 7.004">
             </label>
-            <label>初始止損價
-                <input name="sl" type="number" step="any" placeholder="例如 0.4262">
-            </label>
-            <label>TP 目標價（選填）<input name="tp" type="number" step="any" min="0"></label>
-            <label>單邊手續費假設 · %<input name="fee" type="number" step="0.01" min="0" value="0.05"></label>
-            <label>單邊滑價假設 · %<input name="slip" type="number" step="0.01" min="0" value="0.03"></label>
-            <label>持有期資金成本預留 · %<input name="funding" type="number" step="0.01" min="0" value="0.03"></label>
-            <label class="span-all">我打算用的保證金 · U（選填）
-                <input name="plannedMargin" type="number" step="any" min="0"
-                       placeholder="留空只看估算倉位">
+            <label>止損價
+                <input name="sl" type="number" step="any" min="0.00000001" placeholder="例如 6.974">
             </label>
         </form>
 
@@ -706,24 +639,12 @@ dialog::backdrop { background: #000a; }
         <div id="calcDecision" class="calc-decision" role="status" hidden></div>
         <div id="calcResults" class="result-grid"></div>
 
-        <div id="plannedCheck" class="calc-check" hidden>
-            <div class="calc-check-title">
-                <strong>預計保證金風險檢查</strong>
-                <span>保證金 × 槓桿＝估算名義倉位</span>
-            </div>
-            <div id="plannedResults" class="result-grid"></div>
-            <div id="plannedMessage" class="calc-rule"></div>
-        </div>
-
         <div class="calc-rule">
-            風險預算＝總資金 × 風險%；數量＝風險預算 ÷ 每幣止損價差與成本；
-            保證金＝名義倉位 ÷ 槓桿。<br>
-            同一組進場價、止損與風險比例下，改變槓桿只改變估算保證金。
+            最大可虧損＝總資金 × 單筆風險%；數量＝最大可虧損 ÷ |Entry − SL|；
+            名義倉位＝數量 × Entry；保證金＝名義倉位 ÷ 槓桿；
+            建議使用總資金％＝保證金 ÷ 總資金 × 100。
         </div>
-        <p class="note">
-            輸入上限 10% 並非安全建議。已預留輸入的費用與滑價；未核對維持保證金及強平規則。
-            1/L 是數學參考，不等於實際強平距離，也不代表交易所支援該槓桿。
-        </p>
+        <p class="note">此計算未包含手續費、滑價、資金費與交易所實際強平規則；實際下單可略微縮小倉位保留成本空間。</p>
     </section>
 
     <div class="section-head">
@@ -1138,13 +1059,11 @@ function validateState(data) {
     }
 
     assert(Number.isFinite(totalRealized), "統計金額超出計算範圍。");
-    validateExtension(data);
     return data;
 }
 
 function normalizeState(data) {
     const result = clone(data);
-    result.plans = result.plans || [];
     result.trades = result.trades.map(trade => ({
         ...trade,
         quoteMode: trade.quoteMode ?? "swap",
@@ -1765,7 +1684,6 @@ $("tradeForm").addEventListener("submit", event => {
             throw new Error("開倉時間不能晚於既有平倉紀錄。");
         }
 
-        attachTradePlan(trade, existing, next);
         if (existing) {
             next.trades[next.trades.findIndex(t => t.id === existing.id)] = trade;
         } else next.trades.push(trade);
@@ -1925,14 +1843,78 @@ $("closeForm").addEventListener("submit", event => {
 function clearCalcResults() {
     $("calcResults").innerHTML = "";
     $("calcDecision").hidden = true;
-    $("plannedCheck").hidden = true;
-    $("plannedResults").innerHTML = "";
-    $("plannedMessage").textContent = "";
 }
 
-function calculate() { calculateEnhanced(); }
+function calculate() {
+    clearCalcResults();
+    $("calcError").textContent = "";
 
-function toggleCalculator(force) { setPage(force === false ? 'trades' : 'calculator'); }
+    const f = $("calcForm").elements;
+
+    try {
+        const balance = positiveNumber(f.balance.value, "總資金");
+        const risk = positiveNumber(f.risk.value, "單筆風險");
+        const leverage = positiveNumber(f.leverage.value, "槓桿");
+        const entry = positiveNumber(f.entry.value, "進場價");
+        const sl = positiveNumber(f.sl.value, "止損價");
+        const side = f.side.value;
+
+        if (risk > 100) throw new Error("單筆風險不可超過 100%。");
+        if (side === "long" && sl >= entry) throw new Error("多單 SL 必須低於進場價。");
+        if (side === "short" && sl <= entry) throw new Error("空單 SL 必須高於進場價。");
+
+        const riskBudget = balance * risk / 100;
+        const stopDistance = Math.abs(entry - sl);
+        const stopPct = stopDistance / entry * 100;
+        const quantity = riskBudget / stopDistance;
+        const notional = quantity * entry;
+        const margin = notional / leverage;
+        const marginPct = margin / balance * 100;
+
+        if (![riskBudget, stopDistance, quantity, notional, margin, marginPct].every(Number.isFinite)) {
+            throw new Error("計算超出數值範圍。");
+        }
+
+        const severity = marginPct > 100 ? "danger" : risk > 10 ? "warn" : "good";
+        $("calcDecision").className = `calc-decision ${severity}`;
+        $("calcDecision").hidden = false;
+        $("calcDecision").textContent = marginPct > 100
+            ? `目前 ${number(leverage, 0)}X 需要約 ${number(marginPct, 2)}% 總資金作為保證金，超過可用總資金。`
+            : `若最大止損控制在總資金 ${number(risk, 2)}%，建議使用約 ${number(marginPct, 2)}% 總資金作為保證金。`;
+
+        $("calcResults").innerHTML =
+            cell("建議使用總資金", `${number(marginPct, 2)}%`, "calc-focus") +
+            cell("建議保證金", `${number(margin, 4)} U`) +
+            cell("最大可虧損", `${number(riskBudget, 4)} U`) +
+            cell("名義倉位", `${number(notional, 2)} U`) +
+            cell("持倉數量 · 幣", number(quantity, 8)) +
+            cell("SL 距離", `${number(stopPct, 3)}%`) +
+            cell("Entry → SL", number(stopDistance, 8)) +
+            cell("槓桿", `${number(leverage, 0)}X`);
+    } catch (error) {
+        if (String(f.entry.value).trim() || String(f.sl.value).trim()) {
+            $("calcError").textContent = error.message;
+        }
+    }
+
+    document.querySelectorAll("[data-risk-preset]").forEach(button => {
+        button.classList.toggle("active", Number(button.dataset.riskPreset) === Number(f.risk.value));
+    });
+    document.querySelectorAll("[data-leverage-preset]").forEach(button => {
+        button.classList.toggle("active", Number(button.dataset.leveragePreset) === Number(f.leverage.value));
+    });
+}
+
+function toggleCalculator(force) {
+    const panel = $("calculator");
+    const shouldOpen = force === undefined ? panel.hidden : Boolean(force);
+    panel.hidden = !shouldOpen;
+    $("calcToggle").setAttribute("aria-expanded", String(shouldOpen));
+    if (shouldOpen) {
+        calculate();
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+}
 
 $("calcToggle").addEventListener("click", () => toggleCalculator());
 $("calcClose").addEventListener("click", () => {
@@ -1949,6 +1931,7 @@ document.querySelectorAll("[data-risk-preset]").forEach(button => {
         calculate();
     });
 });
+
 document.querySelectorAll("[data-leverage-preset]").forEach(button => {
     button.addEventListener("click", () => {
         $("calcForm").elements.leverage.value = button.dataset.leveragePreset;
@@ -2020,12 +2003,11 @@ $("importFile").addEventListener("change", async event => {
         if (file.size > 5 * 1024 * 1024) throw new Error("備份不可超過 5 MB。");
         const imported = normalizeState(validateState(JSON.parse(await file.text())));
         if (!confirm(
-            `備份包含 ${imported.trades.length} 筆交易、${imported.plans.length} 筆計畫。\n匯入會取代目前全部紀錄與計畫，是否繼續？`
+            `備份包含 ${imported.trades.length} 筆交易。\n匯入會取代目前全部交易紀錄，是否繼續？`
         )) return;
         commit(imported, true);
         expanded.clear();
         render();
-        activePlanId = null; renderPlans(); renderPerformance();
         toast("備份已匯入");
     } catch (error) {
         toast(`匯入失敗：${error.message}`);
@@ -2064,389 +2046,6 @@ setInterval(() => {
     if (!document.hidden && !marketBusy) render();
 }, 5000);
 
-/* === SCREENER / PLANS v3.0.0 · rules are hypotheses, not a win-rate model === */
-const STRATEGY_VERSION = 'SMA83-EMA200-retest-1.0';
-const TF = {'15m':900000,'1H':3600000,'4H':14400000};
-const SECTORS = {BTC:'主流',ETH:'主流',SOL:'L1',SUI:'L1',APT:'L1',AVAX:'L1',ADA:'L1',NEAR:'L1',DOT:'L1',ATOM:'L1',OP:'L2',ARB:'L2',STRK:'L2',POL:'Polygon',LINK:'預言機',PYTH:'預言機',TRB:'預言機',AAVE:'DeFi',UNI:'DeFi',LDO:'DeFi',CRV:'DeFi',DOGE:'迷因',PEPE:'迷因',SHIB:'迷因',WIF:'迷因',BONK:'迷因',FIL:'儲存',STORJ:'儲存',TIA:'資料可用性'};
-const scan = {busy:false,controller:null,items:[],errors:[],at:0,timer:null,catalog:new Map(),cache:new Map(),lastRequest:0,btc:null};
-let activePlanId = null;
-let entryPlanId = null;
-let lastSizing = null;
-const e = escapeHtml;
-const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
-const sectorOf = id => SECTORS[id.split('-')[0]] || '未分類';
-function setPage(name) {
-    for (const el of document.querySelectorAll('[data-page]')) el.hidden = el.dataset.page !== name;
-    for (const el of document.querySelectorAll('[data-tab]')) {
-        el.classList.toggle('active',el.dataset.tab === name);
-        el.setAttribute('aria-pressed',String(el.dataset.tab === name));
-    }
-    if(name === 'calculator') { $('calculator').hidden=false; calculate(); renderPlans(); }
-    if(name === 'trades') renderPerformance();
-}
-function statusLabel(s) {return ({waiting:'等待回測',confirm:'等待突破訊號 K',triggered:'條件已觸發',extended:'價格已延伸',blocked:'風報空間不足',neutral:'結構不一致／震盪',invalid:'訊號已失效'})[s] || s;}
-function abortCheck(signal) {if(signal?.aborted) throw new DOMException('已停止','AbortError');}
-async function publicGet(path,signal) {
-    for(let attempt=0;attempt<3;attempt++) {
-        abortCheck(signal);
-        await sleep(Math.max(0,160-(Date.now()-scan.lastRequest)));
-        abortCheck(signal); scan.lastRequest=Date.now();
-        const ac = new AbortController();
-        const abort = ()=>ac.abort(); signal?.addEventListener('abort',abort,{once:true});
-        const timer = setTimeout(()=>ac.abort(),10000);
-        try {
-            const r = await fetch(OKX_BASE+path,{signal:ac.signal,cache:'no-store',credentials:'omit'});
-            if(!r.ok) throw new Error('行情 HTTP '+r.status);
-            const b = await r.json();
-            if(b.code !== '0' || !Array.isArray(b.data)) throw new Error(b.msg || '行情資料格式錯誤');
-            return b.data;
-        } catch(err) {
-            abortCheck(signal);
-            if(attempt===2) throw new Error(err.name==='AbortError'?'行情連線逾時':err.message);
-        } finally {clearTimeout(timer);signal?.removeEventListener('abort',abort);}
-        await sleep(600*(attempt+1));
-    }
-}
-function parseBars(raw,period) {
-    const map=new Map();
-    for(const x of raw) {
-        if(x[8]!=='1') continue;
-        const [t,o,h,l,c,v]=[0,1,2,3,4,7].map(i=>Number(x[i]));
-        if(![t,o,h,l,c,v].every(Number.isFinite)||Math.min(o,h,l,c)<=0||v<0||h<Math.max(o,c)||l>Math.min(o,c)||h<l) continue;
-        if(t+period>Date.now()+1500) continue;
-        map.set(t,{t,o,h,l,c,v});
-    }
-    return [...map.values()].sort((a,b)=>a.t-b.t);
-}
-async function barsFor(id,tf,signal) {
-    const key=id+tf,old=scan.cache.get(key),period=TF[tf];
-    if(old?.length && old.at(-1).t+2*period>Date.now()+1500) return old;
-    const base='/api/v5/market/candles?instId='+encodeURIComponent(id)+'&bar='+tf+'&limit=300';
-    let raw=await publicGet(base,signal);
-    if(!old) {
-        const oldest=Math.min(...raw.map(x=>Number(x[0])));
-        if(Number.isFinite(oldest)) raw=raw.concat(await publicGet(base+'&after='+oldest,signal));
-    }
-    const fresh=parseBars(raw,period),merged=new Map((old||[]).map(x=>[x.t,x]));
-    fresh.forEach(x=>merged.set(x.t,x));
-    const out=[...merged.values()].sort((a,b)=>a.t-b.t).slice(-650);
-    if(out.length<450) throw new Error(tf+' 歷史不足 450 根');
-    const last=out.at(-1);
-    if(Date.now()-(last.t+period)>period+60000) throw new Error(tf+' K 線過期');
-    if(out.slice(1).some((x,i)=>x.t-out[i].t!==period)) throw new Error(tf+' K 線有缺口');
-    scan.cache.set(key,out);return out;
-}
-function smaSeries(b,n) {let sum=0;return b.map((x,i)=>{sum+=x.c;if(i>=n)sum-=b[i-n].c;return i>=n-1?sum/n:null;});}
-function emaSeries(b,n) {let val=b[0].c;const a=2/(n+1);return b.map(x=>(val=a*x.c+(1-a)*val));}
-function atrSeries(b,n=14) {let val=0;return b.map((x,i)=>{const prev=i?b[i-1].c:x.o;const tr=Math.max(x.h-x.l,Math.abs(x.h-prev),Math.abs(x.l-prev));val=i<n?(val*i+tr)/(i+1):(val*(n-1)+tr)/n;return val;});}
-function pivots(b,w=3) {
-    const hi=[],lo=[];
-    for(let i=w;i<b.length-w;i++) {
-        const x=b[i],around=b.slice(i-w,i+w+1);
-        if(around.every((v,j)=>j===w||x.h>v.h)) hi.push({p:x.h,i,t:x.t,confirmedAt:b[i+w].t});
-        if(around.every((v,j)=>j===w||x.l<v.l)) lo.push({p:x.l,i,t:x.t,confirmedAt:b[i+w].t});
-    }
-    return {hi,lo};
-}
-function trend(b) {
-    const s=smaSeries(b,83),m=emaSeries(b,200),a=atrSeries(b),k=b.length-1,p=pivots(b.slice(-120));
-    const hs=p.hi.slice(-2),ls=p.lo.slice(-2),slope=(s[k]-s[k-5])/a[k],slow=(m[k]-m[k-5])/a[k];
-    const up=hs.length===2&&ls.length===2&&hs[1].p>hs[0].p&&ls[1].p>ls[0].p;
-    const down=hs.length===2&&ls.length===2&&hs[1].p<hs[0].p&&ls[1].p<ls[0].p;
-    let crosses=0;for(let i=k-19;i<=k;i++)if((s[i]-m[i])*(s[i-1]-m[i-1])<0)crosses++;
-    let side='neutral';
-    if(crosses<=1 && Math.abs(s[k]-m[k])/a[k]>=0.15) {
-        if(up&&b[k].c>s[k]&&s[k]>m[k]&&slope>0.05&&slow>0)side='long';
-        if(down&&b[k].c<s[k]&&s[k]<m[k]&&slope< -0.05&&slow<0)side='short';
-    }
-    return {side,s:s[k],ema:m[k],atr:a[k],crosses,structure:up?'高低點抬高':down?'高低點降低':'結構混合'};
-}
-function zones(b,atr) {
-    const p=pivots(b.slice(-160)),all=[...p.hi,...p.lo].sort((a,b)=>a.p-b.p),groups=[];
-    for(const x of all) {
-        let g=groups.at(-1);
-        if(!g||x.p-g.low>atr*0.5) {g={low:x.p,high:x.p,count:0};groups.push(g);}
-        g.high=x.p;g.count++;
-    }
-    return groups.filter(g=>g.count>=2).map(g=>({...g,low:g.low-atr*0.1,high:g.high+atr*0.1}));
-}
-function compareReturn(b,ref,h) {
-    const t=b.at(-1).t,base=t-h*TF['1H'];
-    const c=b.find(x=>x.t===base),r=ref.find(x=>x.t===base),end=ref.find(x=>x.t===t);
-    if(!c||!r||!end) throw new Error('相對強弱時間未對齊');
-    return (b.at(-1).c/c.c-1-(end.c/r.c-1))*100;
-}
-function costPerCoin(entry,exit,fee,slip,funding) {return (entry+exit)*(fee+slip)/100+entry*funding/100;}
-function sizeTrade({balance,risk,entry,sl,tp,side,leverage,fee,slip,funding,ctVal,lotSz,minSz}) {
-    if(![balance,risk,entry,sl,leverage].every(x=>Number.isFinite(x)&&x>0)||risk>10||leverage<1)throw new Error('請填有效資金、價格、槓桿與 0–10% 風險。');
-    if(![fee,slip,funding].every(x=>Number.isFinite(x)&&x>=0&&x<=10))throw new Error('成本假設須介於 0–10%。');
-    const d=side==='long'?1:-1;
-    if(d*(entry-sl)<=0)throw new Error('初始 SL 必須位於虧損方向。');
-    if(tp!==null&&(!Number.isFinite(tp)||tp<=0||d*(tp-entry)<=0))throw new Error('TP 必須位於獲利方向。');
-    const unitLoss=Math.abs(entry-sl)+costPerCoin(entry,sl,fee,slip,funding),budget=balance*risk/100;
-    let quantity=budget/unitLoss,contracts=null;
-    if(ctVal>0&&lotSz>0) {
-        contracts=Math.floor(quantity/ctVal/lotSz)*lotSz;
-        quantity=contracts*ctVal;
-        if(contracts<minSz||quantity<=0)throw new Error('風險預算不足以達到此 OKX 商品的最小下單量。');
-    }
-    const loss=quantity*unitLoss,notional=quantity*entry,margin=notional/leverage;
-    const profit=tp===null?null:quantity*(d*(tp-entry)-costPerCoin(entry,tp,fee,slip,funding));
-    const rr=profit===null?null:profit/loss;
-    if(![quantity,loss,notional,margin].every(Number.isFinite))throw new Error('計算超出數值範圍。');
-    return {quantity,contracts,loss,notional,margin,profit,rr,budget,entry,sl,tp,side,leverage,balance,risk,fee,slip,funding};
-}
-function analyze(id,h1,h4,m15,btc,last,costs,minRR) {
-    const t1=trend(h1),t4=trend(h4),side=t1.side,atr=atrSeries(m15).at(-1),s=smaSeries(m15,83),ema=emaSeries(m15,200);
-    const rs1=compareReturn(h1,btc,1),rs4=compareReturn(h1,btc,4),rs24=compareReturn(h1,btc,24),rs=rs1*0.2+rs4*0.5+rs24*0.3;
-    const z=zones(h1,t1.atr),d=side==='long'?1:-1;
-    const result={id,side,t1,t4,rs,rs1,rs4,rs24,last,sector:sectorOf(id),at:Date.now(),barAt:m15.at(-1).t,atr,z,status:'neutral',entry:null,sl:null,tp:null,rr:null,reasons:[],signalAt:null};
-    if(side==='neutral') {result.reasons.push('H1 '+t1.structure+'；均線條件未一致');return result;}
-    result.reasons.push('H1 '+t1.structure+'，SMA83／EMA200 同向');
-    if(t4.side!=='neutral'&&t4.side!==side) {result.reasons.push('H4 方向相反，暫不進場');return result;}
-    result.reasons.push(t4.side===side?'H4 方向一致':'H4 尚未形成同向完整結構');
-    result.status='waiting';
-    const nearby=z.filter(g=>side==='long'?g.high<last:g.low>last).sort((a,b)=>Math.abs((a.low+a.high)/2-last)-Math.abs((b.low+b.high)/2-last))[0];
-    result.zone=nearby||null;
-    // Retest signals use only H1 zones that were confirmable BEFORE the signal bar.
-    for(let i=m15.length-1;i>=m15.length-5;i--) {
-        const x=m15[i],prev=m15[i-1],historicalH1=h1.filter(v=>v.t+TF['1H']<=x.t);
-        const availableZones=zones(historicalH1,trend(historicalH1).atr);
-        const touchMA=[s[i],ema[i]].some(v=>x.l<=v+atr*0.25&&x.h>=v-atr*0.25&&(side==='long'?x.c>v:x.c<v));
-        const zone=availableZones.find(g=>x.l<=g.high&&x.h>=g.low&&(side==='long'?x.c>g.high:x.c<g.low));
-        const body=Math.abs(x.c-x.o),range=x.h-x.l;
-        const reject=side==='long'?(Math.min(x.o,x.c)-x.l>=2*Math.max(body,range*0.08)&&x.c>=x.l+range*0.65):(x.h-Math.max(x.o,x.c)>=2*Math.max(body,range*0.08)&&x.c<=x.l+range*0.35);
-        const engulf=side==='long'?(x.c>x.o&&prev.c<prev.o&&x.c>=prev.o&&x.o<=prev.c):(x.c<x.o&&prev.c>prev.o&&x.c<=prev.o&&x.o>=prev.c);
-        if(!touchMA||!zone||!(reject||engulf)||range<=0)continue;
-        const after=m15.slice(i+1),entry=side==='long'?x.h+atr*0.05:x.l-atr*0.05;
-        const sl=side==='long'?x.l-atr*0.2:x.h+atr*0.2;
-        if(sl<=0)continue;
-        const broken=after.some(v=>side==='long'?v.l<=sl:v.h>=sl)||d*(last-sl)<=0;
-        const triggered=after.some(v=>d*(v.c-entry)>0);
-        // H4/H1 targets use only confirmed, currently known structure. No targets invented as fixed 2R.
-        const targets=[...z,...zones(h4,t4.atr)].filter(g=>side==='long'?g.low>entry:g.high<entry).map(g=>side==='long'?g.low:g.high).sort((a,b)=>d*(a-b));
-        const tp=targets[0]??null;
-        Object.assign(result,{entry,sl,tp,zone,signalAt:x.t,status:broken?'invalid':triggered?'triggered':'confirm'});
-        result.reasons.push((reject?'影線拒絕':'實體吞沒')+'＋M15 均線回測＋已確認水平區');
-        const mean=m15.slice(i-20,i).reduce((sum,b)=>sum+b.v,0)/20;
-        result.volumeRatio=mean?x.v/mean:null;
-        if(result.volumeRatio!==null)result.reasons.push('訊號成交量／前20根均量 '+number(result.volumeRatio,2)+' 倍');
-        if(tp!==null)result.rr=(d*(tp-entry)-costPerCoin(entry,tp,costs.fee,costs.slip,costs.funding))/(Math.abs(entry-sl)+costPerCoin(entry,sl,costs.fee,costs.slip,costs.funding));
-        if(!broken) {
-            if(result.rr===null||result.rr<minRR)result.status='blocked';
-            else if(Math.abs(last-entry)>atr*0.75)result.status='extended';
-            else if(triggered&&d*(last-entry)<0)result.status='confirm';
-            if(tp!==null&&d*(last-tp)>=0)result.status='extended';
-        }
-        return result;
-    }
-    result.reasons.push('等待均線與水平區重合的收線確認');return result;
-}
-function scanCosts() {return {fee:Number($('scanFee').value),slip:Number($('scanSlip').value),funding:Number($('scanFunding').value)};}
-async function runScan() {
-    if(scan.busy)return;
-    const count=Number($('scanLimit').value),minVol=Number($('scanVolume').value)*1e6,spreadCap=Number($('scanSpread').value),minRR=Number($('scanRR').value),costs=scanCosts();
-    if(![count,minVol,spreadCap,minRR,...Object.values(costs)].every(Number.isFinite)||minVol<0||spreadCap<=0||minRR<=0||Object.values(costs).some(x=>x<0||x>10)) {toast('請檢查篩選條件與成本假設');return;}
-    scan.busy=true;scan.controller=new AbortController();scan.errors=[];scan.items=[];scan.at=0;
-    clearTimeout(scan.timer);$('scanStart').disabled=true;$('scanStop').disabled=false;renderScan();
-    const sig=scan.controller.signal;
-    try {
-        $('scanStatus').textContent='取得 OKX 永續商品及成交量…';
-        const instruments=await publicGet('/api/v5/public/instruments?instType=SWAP',sig);
-        scan.catalog=new Map(instruments.filter(x=>x.state==='live'&&x.settleCcy==='USDT'&&x.ctType==='linear'&&x.instId.endsWith('-USDT-SWAP')).map(x=>[x.instId,x]));
-        const raw=await publicGet('/api/v5/market/tickers?instType=SWAP',sig),now=Date.now();
-        const eligible=[];
-        for(const x of raw) {
-            const meta=scan.catalog.get(x.instId);if(!meta)continue;
-            const last=Number(x.last),bid=Number(x.bidPx),ask=Number(x.askPx),timestamp=Number(x.ts);
-            // OKX derivatives volCcy24h is base-coin volume. This is explicitly an approximate USDT turnover.
-            const vol=Number(x.volCcy24h)*last,spread=(ask-bid)/((ask+bid)/2)*100;
-            if(![last,bid,ask,timestamp,vol,spread].every(Number.isFinite)||last<=0||bid<=0||ask<bid||Math.abs(now-timestamp)>60000)continue;
-            if(vol<minVol||spread>spreadCap)continue;
-            eligible.push({id:x.instId,last,vol,spread});
-        }
-        eligible.sort((a,b)=>b.vol-a.vol);const chosen=eligible.slice(0,count);
-        if(!chosen.length)throw new Error('沒有符合成交額與價差條件的商品，請調整篩選條件。');
-        const btc=await barsFor('BTC-USDT-SWAP','1H',sig);scan.btc=trend(btc);
-        for(let i=0;i<chosen.length;i++) {
-            abortCheck(sig);const item=chosen[i];
-            $('scanStatus').textContent=`掃描 ${i+1}/${chosen.length} · ${item.id}（首次需建立歷史資料）`;
-            try {
-                const h1=await barsFor(item.id,'1H',sig),h4=await barsFor(item.id,'4H',sig),m15=await barsFor(item.id,'15m',sig);
-                const rows=await publicGet('/api/v5/market/ticker?instId='+encodeURIComponent(item.id),sig),q=rows[0];
-                if(!q||!Number.isFinite(Number(q.last))||Number(q.last)<=0||Math.abs(Date.now()-Number(q.ts))>60000)throw new Error('最新報價過期');
-                const a=analyze(item.id,h1,h4,m15,btc,Number(q.last),costs,minRR);
-                Object.assign(a,{vol:item.vol,spread:item.spread,costs:clone(costs),minRR});scan.items.push(a);
-            }catch(err){abortCheck(sig);scan.errors.push(item.id+'：'+err.message);}
-            renderScan();
-        }
-        scan.at=Date.now();$('scanStatus').textContent=`完成 ${scan.items.length}/${chosen.length} 個 · ${timeText(scan.at)} · 訊號為掃描快照`;
-    }catch(err){$('scanStatus').textContent=sig.aborted?'掃描已停止；保留本次已完成結果':'掃描失敗：'+err.message;}
-    finally {
-        scan.busy=false;$('scanStart').disabled=false;$('scanStop').disabled=true;renderScan();
-        if($('scanAuto').checked&&!document.hidden)scan.timer=setTimeout(runScan,900000);
-    }
-}
-function renderScan() {
-    const filter=$('scanSide').value,query=$('scanSearch').value.trim().toUpperCase();
-    const rows=scan.items.filter(x=>(filter==='all'||(filter==='ready'?x.status==='triggered':x.side===filter))&&x.id.includes(query)).sort((a,b)=>{
-        if(a.side===b.side)return a.side==='short'?a.rs-b.rs:b.rs-a.rs;return a.side.localeCompare(b.side);
-    });
-    $('scanContext').textContent=scan.btc?'BTC H1：'+(scan.btc.side==='long'?'偏多':scan.btc.side==='short'?'偏空':'震盪／條件未一致')+'。排名按相對 BTC 報酬；不代表勝率。':'按「開始掃描」取得真實行情；不使用示範價格。';
-    $('scanErrors').textContent=scan.errors.join('\n');
-    const sectors=new Map();scan.items.forEach(x=>{if(x.sector==='未分類')return;const arr=sectors.get(x.sector)||[];arr.push(x);sectors.set(x.sector,arr);});
-    $('sectorSummary').textContent=[...sectors].map(([k,v])=>{
-        const a=v.map(x=>x.rs4).sort((a,b)=>a-b),mid=Math.floor(a.length/2),median=a.length%2?a[mid]:(a[mid-1]+a[mid])/2;
-        return `${k} ${v.length}幣 · 相對BTC 4H中位數 ${signed(median)}%`;
-    }).join(' ｜ ');
-    $('scanList').innerHTML=rows.length?rows.map(x=>{
-        const stale=Date.now()-x.at>900000,dir=x.side==='long'?'偏多':x.side==='short'?'偏空':'觀望';
-        const zone=x.zone?`${price(x.zone.low)}–${price(x.zone.high)}（${x.zone.count} 個確認高低點）`:'尚無鄰近聚合區';
-        const usable=!stale&&x.entry!==null&&!['invalid','neutral'].includes(x.status);
-        return `<details class="scan-card"><summary><span><strong>${e(x.id.replace('-USDT-SWAP',''))}</strong> <small>${e(x.sector)} · ${dir}</small></span><span class="${x.status==='triggered'?'positive':'yellow'}">${stale?'快照過期':statusLabel(x.status)}</span><span class="number">RS ${signed(x.rs)}%</span></summary><div class="scan-body"><p class="note">${x.reasons.map(e).join(' · ')}</p><div class="result-grid">${cell('相對 BTC · 1H',signed(x.rs1)+'%')}${cell('相對 BTC · 4H',signed(x.rs4)+'%')}${cell('相對 BTC · 24H',signed(x.rs24)+'%')}${cell('掃描時價格',price(x.last))}${cell('預定觸發價',price(x.entry))}${cell('初始 SL',price(x.sl))}${cell('最近結構 TP',price(x.tp))}${cell('預估淨風報比',x.rr===null?'待確認':number(x.rr,2)+'R')}</div><p class="note">區間：${e(zone)}<br>近24H成交額約 ${number(x.vol/1e6,2)}M U · 初篩價差 ${number(x.spread,3)}%<br>快照 ${dateText(new Date(x.at).toISOString())}；M15 收線 ${timeText(x.barAt+TF['15m'])}。高低點需右側3根確認。<br>單邊手續費 ${x.costs.fee}%、單邊滑價 ${x.costs.slip}%、持有期資金成本預留 ${x.costs.funding}%，均為可調假設。</p><button class="primary" data-plan-candidate="${e(x.id)}" ${usable?'':'disabled'}>建立交易計畫</button></div></details>`;
-    }).join(''):'<div class="empty">'+(scan.busy?'正在分析已收盤 K 線…':'目前沒有符合此篩選的結果。')+'</div>';
-}
-function renderPlans() {
-    const plans=state.plans||[];
-    $('planList').innerHTML=plans.length?plans.slice().reverse().map(p=>`<div class="plan-row"><div><strong>${e(p.id===activePlanId?'● ':'')}${e(p.symbol)}</strong> · ${p.side==='long'?'多':'空'} · ${p.tradeId?'已記錄成交':'待執行'}<p class="note">預定 ${price(p.entry)} ／ SL ${price(p.sl)} ／ TP ${price(p.tp)}<br>${dateText(p.createdAt)} · ${e(p.status)} · ${e(p.strategyVersion)}</p></div><button data-load-plan="${e(p.id)}">載入計畫</button></div>`).join(''):'<p class="note">尚無計畫。由篩選結果建立，或直接使用下方計算器。</p>';
-    $('activePlan').textContent=activePlanId?'目前計畫：'+(plans.find(p=>p.id===activePlanId)?.symbol||'')+'。調整計算後請按「儲存計畫參數」。':'獨立計算模式；總資金由你手動提供。';
-    $('savePlanParams').disabled=!activePlanId;
-    $('recordPlan').disabled=!activePlanId||!!plans.find(p=>p.id===activePlanId)?.tradeId;
-}
-function loadPlan(id) {
-    const p=(state.plans||[]).find(x=>x.id===id);if(!p)return;
-    activePlanId=id;const f=$('calcForm').elements;
-    for(const key of ['side','entry','sl','tp','leverage','balance','risk','fee','slip','funding'])if(p[key]!==undefined&&p[key]!==null&&f[key])f[key].value=p[key];
-    if(p.tp===null)f.tp.value='';
-    f.plannedMargin.value='';setPage('calculator');
-}
-function candidateToPlan(id) {
-    const x=scan.items.find(x=>x.id===id);if(!x||x.entry===null||Date.now()-x.at>900000){toast('訊號不足或過期，請重新掃描');return;}
-    try {
-        const next=clone(state);next.plans=next.plans||[];
-        if(next.plans.length>=300)throw new Error('計畫已達300筆，請先備份並整理。');
-        const meta=scan.catalog.get(id),p={id:uid(),symbol:id.replace('-USDT-SWAP','USDT'),instId:id,side:x.side,entry:x.entry,sl:x.sl,tp:x.tp,fee:x.costs.fee,slip:x.costs.slip,funding:x.costs.funding,createdAt:new Date().toISOString(),strategyVersion:STRATEGY_VERSION,status:statusLabel(x.status),signalAt:x.signalAt,sourceAt:x.at,reasons:x.reasons,tradeId:null,ctVal:null,lotSz:null,minSz:null,maxLeverage:null};
-        if(meta&&meta.ctValCcy===id.split('-')[0])Object.assign(p,{ctVal:Number(meta.ctVal)*(Number(meta.ctMult)||1),lotSz:Number(meta.lotSz),minSz:Number(meta.minSz),maxLeverage:Number(meta.lever)||null});
-        next.plans.push(p);commit(next);loadPlan(p.id);toast('計畫已建立；尚未記錄成交');
-    }catch(err){toast(err.message);}
-}
-function getCalcInput() {
-    const f=$('calcForm').elements,p=(state.plans||[]).find(x=>x.id===activePlanId);
-    return {balance:positiveNumber(f.balance.value,'總資金'),risk:positiveNumber(f.risk.value,'風險'),entry:positiveNumber(f.entry.value,'進場價'),sl:positiveNumber(f.sl.value,'SL'),tp:positiveNumber(f.tp.value,'TP',true),side:f.side.value,leverage:positiveNumber(f.leverage.value,'槓桿'),fee:Number(f.fee.value),slip:Number(f.slip.value),funding:Number(f.funding.value),ctVal:p?.ctVal,lotSz:p?.lotSz,minSz:p?.minSz};
-}
-function calculateEnhanced() {
-    clearCalcResults();$('calcError').textContent='';lastSizing=null;
-    try {
-        const v=getCalcInput(),r=sizeTrade(v),f=$('calcForm').elements,p=(state.plans||[]).find(x=>x.id===activePlanId);
-        lastSizing=r;let severity=0;const messages=[];
-        const add=(level,msg)=>{severity=Math.max(severity,level);messages.push(msg);};
-        add(0,`計畫止損成本 ${number(r.loss,4)} U／風險預算 ${number(r.budget,4)} U；未保證極端行情成交價格。`);
-        if(v.risk>3)add(1,'此風險比例會使連續虧損造成較大回撤。');
-        if(r.margin+r.notional*(v.fee+v.slip)/100>v.balance)add(2,'保證金與開倉成本超出總資金，請縮小倉位。');
-        if(Math.abs(v.entry-v.sl)/v.entry>=1/v.leverage)add(2,'SL 距離達到 1/L 粗略參考值；實際清算可能先於止損。');
-        else add(1,'實際清算條件未確認；1/L 不是強平價。');
-        if(p?.maxLeverage&&v.leverage>p.maxLeverage)add(2,'輸入槓桿超過取得的 OKX 商品槓桿上限。');
-        if(r.rr!==null&&r.rr<Number($('scanRR').value))add(1,'預估淨風報比低於篩選門檻。');
-        if(r.contracts===null)add(0,'獨立計算未套用交易所張數步進；下單前核對數量。');
-        else add(0,`按計畫建立時的 OKX 規格向下取整：${number(r.contracts,8)} 張；其他交易所規格可能不同。`);
-        $('calcDecision').className='calc-decision '+(['','warn','danger'][severity]);$('calcDecision').hidden=false;
-        $('calcDecision').innerHTML=messages.map(m=>'<div>'+e(m)+'</div>').join('');
-        $('calcResults').innerHTML=cell('估算保證金',number(r.margin,4)+' U','calc-focus')+cell('計畫止損成本',number(r.loss,4)+' U')+cell('名義倉位',number(r.notional,2)+' U')+cell('持倉數量 · 幣',number(r.quantity,8))+cell('TP 預估淨獲利',r.profit===null?'未提供':signed(r.profit)+' U')+cell('預估淨風報比',r.rr===null?'未提供':number(r.rr,2)+'R')+cell('SL 距離',number(Math.abs(v.entry-v.sl)/v.entry*100,3)+'%')+cell('1/L · 非強平距離',number(100/v.leverage,3)+'%');
-        const planned=positiveNumber(f.plannedMargin.value,'預計保證金',true);
-        if(planned!==null) {
-            const q=planned*v.leverage/v.entry,loss=q*(Math.abs(v.entry-v.sl)+costPerCoin(v.entry,v.sl,v.fee,v.slip,v.funding));
-            $('plannedCheck').hidden=false;$('plannedResults').innerHTML=cell('預計名義倉位',number(planned*v.leverage,2)+' U')+cell('含成本止損估算',number(loss,4)+' U')+cell('占總資金',number(loss/v.balance*100,2)+'%');
-            $('plannedMessage').textContent=(planned>v.balance?'保證金超出總資金。 ':'')+(loss>r.budget?'超過設定風險預算。':'未超過設定風險預算。')+'未套用張數步進，清算条件仍需核對。';
-        }
-    }catch(err){$('calcError').textContent=err.message;}
-    document.querySelectorAll('[data-risk-preset]').forEach(b=>b.classList.toggle('active',Number(b.dataset.riskPreset)===Number($('calcForm').elements.risk.value)));
-    document.querySelectorAll('[data-leverage-preset]').forEach(b=>b.classList.toggle('active',Number(b.dataset.leveragePreset)===Number($('calcForm').elements.leverage.value)));
-}
-function renderPerformance() {
-    const closed=state.trades.filter(t=>t.status==='closed'),net=closed.map(realized),wins=net.filter(x=>x>0),losses=net.filter(x=>x<0);
-    const withR=closed.filter(t=>t.initialRisk>0),rs=withR.map(t=>realized(t)/t.initialRisk);
-    const mean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:null;
-    const open=state.trades.filter(t=>t.status==='open');let missing=0,total=0;
-    open.forEach(t=>{const v=payoff(t,t.sl);if(v===null)missing++;else total+=Math.max(0,-v);});
-    $('performance').innerHTML='<h3>實際交易統計</h3><div class="result-grid">'+cell('已平倉樣本',String(closed.length))+cell('淨獲利筆數比例',closed.length?number(wins.length/closed.length*100,1)+'%':'—')+cell('平均淨盈虧',mean(net)===null?'—':signed(mean(net))+' U')+cell('平均 R · 有初始風險',rs.length?number(mean(rs),2)+'R（'+rs.length+'筆）':'—')+'</div><p class="note">含手動交易，非策略回測勝率。打平交易納入總筆數。舊紀錄缺初始風險時不推算 R。<br>持倉由進場到 SL 的剩餘毛虧損估算 '+number(total,4)+' U'+(missing?'；另有 '+missing+' 筆缺 SL／數量，總風險不完整':'')+'。未含費用、滑價，亦非從現價回吐的金額。</p>';
-}
-function savePlanParams() {
-    try {
-        if(!activePlanId)return;const input=getCalcInput(),r=sizeTrade(input),next=clone(state),p=next.plans.find(x=>x.id===activePlanId);
-        if(p.tradeId)throw new Error('已成交計畫不再覆寫，請編輯交易紀錄。');
-        Object.assign(p,input,{quantity:r.quantity,initialRisk:r.loss,updatedAt:new Date().toISOString()});commit(next);renderPlans();toast('計畫參數已儲存');return true;
-    }catch(err){toast(err.message);}
-}
-function recordPlan() {
-    try {
-        const p=(state.plans||[]).find(x=>x.id===activePlanId);if(!p||p.tradeId)return;
-        const input=getCalcInput(),r=sizeTrade(input);
-        if(!savePlanParams())return;
-        const stored=(state.plans||[]).find(x=>x.id===activePlanId);
-        if(!stored||!stored.quantity)throw new Error('請先成功儲存計畫參數。');
-        openTradeEditor();entryPlanId=p.id;
-        const f=$('tradeForm').elements;
-        f.symbol.value=p.symbol;f.exchange.value='OKX';f.side.value=input.side;f.leverage.value=input.leverage;
-        f.sl.value=input.sl;f.targets.value=input.tp??'';f.okxInstId.value=p.instId;f.quoteMode.value='swap';
-        f.entry.value='';f.quantity.value='';
-        f.note.value=`策略 ${p.strategyVersion}\n計畫進場 ${input.entry}；計畫數量 ${number(r.quantity,8)} 幣\n`+(p.reasons||[]).join('；');
-        $('tradeDialogTitle').textContent='填寫實際成交結果';
-        $('instrumentHint').textContent='請從交易所填入實際成交價、數量及槓桿。按儲存僅記帳，不會下單。';
-    }catch(err){toast(err.message);}
-}
-// Attach only optional extension data. Version 2 trade backups remain readable.
-function validateExtension(data) {
-    if(data.plans!==undefined) {
-        if(!Array.isArray(data.plans)||data.plans.length>300)throw new Error('計畫清單無效或超過300筆。');
-        const ids=new Set();
-        for(const p of data.plans) {
-            if(!p||typeof p.id!=='string'||!p.id||ids.has(p.id)||typeof p.symbol!=='string'||p.symbol.length>40||typeof p.instId!=='string'||p.instId.length>60||!['long','short'].includes(p.side))throw new Error('計畫資料格式錯誤。');ids.add(p.id);
-            if(![p.entry,p.sl].every(x=>Number.isFinite(x)&&x>0)||(p.tp!==null&&(!Number.isFinite(p.tp)||p.tp<=0)))throw new Error('計畫價格無效。');
-            if(typeof p.createdAt!=='string'||!Number.isFinite(Date.parse(p.createdAt))||typeof p.strategyVersion!=='string'||typeof p.status!=='string')throw new Error('計畫資訊無效。');
-            if(p.tradeId!==null&&(!data.trades.some(t=>t.id===p.tradeId)))throw new Error('計畫對應交易不存在。');
-            if(p.reasons!==undefined&&(!Array.isArray(p.reasons)||p.reasons.length>30||!p.reasons.every(x=>typeof x==='string'&&x.length<2000)))throw new Error('計畫理由格式錯誤。');
-            for(const k of ['quantity','initialRisk','ctVal','lotSz','minSz','maxLeverage','balance','risk','leverage','fee','slip','funding'])if(p[k]!==undefined&&p[k]!==null&&(!Number.isFinite(p[k])||p[k]<0))throw new Error('計畫數值無效：'+k);
-        }
-    }
-    for(const t of data.trades)for(const k of ['initialRisk','initialSl','initialQuantity'])if(t[k]!==undefined&&t[k]!==null&&(!Number.isFinite(t[k])||t[k]<=0))throw new Error('初始風險欄位無效。');
-}
-function attachTradePlan(trade,existing,next) {
-    if(!existing) {
-        trade.initialSl=trade.sl;trade.initialQuantity=trade.quantity;
-        trade.initialRisk=trade.sl!==null&&trade.quantity!==null&&((trade.side==='long'&&trade.sl<trade.entry)||(trade.side==='short'&&trade.sl>trade.entry))?Math.abs(trade.entry-trade.sl)*trade.quantity:null;
-        trade.riskBasis='初始價差毛風險';
-    }
-    if(entryPlanId&&!existing) {
-        const p=(next.plans||[]).find(x=>x.id===entryPlanId);if(!p||p.tradeId)throw new Error('計畫已成交或不存在。');
-        if(trade.quantity===null)throw new Error('由計畫記錄成交必須填實際數量。');
-        const direction=trade.side==='long'?1:-1;
-        if(trade.sl===null||direction*(trade.entry-trade.sl)<=0)throw new Error('請核對實際成交價與初始止損方向。');
-        trade.initialRisk=trade.quantity*(Math.abs(trade.entry-trade.sl)+costPerCoin(trade.entry,trade.sl,p.fee,p.slip,p.funding));
-        trade.riskBasis='實際成交數量／初始SL＋計畫成本預留';trade.strategyVersion=p.strategyVersion;trade.planSnapshot=clone(p);p.tradeId=trade.id;
-    }
-}
-function setupExtension() {
-    const calc=$('calculator');calc.dataset.page='calculator';calc.hidden=true;
-    const summary=document.querySelector('.summary-grid'),summaryNote=$('summaryNote');summary.dataset.page='trades';summaryNote.dataset.page='trades';
-    const recordHead=$('recordCount').closest('.section-head');recordHead.dataset.page='trades';
-    document.querySelector('.filters').dataset.page='trades';$('tradeList').dataset.page='trades';$('performance').dataset.page='trades';
-    $('calcToggle').onclick=()=>setPage('calculator');
-    document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.tab)));
-    $('scanStart').onclick=runScan;$('scanStop').onclick=()=>scan.controller?.abort();
-    $('scanSide').onchange=renderScan;$('scanSearch').oninput=renderScan;
-    $('scanAuto').onchange=()=>{clearTimeout(scan.timer);if($('scanAuto').checked&&!scan.busy)scan.timer=setTimeout(runScan,900000);};
-    $('scanList').onclick=event=>{const b=event.target.closest('[data-plan-candidate]');if(b)candidateToPlan(b.dataset.planCandidate);};
-    $('planList').onclick=event=>{const b=event.target.closest('[data-load-plan]');if(b)loadPlan(b.dataset.loadPlan);};
-    $('savePlanParams').onclick=savePlanParams;$('recordPlan').onclick=recordPlan;
-    $('detachPlan').onclick=()=>{activePlanId=null;renderPlans();calculate();};
-    $('tradeDialog').addEventListener('close',()=>{entryPlanId=null;renderPlans();renderPerformance();});
-    $('closeDialog').addEventListener('close',renderPerformance);
-    document.addEventListener('visibilitychange',()=>{if(document.hidden){scan.controller?.abort();clearTimeout(scan.timer);}else if($('scanAuto').checked&&!scan.busy)scan.timer=setTimeout(runScan,1000);});
-    setInterval(()=>{if(!document.hidden&&!scan.busy)renderScan();},30000);
-    renderPlans();renderPerformance();renderScan();setPage('screener');
-}
-
-setupExtension();
 render();
 scheduleMarket(0);
 
