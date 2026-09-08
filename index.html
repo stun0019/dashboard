@@ -618,14 +618,13 @@ dialog::backdrop { background: #000a; }
                 </span>
             </label>
             <label>槓桿 · 倍
-                <input name="leverage" type="number" step="any" min="1" value="50">
-                <span class="calc-preset-row">
-                    <button type="button" class="calc-preset" data-leverage-preset="20">20X</button>
-                    <button type="button" class="calc-preset" data-leverage-preset="50">50X</button>
-                    <button type="button" class="calc-preset" data-leverage-preset="75">75X</button>
-                    <button type="button" class="calc-preset" data-leverage-preset="100">100X</button>
-                    <button type="button" class="calc-preset" data-leverage-preset="200">200X</button>
-                </span>
+                <select name="leverage">
+                    <option value="50" selected>50X</option>
+                    <option value="75">75X</option>
+                    <option value="100">100X</option>
+                    <option value="200">200X</option>
+                    <option value="300">300X</option>
+                </select>
             </label>
             <label>進場價
                 <input name="entry" type="number" step="any" min="0.00000001" placeholder="例如 7.004">
@@ -1932,12 +1931,6 @@ document.querySelectorAll("[data-risk-preset]").forEach(button => {
     });
 });
 
-document.querySelectorAll("[data-leverage-preset]").forEach(button => {
-    button.addEventListener("click", () => {
-        $("calcForm").elements.leverage.value = button.dataset.leveragePreset;
-        calculate();
-    });
-});
 
 /* =========================
    UI / BACKUP / LIFECYCLE
