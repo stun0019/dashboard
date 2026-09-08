@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bryce Strategy · 1% 風控下單</title>
+<title>Bryce Strategy</title>
 
 <style>
 :root {
     color-scheme: dark;
-    --bg: #070b11;
     --panel: #101824;
     --panel-2: #0b121d;
     --border: #29394f;
@@ -17,7 +16,6 @@
     --green: #21d6a2;
     --red: #ff708c;
     --yellow: #f0c65d;
-    --blue: #4f8cc9;
 }
 
 * { box-sizing: border-box; }
@@ -40,8 +38,8 @@ button, input, select {
 }
 
 button {
-    min-height: 42px;
-    padding: 9px 14px;
+    min-height: 36px;
+    padding: 7px 11px;
     font-weight: 700;
     cursor: pointer;
 }
@@ -52,102 +50,122 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 input, select {
     width: 100%;
     min-width: 0;
-    padding: 11px;
+    height: 38px;
+    padding: 8px 10px;
 }
 
 label {
     display: grid;
-    gap: 7px;
+    gap: 5px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11px;
 }
 
 h1, h2, p { margin: 0; }
+[hidden] { display: none !important; }
 
 .app {
-    width: min(100% - 28px, 820px);
+    width: min(100% - 24px, 720px);
     margin: auto;
-    padding: 24px 0 72px;
+    padding: 18px 0 56px;
 }
 
 .header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding-bottom: 20px;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 14px;
     border-bottom: 1px solid var(--border);
 }
 
-.logo {
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
-    display: grid;
-    place-items: center;
-    border-radius: 12px;
-    background: #223b5b;
-    font-weight: 900;
+.brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.brand strong { font-size: 20px; }
-.subtitle {
-    margin-top: 5px;
-    color: var(--muted);
-    font-size: 12px;
+.logo {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #223b5b;
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.brand strong { font-size: 18px; }
+
+#calcToggle {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    flex: 0 0 40px;
+    padding: 0;
+    border-radius: 10px;
+    font-size: 19px;
+}
+
+#calcToggle[aria-expanded="true"] {
+    color: var(--yellow);
+    border-color: var(--yellow);
 }
 
 .panel {
-    margin-top: 18px;
-    padding: 18px;
+    width: min(100%, 620px);
+    margin: 14px 0 0 auto;
+    padding: 14px;
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--panel);
 }
 
-.rule-strip {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 16px;
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 2px;
 }
 
-.rule-card {
-    padding: 14px;
-    border: 1px solid #3c5069;
-    border-radius: 10px;
-    background: #0b1420;
+.panel-head h2 {
+    font-size: 19px;
 }
 
-.rule-label {
-    color: var(--muted);
-    font-size: 11px;
-}
-
-.rule-value {
-    margin-top: 5px;
-    font-family: Consolas, monospace;
-    font-size: 22px;
-    font-weight: 900;
+.close-btn {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    font-size: 17px;
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-    margin-top: 18px;
+    column-gap: 12px;
+    row-gap: 10px;
+    margin-top: 12px;
 }
 
 .result-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px;
-    margin-top: 18px;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.result-grid.single-result {
+    grid-template-columns: minmax(0, 180px);
 }
 
 .cell {
     min-width: 0;
-    padding: 13px;
-    border-radius: 10px;
+    padding: 10px 12px;
+    border-radius: 9px;
     background: #080f1980;
 }
 
@@ -158,26 +176,25 @@ h1, h2, p { margin: 0; }
 
 .cell-label {
     color: var(--muted);
-    font-size: 11px;
-    line-height: 1.4;
+    font-size: 10px;
+    line-height: 1.35;
 }
 
 .cell-value {
-    margin-top: 7px;
+    margin-top: 5px;
     overflow-wrap: anywhere;
     font-family: Consolas, monospace;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 900;
 }
 
 .cell.focus .cell-value {
     color: var(--yellow);
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .positive { color: var(--green); }
 .negative { color: var(--red); }
-.yellow { color: var(--yellow); }
 
 .error {
     margin-top: 14px;
@@ -186,18 +203,11 @@ h1, h2, p { margin: 0; }
     line-height: 1.6;
 }
 
-.note {
-    margin-top: 12px;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.7;
-}
-
 .actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: 18px;
+    margin-top: 12px;
 }
 
 .primary {
@@ -205,15 +215,20 @@ h1, h2, p { margin: 0; }
     border-color: #37678d;
 }
 
+.compact-save {
+    min-width: 96px;
+}
+
 .section-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin-top: 28px;
+    gap: 10px;
+    margin-top: 22px;
 }
 
 .record-count {
+    margin-top: 4px;
     color: var(--muted);
     font-size: 12px;
 }
@@ -296,10 +311,24 @@ h1, h2, p { margin: 0; }
 }
 
 @media (max-width: 620px) {
-    .app { width: calc(100% - 20px); padding-top: 16px; }
-    .form-grid, .rule-strip { grid-template-columns: 1fr; }
-    .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .app { width: calc(100% - 16px); padding-top: 12px; }
+    .panel {
+        width: 100%;
+        padding: 12px;
+        margin-top: 12px;
+    }
+    .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 8px;
+        row-gap: 9px;
+    }
+    .result-grid.single-result { grid-template-columns: minmax(0, 170px); }
     .record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 460px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .result-grid.single-result { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 380px) {
@@ -311,34 +340,31 @@ h1, h2, p { margin: 0; }
 <body>
 <main class="app">
     <header class="header">
-        <div class="logo">BS</div>
-        <div class="brand">
-            <strong>Bryce Strategy</strong>
-            <div class="subtitle">50X · 單筆風險固定 1%</div>
+        <div class="brand-wrap">
+            <div class="logo">BS</div>
+            <div class="brand">
+                <strong>Bryce Strategy</strong>
+            </div>
         </div>
+
+        <button id="calcToggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="calculator"
+                aria-label="倉位計算器"
+                title="倉位計算器">%</button>
     </header>
 
-    <section class="panel">
-        <h2>下單計算</h2>
-
-        <div class="rule-strip">
-            <div class="rule-card">
-                <div class="rule-label">固定槓桿</div>
-                <div class="rule-value">50X</div>
-            </div>
-            <div class="rule-card">
-                <div class="rule-label">單筆最大風險</div>
-                <div class="rule-value yellow">1%</div>
-            </div>
+    <section id="calculator" class="panel" hidden>
+        <div class="panel-head">
+            <h2>倉位計算</h2>
+            <button id="calcClose" class="close-btn" type="button" aria-label="關閉">×</button>
         </div>
 
         <form id="tradeForm" class="form-grid" novalidate>
-            <label>總資金 · U
-                <input name="balance" type="number" step="any" min="0.00000001" value="50" required>
-            </label>
-
             <label>幣種
-                <input name="symbol" type="text" maxlength="30" placeholder="例如 BTC、ETH、UNI" autocomplete="off" required>
+                <input name="symbol" type="text" maxlength="30"
+                       placeholder="例如 UNI" autocomplete="off" required>
             </label>
 
             <label>方向
@@ -349,52 +375,28 @@ h1, h2, p { margin: 0; }
             </label>
 
             <label>進場價
-                <input name="entry" type="number" step="any" min="0.00000001" placeholder="例如 7.004" required>
+                <input name="entry" type="number" step="any"
+                       min="0.00000001" placeholder="例如 7.004" required>
             </label>
 
             <label>止損價
-                <input name="sl" type="number" step="any" min="0.00000001" placeholder="例如 6.974" required>
+                <input name="sl" type="number" step="any"
+                       min="0.00000001" placeholder="手動輸入" required>
             </label>
         </form>
 
         <div id="error" class="error" role="status"></div>
 
-        <div id="results" class="result-grid">
+        <div id="results" class="result-grid single-result">
             <div class="cell focus">
-                <div class="cell-label">建議保證金</div>
-                <div id="marginResult" class="cell-value">—</div>
-            </div>
-            <div class="cell">
-                <div class="cell-label">使用總資金</div>
+                <div class="cell-label">建議使用保證金</div>
                 <div id="marginPctResult" class="cell-value">—</div>
-            </div>
-            <div class="cell">
-                <div class="cell-label">最大可虧損</div>
-                <div id="riskResult" class="cell-value">—</div>
-            </div>
-            <div class="cell">
-                <div class="cell-label">名義倉位</div>
-                <div id="notionalResult" class="cell-value">—</div>
-            </div>
-            <div class="cell">
-                <div class="cell-label">持倉數量 · 幣</div>
-                <div id="quantityResult" class="cell-value">—</div>
-            </div>
-            <div class="cell">
-                <div class="cell-label">Entry → SL 距離</div>
-                <div id="stopPctResult" class="cell-value">—</div>
             </div>
         </div>
 
         <div class="actions">
-            <button id="saveBtn" type="button" class="primary" disabled>儲存下單紀錄</button>
+            <button id="saveBtn" type="button" class="primary compact-save" disabled>儲存紀錄</button>
         </div>
-
-        <p class="note">
-            計算方式：最大可虧損＝總資金 × 1%；持倉數量＝最大可虧損 ÷ |進場價 − 止損價|；
-            名義倉位＝持倉數量 × 進場價；保證金＝名義倉位 ÷ 50。
-            未計入手續費、滑價與資金費。
-        </p>
     </section>
 
     <section>
@@ -413,19 +415,9 @@ h1, h2, p { margin: 0; }
 <script>
 "use strict";
 
-/*
-  精簡版：
-  - 舊 bryce-trading-dashboard-v2 紀錄會在首次載入本版本時清除。
-  - 槓桿固定 50X。
-  - 單筆帳戶風險固定 1%。
-  - 幣種手動輸入。
-  - 無 OKX 行情、無 TP、無交易所、無浮盈、無部分平倉、
-    無費用/資金費、無匯入匯出、無搜尋篩選。
-*/
+const STORAGE_KEY = "bryce-trading-1pct-v4";
 
-const OLD_STORAGE_KEY = "bryce-trading-dashboard-v2";
-const STORAGE_KEY = "bryce-trading-1pct-v1";
-const RESET_FLAG = "bryce-trading-1pct-reset-done";
+const BALANCE = 50;
 const LEVERAGE = 50;
 const RISK_PCT = 1;
 
@@ -433,13 +425,6 @@ const $ = id => document.getElementById(id);
 const form = $("tradeForm");
 
 let lastCalculation = null;
-
-/* 一次性清除舊版交易紀錄 */
-if (localStorage.getItem(RESET_FLAG) !== "1") {
-    localStorage.removeItem(OLD_STORAGE_KEY);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.setItem(RESET_FLAG, "1");
-}
 
 function readRecords() {
     try {
@@ -460,6 +445,30 @@ function saveRecords() {
 function num(value, digits = 4) {
     if (!Number.isFinite(value)) return "—";
     return value.toLocaleString("en-US", {
+        maximumFractionDigits: digits
+    });
+}
+
+function decimalPlaces(rawValue) {
+    const raw = String(rawValue ?? "").trim();
+    if (!raw) return 0;
+
+    if (/e/i.test(raw)) {
+        const value = Number(raw);
+        if (!Number.isFinite(value)) return 0;
+        const normalized = value.toFixed(12).replace(/0+$/, "").replace(/\.$/, "");
+        const dot = normalized.indexOf(".");
+        return dot === -1 ? 0 : normalized.length - dot - 1;
+    }
+
+    const dot = raw.indexOf(".");
+    return dot === -1 ? 0 : raw.length - dot - 1;
+}
+
+function priceByEntry(value, digits) {
+    if (!Number.isFinite(value)) return "—";
+    return value.toLocaleString("en-US", {
+        minimumFractionDigits: digits,
         maximumFractionDigits: digits
     });
 }
@@ -490,12 +499,7 @@ function setText(id, text) {
 
 function clearResults() {
     lastCalculation = null;
-    setText("marginResult", "—");
     setText("marginPctResult", "—");
-    setText("riskResult", "—");
-    setText("notionalResult", "—");
-    setText("quantityResult", "—");
-    setText("stopPctResult", "—");
     $("saveBtn").disabled = true;
 }
 
@@ -503,47 +507,48 @@ function calculate() {
     $("error").textContent = "";
     clearResults();
 
-    const balance = positive(form.elements.balance.value);
     const symbol = form.elements.symbol.value.trim().toUpperCase();
     const side = form.elements.side.value;
-    const entry = positive(form.elements.entry.value);
-    const sl = positive(form.elements.sl.value);
 
-    if (!balance || !symbol || !entry || !sl) return;
+    const entryRaw = form.elements.entry.value.trim();
+    const slRaw = form.elements.sl.value.trim();
+
+    const entry = positive(entryRaw);
+    const sl = positive(slRaw);
+    const entryDecimals = decimalPlaces(entryRaw);
+
+    if (!symbol || !entry || !sl) return;
 
     if (side === "long" && sl >= entry) {
-        $("error").textContent = "做多時，止損價必須低於進場價。";
+        $("error").textContent = "LONG 的止損價必須低於進場價。";
         return;
     }
 
     if (side === "short" && sl <= entry) {
-        $("error").textContent = "做空時，止損價必須高於進場價。";
+        $("error").textContent = "SHORT 的止損價必須高於進場價。";
         return;
     }
 
-    const maxLoss = balance * RISK_PCT / 100;
+    const maxLoss = BALANCE * RISK_PCT / 100;
     const stopDistance = Math.abs(entry - sl);
     const stopPct = stopDistance / entry * 100;
+
     const quantity = maxLoss / stopDistance;
     const notional = quantity * entry;
     const margin = notional / LEVERAGE;
-    const marginPct = margin / balance * 100;
+    const marginPct = margin / BALANCE * 100;
 
     if (![maxLoss, stopDistance, stopPct, quantity, notional, margin, marginPct].every(Number.isFinite)) {
         $("error").textContent = "計算超出數值範圍。";
         return;
     }
 
-    setText("marginResult", `${num(margin, 4)} U`);
+
     setText("marginPctResult", `${num(marginPct, 2)}%`);
-    setText("riskResult", `${num(maxLoss, 4)} U`);
-    setText("notionalResult", `${num(notional, 2)} U`);
-    setText("quantityResult", num(quantity, 8));
-    setText("stopPctResult", `${num(stopPct, 3)}%`);
 
     if (marginPct > 100) {
         $("error").textContent =
-            `此 Entry / SL 距離在 50X 下需要約 ${num(marginPct, 2)}% 總資金作為保證金，超過可用資金。`;
+            `此止損距離在 50X 下需要約 ${num(marginPct, 2)}% 總資金作為保證金，超過可用資金。`;
         $("saveBtn").disabled = true;
     } else {
         $("saveBtn").disabled = false;
@@ -552,15 +557,16 @@ function calculate() {
     lastCalculation = {
         id: uid(),
         createdAt: new Date().toISOString(),
-        balance,
         symbol,
         side,
+        balance: BALANCE,
         leverage: LEVERAGE,
         riskPct: RISK_PCT,
         entry,
+        entryDecimals,
         sl,
-        maxLoss,
         stopPct,
+        maxLoss,
         quantity,
         notional,
         margin,
@@ -589,7 +595,6 @@ function renderRecords() {
                             <span class="${record.side === "long" ? "positive" : "negative"}">
                                 ${record.side.toUpperCase()}
                             </span>
-                            · 50X · 風險 1%
                         </div>
                     </div>
                     <button class="delete-btn" type="button"
@@ -597,25 +602,37 @@ function renderRecords() {
                 </div>
 
                 <div class="record-grid">
-                    <div class="mini"><span>進場價</span><strong>${num(record.entry, 8)}</strong></div>
-                    <div class="mini"><span>止損價</span><strong>${num(record.sl, 8)}</strong></div>
+                    <div class="mini"><span>進場價</span><strong>${priceByEntry(record.entry, record.entryDecimals ?? 8)}</strong></div>
+                    <div class="mini"><span>止損價</span><strong>${priceByEntry(record.sl, record.entryDecimals ?? 8)}</strong></div>
                     <div class="mini"><span>保證金</span><strong>${num(record.margin, 4)} U</strong></div>
                     <div class="mini"><span>最大虧損</span><strong>${num(record.maxLoss, 4)} U</strong></div>
-                    <div class="mini"><span>名義倉位</span><strong>${num(record.notional, 2)} U</strong></div>
-                    <div class="mini"><span>持倉數量</span><strong>${num(record.quantity, 8)}</strong></div>
-                    <div class="mini"><span>SL 距離</span><strong>${num(record.stopPct, 3)}%</strong></div>
-                    <div class="mini"><span>使用總資金</span><strong>${num(record.marginPct, 2)}%</strong></div>
                 </div>
             </article>
         `).join("");
 }
 
+function toggleCalculator(force) {
+    const panel = $("calculator");
+    const shouldOpen = force === undefined ? panel.hidden : Boolean(force);
+
+    panel.hidden = !shouldOpen;
+    $("calcToggle").setAttribute("aria-expanded", String(shouldOpen));
+
+    if (shouldOpen) {
+        calculate();
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+}
+
 form.addEventListener("input", calculate);
 form.addEventListener("change", calculate);
 
+$("calcToggle").addEventListener("click", () => toggleCalculator());
+$("calcClose").addEventListener("click", () => toggleCalculator(false));
+
 $("saveBtn").addEventListener("click", () => {
     calculate();
-    if (!lastCalculation || $("saveBtn").disabled) return;
+    if (!lastCalculation) return;
 
     records.push(lastCalculation);
     saveRecords();
@@ -625,7 +642,6 @@ $("saveBtn").addEventListener("click", () => {
     form.elements.entry.value = "";
     form.elements.sl.value = "";
     clearResults();
-    form.elements.symbol.focus();
 });
 
 $("recordList").addEventListener("click", event => {
