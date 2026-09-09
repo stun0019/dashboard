@@ -8,25 +8,6 @@ BS.RiskCalculator = {
       return 0;
     }
 
-    if (/e/i.test(raw)) {
-      const value = Number(raw);
-
-      if (!Number.isFinite(value)) {
-        return 0;
-      }
-
-      const normalized = value
-        .toFixed(12)
-        .replace(/0+$/, "")
-        .replace(/\.$/, "");
-
-      const dot = normalized.indexOf(".");
-
-      return dot === -1
-        ? 0
-        : normalized.length - dot - 1;
-    }
-
     const dot = raw.indexOf(".");
 
     return dot === -1
@@ -39,13 +20,10 @@ BS.RiskCalculator = {
     side,
     entry,
     sl,
-    leverage,
-    balance = BS.Config.balance,
-    riskPct = BS.Config.riskPct
+    leverage
   }) {
-    const normalizedSymbol = String(symbol || "")
-      .trim()
-      .toUpperCase();
+    const normalizedSymbol =
+      String(symbol || "").trim().toUpperCase();
 
     const normalizedSide =
       String(side || "long").toLowerCase();
@@ -53,22 +31,12 @@ BS.RiskCalculator = {
     const entryNumber = Number(entry);
     const slNumber = Number(sl);
     const leverageNumber = Number(leverage);
-    const balanceNumber = Number(balance);
-    const riskNumber = Number(riskPct);
-
-    if (!normalizedSymbol) {
-      return {
-        valid: false,
-        error: ""
-      };
-    }
 
     if (
+      !normalizedSymbol ||
       !(entryNumber > 0) ||
       !(slNumber > 0) ||
-      !(leverageNumber > 0) ||
-      !(balanceNumber > 0) ||
-      !(riskNumber > 0)
+      !(leverageNumber > 0)
     ) {
       return {
         valid: false,
@@ -96,16 +64,19 @@ BS.RiskCalculator = {
       };
     }
 
-    const maxLoss = balanceNumber * riskNumber / 100;
+    const balance = BS.Config.balance;
+    const riskPct = BS.Config.riskPct;
+
+    const maxLoss = balance * riskPct / 100;
     const stopDistance = Math.abs(entryNumber - slNumber);
     const stopPct = stopDistance / entryNumber * 100;
 
     const quantity = maxLoss / stopDistance;
     const notional = quantity * entryNumber;
     const margin = notional / leverageNumber;
-    const marginPct = margin / balanceNumber * 100;
+    const marginPct = margin / balance * 100;
 
-    const values = [
+    const numbers = [
       maxLoss,
       stopDistance,
       stopPct,
@@ -115,12 +86,29 @@ BS.RiskCalculator = {
       marginPct
     ];
 
-    if (!values.every(Number.isFinite)) {
+    if (!numbers.every(Number.isFinite)) {
       return {
         valid: false,
         error: "計算超出數值範圍。"
       };
     }
+
+    const data = {
+      symbol: normalizedSymbol,
+      side: normalizedSide,
+      entry: entryNumber,
+      sl: slNumber,
+      leverage: leverageNumber,
+      balance,
+      riskPct,
+      maxLoss,
+      stopDistance,
+      stopPct,
+      quantity,
+      notional,
+      margin,
+      marginPct
+    };
 
     if (marginPct > 100) {
       return {
@@ -128,44 +116,14 @@ BS.RiskCalculator = {
         error:
           `此止損距離在 ${leverageNumber}X 下需要約 ` +
           `${marginPct.toFixed(2)}% 總資金作為保證金，超過可用資金。`,
-        data: {
-          symbol: normalizedSymbol,
-          side: normalizedSide,
-          entry: entryNumber,
-          sl: slNumber,
-          leverage: leverageNumber,
-          balance: balanceNumber,
-          riskPct: riskNumber,
-          maxLoss,
-          stopDistance,
-          stopPct,
-          quantity,
-          notional,
-          margin,
-          marginPct
-        }
+        data
       };
     }
 
     return {
       valid: true,
       error: "",
-      data: {
-        symbol: normalizedSymbol,
-        side: normalizedSide,
-        entry: entryNumber,
-        sl: slNumber,
-        leverage: leverageNumber,
-        balance: balanceNumber,
-        riskPct: riskNumber,
-        maxLoss,
-        stopDistance,
-        stopPct,
-        quantity,
-        notional,
-        margin,
-        marginPct
-      }
+      data
     };
   }
 };

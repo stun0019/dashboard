@@ -1,27 +1,26 @@
 :root {
   color-scheme: dark;
 
-  --bg: #05080d;
-  --bg-soft: #08101a;
+  --bg: #05080c;
+  --bg-soft: #071019;
+  --panel: #0b141e;
+  --panel-2: #0f1b28;
+  --panel-3: #111f2e;
 
-  --sidebar: #071019;
-  --panel: #0d1723;
-  --panel-2: #0a131d;
-  --panel-3: #101d2b;
+  --border: #243548;
+  --border-strong: #37516d;
 
-  --border: #25374b;
-  --border-strong: #38536f;
+  --text: #eef4fb;
+  --muted: #8fa0b5;
+  --muted-2: #62758c;
 
-  --text: #eef4fc;
-  --muted: #8fa2ba;
-  --muted-2: #62758d;
+  --green: #27d6a1;
+  --red: #ff6f8d;
+  --yellow: #efc85f;
+  --blue: #6aaaff;
 
-  --green: #21d6a2;
-  --red: #ff708c;
-  --yellow: #f0c65d;
-  --blue: #65a8ff;
-
-  --sidebar-width: 220px;
+  --drawer-width: 260px;
+  --calculator-width: 390px;
 }
 
 * {
@@ -36,8 +35,9 @@ body {
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
   background:
-    radial-gradient(circle at 70% -20%, #102438 0%, transparent 38%),
+    radial-gradient(circle at 82% -12%, #102438 0, transparent 36%),
     linear-gradient(180deg, #08111a 0%, var(--bg) 100%);
   color: var(--text);
   font-family: Arial, "Noto Sans TC", sans-serif;
@@ -49,16 +49,13 @@ select {
   font: inherit;
 }
 
-button {
-  color: var(--text);
-}
-
 button,
 input,
 select {
   border: 1px solid var(--border);
   border-radius: 9px;
-  background: var(--panel-2);
+  color: var(--text);
+  background: #09121b;
 }
 
 button {
@@ -66,7 +63,7 @@ button {
 }
 
 button:hover {
-  border-color: #5b7799;
+  border-color: #5f7fa4;
 }
 
 button:disabled {
@@ -77,10 +74,9 @@ button:disabled {
 input,
 select {
   width: 100%;
-  min-width: 0;
   height: 40px;
+  min-width: 0;
   padding: 8px 10px;
-  color: var(--text);
 }
 
 h1,
@@ -88,6 +84,10 @@ h2,
 h3,
 p {
   margin: 0;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .positive {
@@ -108,8 +108,4 @@ p {
 
 .mono {
   font-family: Consolas, "SFMono-Regular", monospace;
-}
-
-[hidden] {
-  display: none !important;
 }

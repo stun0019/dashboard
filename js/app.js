@@ -51,9 +51,9 @@ BS.UI = {
       return "—";
     }
 
-    const safeDigits = Math.min(
-      Math.max(Number(digits) || 0, 0),
-      12
+    const safeDigits = Math.max(
+      0,
+      Math.min(12, Number(digits) || 0)
     );
 
     return number.toLocaleString("en-US", {
@@ -106,19 +106,24 @@ BS.UI = {
 BS.App = {
   allSymbols: [],
 
+  refreshScheduled: false,
+  lastRenderAt: 0,
+  renderInterval: 350,
+
   init() {
     BS.TradeRecords.init();
 
     this.allSymbols = [
       ...new Set([
         ...BS.Config.coreSymbols,
-        ...BS.Config.watchlist,
+        ...BS.Config.longShortUniverse,
         ...BS.Config.sectors.flatMap(
           sector => sector.symbols
-        ),
-        ...BS.Storage.getWatchlist()
+        )
       ])
     ];
+
+    this.bindShell();
 
     BS.BingX.onStatus = (state, text) => {
       this.setWsStatus(state, text);
@@ -134,8 +139,39 @@ BS.App = {
     };
 
     BS.MarketStore.subscribe(() => {
-      this.schedulePanelRefresh();
+      this.scheduleRender();
     });
+
+    BS.Router.init();
+    BS.Views.calculator.mount();
+
+    BS.BingX.connect(this.allSymbols);
+  },
+
+  bindShell() {
+    document
+      .getElementById("menuBtn")
+      .addEventListener("click", () => {
+        this.openMenu();
+      });
+
+    document
+      .getElementById("closeMenuBtn")
+      .addEventListener("click", () => {
+        this.closeMenu();
+      });
+
+    document
+      .getElementById("calculatorBtn")
+      .addEventListener("click", () => {
+        this.openCalculator();
+      });
+
+    document
+      .getElementById("closeCalculatorBtn")
+      .addEventListener("click", () => {
+        this.closeCalculator();
+      });
 
     document
       .getElementById("reconnectBtn")
@@ -143,141 +179,168 @@ BS.App = {
         BS.BingX.reconnect();
       });
 
-    BS.Router.init();
-    BS.BingX.connect(this.allSymbols);
+    document
+      .getElementById("overlay")
+      .addEventListener("click", () => {
+        this.closeMenu();
+        this.closeCalculator();
+      });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        this.closeMenu();
+        this.closeCalculator();
+      }
+    });
   },
 
-  refreshTimer: null,
+  scheduleRender() {
+    if (this.refreshScheduled) {
+      return;
+    }
 
-  schedulePanelRefresh() {
-    clearTimeout(this.refreshTimer);
+    const elapsed =
+      performance.now() - this.lastRenderAt;
 
-    this.refreshTimer = setTimeout(() => {
+    const delay =
+      Math.max(0, this.renderInterval - elapsed);
+
+    this.refreshScheduled = true;
+
+    setTimeout(() => {
+      this.refreshScheduled = false;
+      this.lastRenderAt = performance.now();
+
       /*
-        不在使用者輸入倉位計算器時強制重繪，
-        避免即時行情更新造成輸入框失焦。
+        Main Panel 允許即時重繪。
+        Calculator 是獨立 Drawer，不會受到 Main Panel 重繪影響。
       */
-      if (BS.Router.currentRoute === "calculator") {
-        return;
-      }
-
-      if (BS.Router.currentRoute === "watchlist") {
-        return;
-      }
-
-      if (BS.Router.currentRoute === "records") {
-        return;
-      }
-
       BS.Router.renderCurrent();
-    }, 180);
+    }, delay);
   },
 
   setWsStatus(state, text) {
-    const dot = document.getElementById("wsDot");
-    const label = document.getElementById("wsText");
+    const dot =
+      document.getElementById("wsDot");
+
+    const label =
+      document.getElementById("wsText");
 
     dot.className = `status-dot ${state || ""}`;
     label.textContent = text;
   },
 
-  bindGlobalPanelActions() {
+  setOverlay(show) {
+    document.getElementById("overlay").hidden = !show;
+  },
+
+  openMenu() {
+    this.closeCalculator(false);
+
+    document
+      .getElementById("sideDrawer")
+      .classList.add("open");
+
+    document
+      .getElementById("sideDrawer")
+      .setAttribute("aria-hidden", "false");
+
+    document
+      .getElementById("menuBtn")
+      .setAttribute("aria-expanded", "true");
+
+    this.setOverlay(true);
+  },
+
+  closeMenu(updateOverlay = true) {
+    document
+      .getElementById("sideDrawer")
+      .classList.remove("open");
+
+    document
+      .getElementById("sideDrawer")
+      .setAttribute("aria-hidden", "true");
+
+    document
+      .getElementById("menuBtn")
+      .setAttribute("aria-expanded", "false");
+
+    if (updateOverlay) {
+      this.setOverlay(false);
+    }
+  },
+
+  openCalculator() {
+    this.closeMenu(false);
+
+    BS.Views.calculator.mount();
+
+    document
+      .getElementById("calculatorDrawer")
+      .classList.add("open");
+
+    document
+      .getElementById("calculatorDrawer")
+      .setAttribute("aria-hidden", "false");
+
+    document
+      .getElementById("calculatorBtn")
+      .setAttribute("aria-expanded", "true");
+
+    this.setOverlay(true);
+  },
+
+  closeCalculator(updateOverlay = true) {
+    document
+      .getElementById("calculatorDrawer")
+      .classList.remove("open");
+
+    document
+      .getElementById("calculatorDrawer")
+      .setAttribute("aria-hidden", "true");
+
+    document
+      .getElementById("calculatorBtn")
+      .setAttribute("aria-expanded", "false");
+
+    if (updateOverlay) {
+      this.setOverlay(false);
+    }
+  },
+
+  bindPanelActions() {
     document
       .querySelectorAll("[data-route-link]")
       .forEach(button => {
         button.addEventListener("click", () => {
-          BS.Router.go(button.dataset.routeLink);
+          BS.Router.go(
+            button.dataset.routeLink
+          );
         });
       });
 
     document
-      .querySelectorAll("[data-sector-id]")
-      .forEach(card => {
-        card.addEventListener("click", () => {
-          BS.Router.goSector(card.dataset.sectorId);
-        });
-      });
-
-    document
-      .querySelectorAll("[data-use-price]")
-      .forEach(button => {
-        button.addEventListener("click", () => {
-          const symbol = button.dataset.usePrice;
-
-          const ok =
-            BS.Views.calculator.useMarketPrice(symbol);
-
-          if (!ok) {
-            alert("目前尚未取得此幣種即時價格。");
-            return;
-          }
-
-          BS.Router.go("calculator");
-        });
-      });
-  },
-
-  bindWatchlistActions() {
-    const addButton =
-      document.getElementById("addWatchBtn");
-
-    const input =
-      document.getElementById("watchSymbolInput");
-
-    if (addButton && input) {
-      const add = () => {
-        const symbol = input.value
-          .trim()
-          .toUpperCase()
-          .replace("-USDT", "");
-
-        if (!symbol) {
-          return;
-        }
-
-        const list = BS.Storage.getWatchlist();
-
-        if (!list.includes(symbol)) {
-          list.push(symbol);
-          BS.Storage.saveWatchlist(list);
-        }
-
-        if (!this.allSymbols.includes(symbol)) {
-          this.allSymbols.push(symbol);
-
-          /*
-            目前簡單重連一次，
-            讓新增 symbol 加入 WebSocket 訂閱。
-          */
-          BS.BingX.connect(this.allSymbols);
-        }
-
-        BS.Router.renderCurrent();
-      };
-
-      addButton.addEventListener("click", add);
-
-      input.addEventListener("keydown", event => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          add();
-        }
-      });
-    }
-
-    document
-      .querySelectorAll("[data-remove-watch]")
+      .querySelectorAll("[data-open-calc]")
       .forEach(button => {
         button.addEventListener("click", () => {
           const symbol =
-            button.dataset.removeWatch;
+            button.dataset.openCalc;
 
-          const next = BS.Storage
-            .getWatchlist()
-            .filter(item => item !== symbol);
+          const side =
+            button.dataset.side || null;
 
-          BS.Storage.saveWatchlist(next);
-          BS.Router.renderCurrent();
+          const ok =
+            BS.Views.calculator.useMarketPrice(
+              symbol,
+              side
+            );
+
+          if (!ok) {
+            alert("目前尚未取得此幣即時價格。");
+            return;
+          }
+
+          this.openCalculator();
         });
       });
   }

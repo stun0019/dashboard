@@ -1,93 +1,68 @@
 # Bryce Strategy
 
-單頁交易 Dashboard，使用左側 Sidebar 切換右側單一主 Panel。
+主軸：交易快訊。
+
+## UI 架構
+
+頂部：
+
+```text
+☰  Bryce Strategy / 當前 Panel                         %
+```
+
+- `☰`：展開左側功能選單
+- `%`：開啟右側倉位計算器
+
+左側選單：
+
+```text
+交易快訊
+賽道強弱
+多空標的
+下單紀錄
+```
+
+主內容一次只顯示一個 Panel。
 
 ## 功能
 
-- Dashboard
-- 板塊雷達
+### 交易快訊
+
+顯示：
+
+- BTC / ETH / SOL 市場方向
+- 最強 Top 3 賽道
+- 最弱 Bottom 3 賽道
+- 偏多觀察 Top 5
+- 偏空觀察 Top 5
+
+### 賽道強弱
+
+依賽道成員的 24H 平均漲跌做排序：
+
 - AI
-- Meme
 - RWA
-- 自選幣
-- 倉位計算
-- 下單紀錄
-- BingX USDT-M WebSocket 即時 ticker
-- localStorage 儲存自選幣與下單紀錄
+- Meme
+- L1
+- L2
+- DeFi
+- Perp
+- DePIN
+- Gaming
+- BTC 生態
 
-## 目錄
+### 多空標的
 
-```text
-bryce-strategy-dashboard/
-├─ index.html
-├─ README.md
-├─ css/
-│  ├─ base.css
-│  ├─ layout.css
-│  ├─ components.css
-│  └─ responsive.css
-└─ js/
-   ├─ app.js
-   ├─ config/
-   │  └─ sectors.js
-   ├─ services/
-   │  ├─ bingx.js
-   │  └─ storage.js
-   ├─ modules/
-   │  ├─ market-store.js
-   │  ├─ sector-engine.js
-   │  ├─ risk-calculator.js
-   │  └─ trade-records.js
-   ├─ router/
-   │  └─ router.js
-   └─ views/
-      ├─ dashboard.js
-      ├─ sectors.js
-      ├─ sector-detail.js
-      ├─ watchlist.js
-      ├─ calculator.js
-      └─ records.js
-```
+目前最多各選 8 個：
 
-## 使用
+- 偏多觀察
+- 偏空觀察
 
-可直接開啟 `index.html`。
+此處為相對強弱篩選，不是自動交易訊號。
 
-若瀏覽器對本機 WebSocket / JS 載入有限制，也可在專案根目錄啟動本機伺服器：
+### 倉位計算器
 
-```bash
-python -m http.server 8080
-```
-
-再開：
-
-```text
-http://localhost:8080
-```
-
-## BingX
-
-目前只使用公開 USDT-M WebSocket 行情，不使用帳戶 API Key，也不提供自動下單。
-
-WebSocket：
-
-```text
-wss://open-api-swap.bingx.com/swap-market
-```
-
-訂閱格式：
-
-```json
-{
-  "id": "unique-id",
-  "reqType": "sub",
-  "dataType": "BTC-USDT@ticker"
-}
-```
-
-伺服器 Ping 時回覆 Pong。
-
-## 風控
+由右上角 `%` 打開。
 
 預設：
 
@@ -95,10 +70,47 @@ wss://open-api-swap.bingx.com/swap-market
 - 單筆風險：1%
 - 槓桿：50 / 75 / 100 / 200 / 300 X
 
-可在：
+### 下單紀錄
+
+使用 localStorage。
+
+可：
+
+- 儲存
+- 刪除
+- 清空
+
+## BingX
+
+目前只串公開 USDT-M WebSocket：
 
 ```text
-js/config/sectors.js
+wss://open-api-swap.bingx.com/swap-market
 ```
 
-修改。
+不需要 API Key。
+
+不會自動下單。
+
+## 開啟方式
+
+建議在 repo 根目錄：
+
+```bash
+python -m http.server 8080
+```
+
+然後開：
+
+```text
+http://localhost:8080
+```
+
+## Codex 注意
+
+Codex 修改本專案時：
+
+- 不要 commit
+- 不要 push
+- 不要建立 PR
+- 不要自行部署 GitHub Pages

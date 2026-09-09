@@ -5,27 +5,25 @@ BS.MarketStore = {
   listeners: new Set(),
 
   setQuote(symbol, quote) {
-    const normalized = String(symbol || "").toUpperCase();
+    const key = String(symbol || "").toUpperCase();
 
-    if (!normalized) {
+    if (!key) {
       return;
     }
 
-    this.quotes.set(normalized, {
-      ...(this.quotes.get(normalized) || {}),
+    this.quotes.set(key, {
+      ...(this.quotes.get(key) || {}),
       ...quote,
-      symbol: normalized
+      symbol: key
     });
 
-    this.emit(normalized);
+    this.listeners.forEach(listener => listener(key, quote));
   },
 
   getQuote(symbol) {
-    return this.quotes.get(String(symbol || "").toUpperCase()) || {};
-  },
-
-  getQuotes(symbols) {
-    return symbols.map(symbol => this.getQuote(symbol));
+    return this.quotes.get(
+      String(symbol || "").toUpperCase()
+    ) || {};
   },
 
   subscribe(listener) {
@@ -34,11 +32,5 @@ BS.MarketStore = {
     return () => {
       this.listeners.delete(listener);
     };
-  },
-
-  emit(symbol) {
-    for (const listener of this.listeners) {
-      listener(symbol, this.getQuote(symbol));
-    }
   }
 };

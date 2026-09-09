@@ -5,25 +5,17 @@ BS.BingX = {
 
   socket: null,
   reconnectTimer: null,
-  manualClose: false,
+  connectionToken: 0,
+
   symbols: [],
 
   onStatus: null,
   onTick: null,
 
   uid() {
-    if (globalThis.crypto && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
-
-    return (
+    return globalThis.crypto?.randomUUID?.() ||
       Date.now().toString(36) +
-      Math.random().toString(36).slice(2)
-    );
-  },
-
-  symbolKey(symbol) {
-    return `${symbol}-USDT`;
+      Math.random().toString(36).slice(2);
   },
 
   async decodeMessage(data) {
@@ -38,14 +30,13 @@ BS.BingX = {
 
     if ("DecompressionStream" in window) {
       try {
-        const ds = new DecompressionStream("gzip");
         const stream = new Blob([buffer])
           .stream()
-          .pipeThrough(ds);
+          .pipeThrough(new DecompressionStream("gzip"));
 
         return await new Response(stream).text();
       } catch {
-        // fallback below
+        // 使用 TextDecoder fallback
       }
     }
 
@@ -53,25 +44,35 @@ BS.BingX = {
   },
 
   setStatus(state, text) {
-    if (typeof this.onStatus === "function") {
-      this.onStatus(state, text);
-    }
+    this.onStatus?.(state, text);
   },
 
   connect(symbols) {
-    this.symbols = [...new Set(symbols.map(s => String(s).toUpperCase()))];
-    this.manualClose = false;
+    const normalized = [
+      ...new Set(
+        symbols
+          .map(symbol => String(symbol || "").trim().toUpperCase())
+          .filter(Boolean)
+      )
+    ];
+
+    this.symbols = normalized;
 
     clearTimeout(this.reconnectTimer);
 
-    if (
-      this.socket &&
-      (
-        this.socket.readyState === WebSocket.OPEN ||
-        this.socket.readyState === WebSocket.CONNECTING
-      )
-    ) {
-      this.socket.close();
+    const token = ++this.connectionToken;
+
+    if (this.socket) {
+      const oldSocket = this.socket;
+      this.socket = null;
+
+      try {
+        oldSocket.onclose = null;
+        oldSocket.onerror = null;
+        oldSocket.close();
+      } catch {
+        // ignore
+      }
     }
 
     this.setStatus("", "BingX 連線中");
@@ -82,26 +83,36 @@ BS.BingX = {
     this.socket = socket;
 
     socket.onopen = () => {
+      if (token !== this.connectionToken) {
+        socket.close();
+        return;
+      }
+
       this.setStatus("on", "BingX 已連線");
 
       this.symbols.forEach((symbol, index) => {
         setTimeout(() => {
-          if (socket.readyState !== WebSocket.OPEN) {
+          if (
+            token !== this.connectionToken ||
+            socket.readyState !== WebSocket.OPEN
+          ) {
             return;
           }
 
-          socket.send(
-            JSON.stringify({
-              id: this.uid(),
-              reqType: "sub",
-              dataType: `${this.symbolKey(symbol)}@ticker`
-            })
-          );
-        }, index * 25);
+          socket.send(JSON.stringify({
+            id: this.uid(),
+            reqType: "sub",
+            dataType: `${symbol}-USDT@ticker`
+          }));
+        }, index * 20);
       });
     };
 
     socket.onmessage = async event => {
+      if (token !== this.connectionToken) {
+        return;
+      }
+
       try {
         const raw = (await this.decodeMessage(event.data)).trim();
 
@@ -110,15 +121,17 @@ BS.BingX = {
           return;
         }
 
-        if (raw === "Pong" || !raw.startsWith("{")) {
+        if (
+          raw === "Pong" ||
+          !raw.startsWith("{")
+        ) {
           return;
         }
 
         const message = JSON.parse(raw);
 
         if (
-          !message ||
-          !message.data ||
+          !message?.data ||
           !String(message.dataType || "").endsWith("@ticker")
         ) {
           return;
@@ -131,53 +144,63 @@ BS.BingX = {
           return;
         }
 
-        const quote = {
+        this.onTick?.(symbol, {
           last: Number(data.c),
+          open: Number(data.o),
           high: Number(data.h),
           low: Number(data.l),
           volume: Number(data.v),
           change: Number(data.P),
           time: Date.now()
-        };
-
-        if (typeof this.onTick === "function") {
-          this.onTick(symbol, quote);
-        }
+        });
       } catch (error) {
-        console.debug("BingX WebSocket decode error:", error);
+        console.debug("BingX ticker decode error:", error);
       }
     };
 
     socket.onerror = () => {
+      if (token !== this.connectionToken) {
+        return;
+      }
+
       this.setStatus("off", "BingX 連線錯誤");
     };
 
     socket.onclose = () => {
-      this.setStatus("off", "BingX 已斷線");
-
-      if (this.manualClose) {
+      if (token !== this.connectionToken) {
         return;
       }
+
+      this.setStatus("off", "BingX 已斷線");
 
       clearTimeout(this.reconnectTimer);
 
       this.reconnectTimer = setTimeout(() => {
-        this.connect(this.symbols);
+        if (token === this.connectionToken) {
+          this.connect(this.symbols);
+        }
       }, 3000);
     };
   },
 
   reconnect() {
-    this.manualClose = false;
     this.connect(this.symbols);
   },
 
   disconnect() {
-    this.manualClose = true;
     clearTimeout(this.reconnectTimer);
 
+    ++this.connectionToken;
+
     if (this.socket) {
-      this.socket.close();
+      try {
+        this.socket.close();
+      } catch {
+        // ignore
+      }
     }
+
+    this.socket = null;
+    this.setStatus("off", "BingX 已停止");
   }
 };

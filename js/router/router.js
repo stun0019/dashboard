@@ -1,56 +1,31 @@
 window.BS = window.BS || {};
 
 BS.Router = {
-  currentRoute: "dashboard",
-  currentSectorId: null,
+  currentRoute: "alerts",
 
   routes: {
-    dashboard: {
-      view: () => BS.Views.dashboard,
-      title: "Dashboard",
-      subtitle: "市場總覽與板塊強弱"
+    alerts: {
+      view: () => BS.Views.alerts,
+      title: "交易快訊",
+      subtitle: "市場方向、賽道強弱與多空觀察"
     },
 
     sectors: {
       view: () => BS.Views.sectors,
-      title: "板塊",
-      subtitle: "加密貨幣 Narrative 強弱"
+      title: "賽道強弱",
+      subtitle: "辨別當前較強勢與較弱勢區塊"
     },
 
-    "sector-ai": {
-      sectorId: "ai",
-      title: "AI",
-      subtitle: "AI 板塊"
-    },
-
-    "sector-meme": {
-      sectorId: "meme",
-      title: "Meme",
-      subtitle: "Meme 板塊"
-    },
-
-    "sector-rwa": {
-      sectorId: "rwa",
-      title: "RWA",
-      subtitle: "RWA 板塊"
-    },
-
-    watchlist: {
-      view: () => BS.Views.watchlist,
-      title: "自選幣",
-      subtitle: "自訂觀察標的"
-    },
-
-    calculator: {
-      view: () => BS.Views.calculator,
-      title: "倉位計算",
-      subtitle: "依最大可承受虧損反推倉位"
+    signals: {
+      view: () => BS.Views.signals,
+      title: "多空標的",
+      subtitle: "當前偏多 / 偏空觀察清單"
     },
 
     records: {
       view: () => BS.Views.records,
       title: "下單紀錄",
-      subtitle: "交易風控紀錄"
+      subtitle: "交易與風控紀錄"
     }
   },
 
@@ -60,11 +35,13 @@ BS.Router = {
       .forEach(button => {
         button.addEventListener("click", () => {
           this.go(button.dataset.route);
+          BS.App.closeMenu();
         });
       });
 
     window.addEventListener("hashchange", () => {
-      const route = location.hash.replace("#", "") || "dashboard";
+      const route =
+        location.hash.replace("#", "") || "alerts";
 
       if (this.routes[route]) {
         this.go(route, false);
@@ -72,9 +49,12 @@ BS.Router = {
     });
 
     const initial =
-      location.hash.replace("#", "") || "dashboard";
+      location.hash.replace("#", "") || "alerts";
 
-    this.go(this.routes[initial] ? initial : "dashboard", false);
+    this.go(
+      this.routes[initial] ? initial : "alerts",
+      false
+    );
   },
 
   go(route, updateHash = true) {
@@ -85,7 +65,6 @@ BS.Router = {
     }
 
     this.currentRoute = route;
-    this.currentSectorId = config.sectorId || null;
 
     if (updateHash) {
       history.replaceState(null, "", `#${route}`);
@@ -94,91 +73,34 @@ BS.Router = {
     this.renderCurrent();
   },
 
-  goSector(sectorId) {
-    const fixedRouteMap = {
-      ai: "sector-ai",
-      meme: "sector-meme",
-      rwa: "sector-rwa"
-    };
-
-    if (fixedRouteMap[sectorId]) {
-      this.go(fixedRouteMap[sectorId]);
-      return;
-    }
-
-    this.currentRoute = "sector-detail";
-    this.currentSectorId = sectorId;
-
-    history.replaceState(null, "", "#sectors");
-    this.renderCurrent();
-  },
-
   renderCurrent() {
-    const main = document.getElementById("mainPanel");
-    const routeConfig = this.routes[this.currentRoute];
+    const config =
+      this.routes[this.currentRoute];
 
-    let title = routeConfig ? routeConfig.title : "板塊";
-    let subtitle = routeConfig ? routeConfig.subtitle : "";
-    let html = "";
+    const view = config.view();
 
-    if (this.currentRoute === "sector-detail") {
-      const sector =
-        BS.SectorEngine.getSectorById(this.currentSectorId);
+    document.getElementById("pageTitle").textContent =
+      config.title;
 
-      title = sector ? sector.name : "板塊";
-      subtitle = "板塊詳細";
+    document.getElementById("pageSubtitle").textContent =
+      config.subtitle;
 
-      html = BS.Views.sectorDetail.render(
-        this.currentSectorId
-      );
-    } else if (routeConfig && routeConfig.sectorId) {
-      const sector =
-        BS.SectorEngine.getSectorById(routeConfig.sectorId);
+    document.getElementById("mainPanel").innerHTML =
+      view.render();
 
-      html = BS.Views.sectorDetail.render(
-        routeConfig.sectorId
-      );
-
-      title = sector ? sector.name : routeConfig.title;
-    } else if (routeConfig && routeConfig.view) {
-      html = routeConfig.view().render();
-    }
-
-    document.getElementById("pageTitle").textContent = title;
-    document.getElementById("pageSubtitle").textContent = subtitle;
-    main.innerHTML = html;
-
-    this.updateActiveNav();
-    this.bindCurrentView();
-    BS.App.bindGlobalPanelActions();
-  },
-
-  updateActiveNav() {
     document
       .querySelectorAll("[data-route]")
       .forEach(button => {
         button.classList.toggle(
           "active",
-          button.dataset.route === this.currentRoute ||
-          (
-            this.currentRoute === "sector-detail" &&
-            button.dataset.route === "sectors"
-          )
+          button.dataset.route === this.currentRoute
         );
       });
-  },
-
-  bindCurrentView() {
-    if (this.currentRoute === "calculator") {
-      BS.Views.calculator.bind();
-    }
 
     if (this.currentRoute === "records") {
       BS.Views.records.bind();
     }
 
-    if (this.currentRoute === "watchlist") {
-      BS.App.bindWatchlistActions();
-    }
+    BS.App.bindPanelActions();
   }
 };

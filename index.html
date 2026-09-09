@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#071019">
+  <meta name="theme-color" content="#070c12">
   <title>Bryce Strategy</title>
 
   <link rel="stylesheet" href="css/base.css">
@@ -13,100 +13,156 @@
 </head>
 
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="brand-logo">BS</div>
+  <div id="app" class="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button
+          id="menuBtn"
+          class="icon-btn"
+          type="button"
+          aria-label="開啟選單"
+          aria-expanded="false"
+          title="選單"
+        >
+          ☰
+        </button>
+
         <div>
-          <div class="brand-name">Bryce Strategy</div>
-          <div class="brand-sub">BingX Market Dashboard</div>
+          <div class="brand-row">
+            <span class="brand-mark">BS</span>
+            <strong class="brand-name">Bryce Strategy</strong>
+          </div>
+
+          <div class="page-heading">
+            <h1 id="pageTitle">交易快訊</h1>
+            <span id="pageSubtitle">市場方向、賽道強弱與多空觀察</span>
+          </div>
         </div>
       </div>
 
-      <nav class="sidebar-nav" aria-label="主選單">
-        <button class="nav-item active" data-route="dashboard">
-          <span class="nav-icon">⌂</span>
-          <span>Dashboard</span>
-        </button>
-
-        <button class="nav-item" data-route="sectors">
-          <span class="nav-icon">◫</span>
-          <span>板塊</span>
-        </button>
-
-        <button class="nav-item" data-route="sector-ai">
-          <span class="nav-icon">AI</span>
-          <span>AI</span>
-        </button>
-
-        <button class="nav-item" data-route="sector-meme">
-          <span class="nav-icon">M</span>
-          <span>Meme</span>
-        </button>
-
-        <button class="nav-item" data-route="sector-rwa">
-          <span class="nav-icon">R</span>
-          <span>RWA</span>
-        </button>
-
-        <button class="nav-item" data-route="watchlist">
-          <span class="nav-icon">★</span>
-          <span>自選幣</span>
-        </button>
-
-        <button class="nav-item" data-route="calculator">
-          <span class="nav-icon">%</span>
-          <span>倉位計算</span>
-        </button>
-
-        <button class="nav-item" data-route="records">
-          <span class="nav-icon">≡</span>
-          <span>下單紀錄</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="ws-status">
-          <span class="status-dot" id="wsDot"></span>
+      <div class="topbar-right">
+        <div class="feed-status">
+          <span id="wsDot" class="status-dot"></span>
           <span id="wsText">BingX 連線中</span>
         </div>
 
-        <button id="reconnectBtn" class="secondary-btn sidebar-reconnect" type="button">
-          重新連線
-        </button>
-      </div>
-    </aside>
-
-    <section class="content-shell">
-      <header class="topbar">
-        <div>
-          <h1 id="pageTitle">Dashboard</h1>
-          <div id="pageSubtitle" class="topbar-subtitle">市場總覽與板塊強弱</div>
-        </div>
-
-        <div class="topbar-meta">
-          <span>最後更新</span>
+        <div class="last-update">
+          <span>更新</span>
           <strong id="lastUpdate">—</strong>
         </div>
-      </header>
 
-      <main id="mainPanel" class="main-panel"></main>
-    </section>
+        <button
+          id="calculatorBtn"
+          class="icon-btn calc-trigger"
+          type="button"
+          aria-label="倉位計算器"
+          aria-expanded="false"
+          title="倉位計算器"
+        >
+          %
+        </button>
+      </div>
+    </header>
+
+    <main id="mainPanel" class="main-panel"></main>
   </div>
 
-  <script src="js/config/sectors.js"></script>
+  <div id="overlay" class="overlay" hidden></div>
+
+  <aside
+    id="sideDrawer"
+    class="side-drawer"
+    aria-hidden="true"
+  >
+    <div class="drawer-head">
+      <div>
+        <strong>Bryce Strategy</strong>
+        <span>交易快訊</span>
+      </div>
+
+      <button
+        id="closeMenuBtn"
+        class="icon-btn small"
+        type="button"
+        aria-label="關閉選單"
+      >
+        ×
+      </button>
+    </div>
+
+    <nav class="drawer-nav" aria-label="功能選單">
+      <button class="drawer-nav-item active" data-route="alerts">
+        <span>01</span>
+        <strong>交易快訊</strong>
+      </button>
+
+      <button class="drawer-nav-item" data-route="sectors">
+        <span>02</span>
+        <strong>賽道強弱</strong>
+      </button>
+
+      <button class="drawer-nav-item" data-route="signals">
+        <span>03</span>
+        <strong>多空標的</strong>
+      </button>
+
+      <button class="drawer-nav-item" data-route="records">
+        <span>04</span>
+        <strong>下單紀錄</strong>
+      </button>
+    </nav>
+
+    <div class="drawer-foot">
+      <button
+        id="reconnectBtn"
+        class="secondary-btn full"
+        type="button"
+      >
+        重新連線 BingX
+      </button>
+    </div>
+  </aside>
+
+  <aside
+    id="calculatorDrawer"
+    class="calculator-drawer"
+    aria-hidden="true"
+  >
+    <div class="drawer-head">
+      <div>
+        <strong>倉位計算器</strong>
+        <span>依止損距離反推保證金</span>
+      </div>
+
+      <button
+        id="closeCalculatorBtn"
+        class="icon-btn small"
+        type="button"
+        aria-label="關閉倉位計算器"
+      >
+        ×
+      </button>
+    </div>
+
+    <div id="calculatorMount" class="calculator-mount"></div>
+  </aside>
+
+  <script src="js/config/markets.js"></script>
   <script src="js/services/storage.js"></script>
   <script src="js/services/bingx.js"></script>
+
   <script src="js/modules/market-store.js"></script>
   <script src="js/modules/sector-engine.js"></script>
+  <script src="js/modules/signal-engine.js"></script>
   <script src="js/modules/risk-calculator.js"></script>
   <script src="js/modules/trade-records.js"></script>
-  <script src="js/views/dashboard.js"></script>
+
+  <script src="js/views/alerts.js"></script>
   <script src="js/views/sectors.js"></script>
-  <script src="js/views/sector-detail.js"></script>
-  <script src="js/views/watchlist.js"></script>
-  <script src="js/views/calculator.js"></script>
+  <script src="js/views/signals.js"></script>
   <script src="js/views/records.js"></script>
+  <script src="js/views/calculator.js"></script>
+
   <script src="js/router/router.js"></script>
   <script src="js/app.js"></script>
 </body>

@@ -1,0 +1,43 @@
+Bryce Strategy - Codex 修改指示
+
+請依照本文件後方提供的完整程式碼更新目前 dashboard 專案。
+
+重要限制：
+1. 只修改本機工作目錄內的檔案。
+2. 不要 git commit。
+3. 不要 git push。
+4. 不要建立 Pull Request。
+5. 不要切換 branch。
+6. 不要更改 remote。
+7. 不要刪除 .git。
+8. 完成後只回報：
+   - 修改了哪些檔案
+   - 主要完成項目
+   - 是否有語法錯誤
+   - 建議我自行測試哪些功能
+9. 不要自行部署 GitHub Pages。
+
+本次產品主軸：
+「交易快訊」
+
+UI / 功能需求：
+- Header 左側：漢堡按鈕
+- Header 中間：目前 Panel 標題
+- Header 右側：% 倉位計算器按鈕
+- 左側 Sidebar / Drawer 平常收起，點漢堡才展開
+- Sidebar 選單：
+  1. 交易快訊
+  2. 賽道強弱
+  3. 多空標的
+  4. 下單紀錄
+- 右側 / 主內容：單一 Main Panel，選擇 Sidebar 對應功能後切換
+- 倉位計算器不是 Panel，點右上角 % 後以右側 Drawer 開啟
+- 保留 localStorage 下單紀錄
+- BingX WebSocket 只使用公開行情，不使用 API Key、不下單
+
+交易快訊主頁要回答三件事：
+1. 現在市場大方向如何
+2. 哪些賽道較強 / 較弱
+3. 目前偏多 / 偏空觀察有哪些幣
+
+「偏多 / 偏空」只是觀察清單，不是自動交易訊號。

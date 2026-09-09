@@ -2,73 +2,72 @@ window.BS = window.BS || {};
 BS.Views = BS.Views || {};
 
 BS.Views.sectors = {
-  title: "板塊",
-  subtitle: "加密貨幣 Narrative 強弱",
+  title: "賽道強弱",
+  subtitle: "辨別當前較強勢與較弱勢區塊",
 
   render() {
-    const sectors = BS.SectorEngine.getRankedSectors();
+    const sectors = BS.SectorEngine.ranked();
 
     return `
       <section class="panel">
         <div class="panel-head">
           <div>
-            <div class="panel-title">板塊雷達</div>
+            <div class="panel-title">賽道排行</div>
             <div class="panel-subtitle">
-              24H 平均漲跌與相對強度
+              依各賽道成員 24H 平均漲跌排序
             </div>
           </div>
 
-          <div class="muted" style="font-size:10px;">
-            ${BS.Config.sectors.length} 類
-          </div>
+          <span class="muted" style="font-size:9px;">
+            ${sectors.length} 個賽道
+          </span>
         </div>
 
-        <div class="sector-grid">
-          ${sectors.map(sector => {
-            return this.sectorCard(sector);
+        <div class="sector-list">
+          ${sectors.map((sector, index) => {
+            const score = Number.isFinite(sector.score)
+              ? Math.round(sector.score)
+              : "—";
+
+            return `
+              <article class="sector-card">
+                <div class="sector-card-top">
+                  <div>
+                    <div class="sector-card-name">
+                      ${String(index + 1).padStart(2, "0")} ·
+                      ${BS.UI.escape(sector.name)}
+                    </div>
+
+                    <div class="sector-card-symbols">
+                      ${BS.UI.escape(sector.symbols.join(" · "))}
+                    </div>
+                  </div>
+
+                  <div class="sector-score ${BS.UI.changeClass(sector.averageChange)}">
+                    ${score}
+                  </div>
+
+                  <div class="sector-change ${BS.UI.changeClass(sector.averageChange)}">
+                    ${BS.UI.percent(sector.averageChange)}
+                  </div>
+                </div>
+
+                <div
+                  class="strength-bar"
+                  style="color:${BS.UI.changeColor(sector.averageChange)}"
+                >
+                  <i style="width:${Number.isFinite(sector.score) ? sector.score : 0}%"></i>
+                </div>
+              </article>
+            `;
           }).join("")}
         </div>
+
+        <div class="note">
+          強度分數目前以 24H 賽道平均漲跌換算；後續若要做交易級判斷，
+          再加入 1H / 4H、Funding、OI。
+        </div>
       </section>
-    `;
-  },
-
-  sectorCard(sector) {
-    const score = Number.isFinite(sector.score)
-      ? Math.round(sector.score)
-      : "—";
-
-    const avg = sector.averageChange;
-
-    const symbols = sector.symbols.length
-      ? sector.symbols.join(" · ")
-      : "動態新幣池";
-
-    return `
-      <article
-        class="sector-card"
-        data-sector-id="${sector.id}"
-      >
-        <div class="sector-card-top">
-          <span class="sector-name">${BS.UI.escape(sector.name)}</span>
-          <span class="sector-score ${BS.UI.changeClass(avg)}">
-            ${score}
-          </span>
-        </div>
-
-        <div class="sector-meta">
-          <span>${BS.UI.escape(symbols)}</span>
-          <span class="${BS.UI.changeClass(avg)}">
-            ${BS.UI.percent(avg)}
-          </span>
-        </div>
-
-        <div
-          class="strength-bar"
-          style="color:${BS.UI.changeColor(avg)}"
-        >
-          <i style="width:${Number.isFinite(sector.score) ? sector.score : 0}%"></i>
-        </div>
-      </article>
     `;
   }
 };

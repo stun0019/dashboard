@@ -8,31 +8,23 @@ BS.TradeRecords = {
   },
 
   uid() {
-    if (globalThis.crypto && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
-
-    return (
+    return globalThis.crypto?.randomUUID?.() ||
       Date.now().toString(36) +
-      Math.random().toString(36).slice(2)
-    );
+      Math.random().toString(36).slice(2);
   },
 
-  getAll() {
+  all() {
     return [...this.records];
   },
 
   add(record) {
-    const newRecord = {
+    this.records.push({
       id: this.uid(),
       createdAt: new Date().toISOString(),
       ...record
-    };
+    });
 
-    this.records.push(newRecord);
     BS.Storage.saveRecords(this.records);
-
-    return newRecord;
   },
 
   remove(id) {
