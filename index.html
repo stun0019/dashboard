@@ -3,669 +3,607 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bryce Strategy</title>
-
+<title>Bryce Strategy Dashboard</title>
 <style>
-:root {
-    color-scheme: dark;
-    --panel: #101824;
-    --panel-2: #0b121d;
-    --border: #29394f;
-    --text: #eef4fc;
-    --muted: #9aaac0;
-    --green: #21d6a2;
-    --red: #ff708c;
-    --yellow: #f0c65d;
+:root{
+  color-scheme:dark;
+  --bg:#05080d;--panel:#0d1723;--panel2:#09111b;--panel3:#101d2b;
+  --border:#26384d;--text:#eef4fc;--muted:#8fa2ba;
+  --green:#21d6a2;--red:#ff708c;--yellow:#f0c65d;--blue:#65a8ff;
 }
-
-* { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    min-height: 100vh;
-    background: linear-gradient(180deg, #0b111b, #05080d);
-    color: var(--text);
-    font-family: Arial, "Noto Sans TC", sans-serif;
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:Arial,"Noto Sans TC",sans-serif;
+  background:linear-gradient(180deg,#0b111b 0%,var(--bg) 100%);
 }
-
-button, input, select { font: inherit; }
-
-button, input, select {
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    background: var(--panel-2);
+button,input,select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:9px}
+button{cursor:pointer;font-weight:700;padding:8px 11px}
+button:hover{border-color:#6382a8}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{width:100%;height:38px;padding:8px 10px}
+h1,h2,h3,p{margin:0}
+[hidden]{display:none!important}
+.positive{color:var(--green)} .negative{color:var(--red)} .neutral{color:var(--muted)}
+.app{width:min(100% - 28px,1180px);margin:auto;padding:16px 0 50px}
+.header{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-bottom:14px;border-bottom:1px solid var(--border)
 }
-
-button {
-    min-height: 36px;
-    padding: 7px 11px;
-    font-weight: 700;
-    cursor: pointer;
+.brand-wrap,.header-actions,.status-wrap{display:flex;align-items:center;gap:10px}
+.logo{
+  width:40px;height:40px;display:grid;place-items:center;border-radius:10px;
+  background:#223b5b;font-weight:900;font-size:14px
 }
-
-button:hover { border-color: #6b87ad; }
-button:disabled { opacity: .45; cursor: not-allowed; }
-
-input, select {
-    width: 100%;
-    min-width: 0;
-    height: 38px;
-    padding: 8px 10px;
+.brand strong{font-size:18px}
+.brand small{display:block;margin-top:2px;color:var(--muted);font-size:11px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#66788f}
+.status-dot.on{background:var(--green);box-shadow:0 0 10px #21d6a266}
+.status-dot.off{background:var(--red)}
+.status-text{font-size:11px;color:var(--muted)}
+.icon-btn{min-width:40px;height:40px;padding:0}
+.main-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.8fr);gap:14px;margin-top:14px}
+.panel{
+  padding:14px;border:1px solid var(--border);border-radius:12px;
+  background:linear-gradient(180deg,#101a27,#0c151f)
 }
-
-label {
-    display: grid;
-    gap: 5px;
-    color: var(--muted);
-    font-size: 11px;
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel-head h2{font-size:16px}
+.sub{margin-top:4px;color:var(--muted);font-size:11px}
+.market-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.market-card,.sector-card,.coin-row,.mini,.metric{
+  background:#08111b;border:1px solid transparent;border-radius:10px
 }
-
-h1, h2, p { margin: 0; }
-[hidden] { display: none !important; }
-
-.app {
-    width: min(100% - 24px, 720px);
-    margin: auto;
-    padding: 18px 0 56px;
+.market-card{padding:11px}
+.market-card .sym{font-size:11px;color:var(--muted)}
+.market-card .price{margin-top:6px;font:800 17px Consolas,monospace}
+.market-card .chg{margin-top:4px;font-size:11px;font-weight:700}
+.sector-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.sector-card{padding:11px;cursor:pointer;transition:.15s}
+.sector-card:hover{border-color:#536d8c;transform:translateY(-1px)}
+.sector-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sector-name{font-size:12px;font-weight:800}
+.score{font:900 18px Consolas,monospace}
+.sector-meta{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--muted);font-size:10px}
+.bar{height:4px;margin-top:9px;background:#152436;border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:currentColor}
+.watchlist{display:grid;gap:7px;margin-top:12px}
+.coin-row{
+  display:grid;grid-template-columns:80px minmax(0,1fr) 72px 28px;
+  gap:10px;align-items:center;padding:9px 10px;cursor:pointer
 }
-
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border);
+.coin-row:hover{border-color:#526c8b}
+.coin-symbol{font-size:12px;font-weight:900}
+.coin-price{text-align:right;font:800 13px Consolas,monospace}
+.coin-change{text-align:right;font-size:11px;font-weight:800}
+.coin-add{font-size:16px;text-align:center;color:var(--blue)}
+.sidebar{display:grid;align-content:start;gap:14px}
+.focus-card{padding:15px;border:1px solid #385474;border-radius:12px;background:#0b1724}
+.focus-title{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.focus-symbol{font-size:22px;font-weight:900}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tag{padding:3px 6px;border-radius:99px;background:#152437;color:#aebdd0;font-size:9px}
+.focus-price{margin-top:13px;font:900 28px Consolas,monospace}
+.focus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:12px}
+.metric{padding:9px}
+.metric span{display:block;color:var(--muted);font-size:9px}
+.metric strong{display:block;margin-top:4px;font:800 13px Consolas,monospace}
+.relation{
+  margin-top:10px;padding:10px;border-radius:9px;background:#111d2a;
+  font-size:11px;line-height:1.6;color:#c7d3e2
 }
-
-.brand-wrap {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.calc-panel{margin-top:14px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 10px;margin-top:12px}
+label{display:grid;gap:5px;color:var(--muted);font-size:10px}
+.result-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}
+.result{
+  padding:10px;border-radius:9px;background:#08111b
 }
-
-.logo {
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
-    display: grid;
-    place-items: center;
-    border-radius: 10px;
-    background: #223b5b;
-    font-weight: 900;
-    font-size: 14px;
+.result span{display:block;color:var(--muted);font-size:9px}
+.result strong{display:block;margin-top:4px;font:900 15px Consolas,monospace}
+.result.focus{border:1px solid #6c6234;background:#211e12}
+.result.focus strong{color:var(--yellow)}
+.error{margin-top:10px;color:#ff9caf;font-size:11px;line-height:1.5}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:11px}
+.primary{background:#20486c;border-color:#37678d}
+.records{margin-top:14px}
+.record-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.record-count{margin-top:3px;color:var(--muted);font-size:10px}
+.record-list{display:grid;gap:8px;margin-top:10px}
+.record-card{padding:11px;border:1px solid #2c4057;border-radius:10px;background:#0b1520}
+.record-top{display:flex;justify-content:space-between;gap:10px}
+.record-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}
+.mini{padding:8px}
+.mini span{display:block;color:var(--muted);font-size:9px}
+.mini strong{display:block;margin-top:4px;font:800 11px Consolas,monospace;overflow-wrap:anywhere}
+.delete-btn{padding:4px 8px;min-height:30px;color:#ff9caf;font-size:10px}
+.empty{padding:24px 12px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:10px;font-size:11px}
+.note{margin-top:9px;color:var(--muted);font-size:9px;line-height:1.5}
+@media(max-width:900px){
+  .main-grid{grid-template-columns:1fr}
+  .sidebar{grid-template-columns:1fr 1fr}
 }
-
-.brand strong { font-size: 18px; }
-
-#calcToggle {
-    width: 40px;
-    height: 40px;
-    min-height: 40px;
-    flex: 0 0 40px;
-    padding: 0;
-    border-radius: 10px;
-    font-size: 19px;
+@media(max-width:720px){
+  .app{width:calc(100% - 16px);padding-top:10px}
+  .market-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sidebar{grid-template-columns:1fr}
 }
-
-#calcToggle[aria-expanded="true"] {
-    color: var(--yellow);
-    border-color: var(--yellow);
-}
-
-.panel {
-    width: min(100%, 620px);
-    margin: 14px 0 0 auto;
-    padding: 14px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--panel);
-}
-
-.panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 2px;
-}
-
-.panel-head h2 {
-    font-size: 19px;
-}
-
-.close-btn {
-    width: 34px;
-    height: 34px;
-    min-height: 34px;
-    padding: 0;
-    font-size: 17px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 12px;
-    row-gap: 10px;
-    margin-top: 12px;
-}
-
-.result-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.result-grid.single-result {
-    grid-template-columns: minmax(0, 180px);
-}
-
-.cell {
-    min-width: 0;
-    padding: 10px 12px;
-    border-radius: 9px;
-    background: #080f1980;
-}
-
-.cell.focus {
-    border: 1px solid #6c6234;
-    background: #211e12;
-}
-
-.cell-label {
-    color: var(--muted);
-    font-size: 10px;
-    line-height: 1.35;
-}
-
-.cell-value {
-    margin-top: 5px;
-    overflow-wrap: anywhere;
-    font-family: Consolas, monospace;
-    font-size: 16px;
-    font-weight: 900;
-}
-
-.cell.focus .cell-value {
-    color: var(--yellow);
-    font-size: 18px;
-}
-
-.positive { color: var(--green); }
-.negative { color: var(--red); }
-
-.error {
-    margin-top: 14px;
-    color: #ff9caf;
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-.actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.primary {
-    background: #20486c;
-    border-color: #37678d;
-}
-
-.compact-save {
-    min-width: 96px;
-}
-
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-top: 22px;
-}
-
-.record-count {
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.record-list {
-    display: grid;
-    gap: 10px;
-    margin-top: 14px;
-}
-
-.record-card {
-    padding: 15px;
-    border: 1px solid #30445e;
-    border-radius: 12px;
-    background: #0d1723;
-}
-
-.record-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-}
-
-.symbol {
-    font-size: 19px;
-    font-weight: 900;
-    overflow-wrap: anywhere;
-}
-
-.meta {
-    margin-top: 5px;
-    color: var(--muted);
-    font-size: 11px;
-}
-
-.record-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    margin-top: 13px;
-}
-
-.mini {
-    min-width: 0;
-    padding: 10px;
-    border-radius: 8px;
-    background: #080f1980;
-}
-
-.mini span {
-    display: block;
-    color: var(--muted);
-    font-size: 10px;
-}
-
-.mini strong {
-    display: block;
-    margin-top: 5px;
-    overflow-wrap: anywhere;
-    font-family: Consolas, monospace;
-    font-size: 13px;
-}
-
-.delete-btn {
-    min-height: 34px;
-    padding: 5px 9px;
-    color: #ff9caf;
-    font-size: 11px;
-}
-
-.empty {
-    margin-top: 14px;
-    padding: 34px 14px;
-    border: 1px dashed var(--border);
-    border-radius: 12px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-}
-
-@media (max-width: 620px) {
-    .app { width: calc(100% - 16px); padding-top: 12px; }
-    .panel {
-        width: 100%;
-        padding: 12px;
-        margin-top: 12px;
-    }
-    .form-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 8px;
-        row-gap: 9px;
-    }
-    .result-grid.single-result { grid-template-columns: minmax(0, 170px); }
-    .record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@media (max-width: 460px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .result-grid.single-result { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 380px) {
-    .result-grid { grid-template-columns: 1fr; }
+@media(max-width:460px){
+  .brand small,.status-text{display:none}
+  .sector-grid,.form-grid,.result-row{grid-template-columns:1fr}
+  .coin-row{grid-template-columns:68px minmax(0,1fr) 62px 24px}
+  .record-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
 </head>
-
 <body>
 <main class="app">
-    <header class="header">
-        <div class="brand-wrap">
-            <div class="logo">BS</div>
-            <div class="brand">
-                <strong>Bryce Strategy</strong>
-            </div>
-        </div>
+  <header class="header">
+    <div class="brand-wrap">
+      <div class="logo">BS</div>
+      <div class="brand">
+        <strong>Bryce Strategy</strong>
+        <small>BingX Market × Sector Radar × Risk</small>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="status-wrap">
+        <i id="wsDot" class="status-dot"></i>
+        <span id="wsText" class="status-text">連線中</span>
+      </div>
+      <button id="reconnectBtn" class="icon-btn" title="重新連線">↻</button>
+    </div>
+  </header>
 
-        <button id="calcToggle"
-                type="button"
-                aria-expanded="false"
-                aria-controls="calculator"
-                aria-label="倉位計算器"
-                title="倉位計算器">%</button>
-    </header>
-
-    <section id="calculator" class="panel" hidden>
+  <div class="main-grid">
+    <section>
+      <div class="panel">
         <div class="panel-head">
+          <div>
+            <h2>市場總覽</h2>
+            <div class="sub">BingX USDT-M 永續合約 · 24H</div>
+          </div>
+          <div id="lastUpdate" class="sub">—</div>
+        </div>
+        <div id="marketStrip" class="market-strip"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head">
+          <div>
+            <h2>板塊雷達</h2>
+            <div class="sub">依板塊成員 24H 平均漲跌計算相對強度</div>
+          </div>
+          <span id="sectorCount" class="sub"></span>
+        </div>
+        <div id="sectorGrid" class="sector-grid"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head">
+          <div>
+            <h2 id="watchTitle">自選 / 主要觀察</h2>
+            <div class="sub">點擊幣種 → 右側分析；＋ → 帶入倉位計算</div>
+          </div>
+        </div>
+        <div id="watchlist" class="watchlist"></div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="focus-card">
+        <div class="focus-title">
+          <div>
+            <div id="focusSymbol" class="focus-symbol">WLD</div>
+            <div id="focusTags" class="tags"></div>
+          </div>
+          <div id="focusChange" class="coin-change">—</div>
+        </div>
+        <div id="focusPrice" class="focus-price">—</div>
+        <div class="focus-grid">
+          <div class="metric"><span>所屬板塊</span><strong id="focusSector">AI</strong></div>
+          <div class="metric"><span>板塊強度</span><strong id="focusScore">—</strong></div>
+          <div class="metric"><span>24H High</span><strong id="focusHigh">—</strong></div>
+          <div class="metric"><span>24H Low</span><strong id="focusLow">—</strong></div>
+        </div>
+        <div id="relationText" class="relation">等待行情資料…</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
             <h2>倉位計算</h2>
-            <button id="calcClose" class="close-btn" type="button" aria-label="關閉">×</button>
+            <div class="sub">本金 50 U · 單筆風險 1%</div>
+          </div>
         </div>
 
         <form id="tradeForm" class="form-grid" novalidate>
-            <label>幣種
-                <input name="symbol" type="text" maxlength="30"
-                       placeholder="例如 UNI" autocomplete="off" required>
-            </label>
-
-            <label>方向
-                <select name="side">
-                    <option value="long">LONG · 做多</option>
-                    <option value="short">SHORT · 做空</option>
-                </select>
-            </label>
-
-            <label>進場價
-                <input name="entry" type="number" step="any"
-                       min="0.00000001" placeholder="例如 7.004" required>
-            </label>
-
-            <label>止損價
-                <input name="sl" type="number" step="any"
-                       min="0.00000001" placeholder="手動輸入" required>
-            </label>
+          <label>幣種
+            <input name="symbol" type="text" maxlength="30" placeholder="例如 WLD" autocomplete="off" required>
+          </label>
+          <label>方向
+            <select name="side">
+              <option value="long">LONG · 做多</option>
+              <option value="short">SHORT · 做空</option>
+            </select>
+          </label>
+          <label>進場價
+            <input name="entry" type="number" step="any" min="0.00000001" placeholder="點擊 + 可自動帶入" required>
+          </label>
+          <label>止損價
+            <input name="sl" type="number" step="any" min="0.00000001" placeholder="手動輸入" required>
+          </label>
+          <label>槓桿
+            <select name="leverage">
+              <option>50</option><option>75</option><option>100</option><option>200</option><option>300</option>
+            </select>
+          </label>
         </form>
 
-        <div id="error" class="error" role="status"></div>
-
-        <div id="results" class="result-grid single-result">
-            <div class="cell focus">
-                <div class="cell-label">建議使用保證金</div>
-                <div id="marginPctResult" class="cell-value">—</div>
-            </div>
+        <div id="calcError" class="error"></div>
+        <div class="result-row">
+          <div class="result focus"><span>建議使用保證金</span><strong id="marginPctResult">—</strong></div>
+          <div class="result"><span>最大虧損</span><strong id="maxLossResult">0.5 U</strong></div>
         </div>
-
         <div class="actions">
-            <button id="saveBtn" type="button" class="primary compact-save" disabled>儲存紀錄</button>
+          <button id="saveBtn" class="primary" type="button" disabled>儲存紀錄</button>
         </div>
-    </section>
+        <div class="note">僅以止損距離估算理論倉位；未納入手續費、滑價、資金費率與強平條件。</div>
+      </div>
 
-    <section>
-        <div class="section-head">
-            <div>
-                <h1 style="font-size:22px;">下單紀錄</h1>
-                <div id="recordCount" class="record-count">0 筆</div>
-            </div>
-            <button id="clearBtn" type="button">清空紀錄</button>
+      <div class="panel records">
+        <div class="record-head">
+          <div>
+            <h2 style="font-size:16px">下單紀錄</h2>
+            <div id="recordCount" class="record-count">0 筆</div>
+          </div>
+          <button id="clearBtn" type="button">清空</button>
         </div>
-
         <div id="recordList" class="record-list"></div>
-    </section>
+      </div>
+    </aside>
+  </div>
 </main>
 
 <script>
 "use strict";
 
-const STORAGE_KEY = "bryce-trading-1pct-v4";
-
+const WS_URL = "wss://open-api-swap.bingx.com/swap-market";
+const STORAGE_KEY = "bryce-strategy-dashboard-v2";
 const BALANCE = 50;
-const LEVERAGE = 50;
 const RISK_PCT = 1;
+
+const SECTORS = [
+  {name:"BTC 生態", symbols:["BTC","STX"]},
+  {name:"Ethereum / L2", symbols:["ETH","ARB","OP","STRK"]},
+  {name:"L1", symbols:["SOL","SUI","AVAX","APT"]},
+  {name:"AI", symbols:["TAO","RENDER","FET","WLD"]},
+  {name:"DePIN", symbols:["RENDER","AKT","FIL"]},
+  {name:"RWA", symbols:["ONDO","LINK"]},
+  {name:"DeFi", symbols:["AAVE","UNI","PENDLE"]},
+  {name:"Perp", symbols:["HYPE","DYDX"]},
+  {name:"Gaming", symbols:["IMX","GALA","SAND"]},
+  {name:"Meme", symbols:["DOGE","PEPE","BONK","WIF"]},
+  {name:"Privacy / ZK", symbols:["ZEC","XMR"]},
+  {name:"土狗 / Micro Cap", symbols:[]}
+];
+
+const TAGS = {
+  WLD:["AI","Identity","World Chain / L2"],
+  ARB:["Ethereum","L2"],
+  BTC:["BTC","Market"],
+  ETH:["Ethereum","L1"],
+  TAO:["AI"],
+  RENDER:["AI","DePIN"]
+};
+
+const CORE = ["BTC","ETH","SOL","WLD"];
+const WATCH = ["WLD","ARB","TAO","RENDER","FET","ONDO","LINK","HYPE","DOGE","PEPE","SOL","SUI"];
+const ALL = [...new Set([...CORE,...WATCH,...SECTORS.flatMap(s=>s.symbols)])];
 
 const $ = id => document.getElementById(id);
 const form = $("tradeForm");
-
-let lastCalculation = null;
-
-function readRecords() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-}
-
+const quotes = new Map();
+let ws = null;
+let reconnectTimer = null;
 let records = readRecords();
+let lastCalculation = null;
+let focus = "WLD";
+let selectedSector = null;
 
-function saveRecords() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+function uuid(){return crypto?.randomUUID?.() || Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function num(v,d=4){
+  if(!Number.isFinite(Number(v))) return "—";
+  return Number(v).toLocaleString("en-US",{maximumFractionDigits:d});
+}
+function price(v){
+  const n=Number(v); if(!Number.isFinite(n)) return "—";
+  const d=n>=1000?2:n>=1?4:n>=0.01?5:8;
+  return n.toLocaleString("en-US",{minimumFractionDigits:Math.min(d,2),maximumFractionDigits:d});
+}
+function pct(v){
+  const n=Number(v); if(!Number.isFinite(n)) return "—";
+  return `${n>=0?"+":""}${n.toFixed(2)}%`;
+}
+function cls(v){return Number(v)>0?"positive":Number(v)<0?"negative":"neutral"}
+function symbolKey(s){return `${s}-USDT`}
+function getQ(s){return quotes.get(s)||{}}
+
+function sectorStats(sec){
+  const vals=sec.symbols.map(s=>Number(getQ(s).change)).filter(Number.isFinite);
+  if(!vals.length) return {avg:null,score:null,count:0};
+  const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+  // Relative display score: 50 neutral, +/-10% roughly spans 0~100.
+  const score=Math.max(0,Math.min(100,50+avg*5));
+  return {avg,score,count:vals.length};
+}
+function sectorOf(sym){
+  return SECTORS.find(s=>s.symbols.includes(sym)) || null;
 }
 
-function num(value, digits = 4) {
-    if (!Number.isFinite(value)) return "—";
-    return value.toLocaleString("en-US", {
-        maximumFractionDigits: digits
+function renderMarket(){
+  $("marketStrip").innerHTML=CORE.map(sym=>{
+    const q=getQ(sym);
+    return `<div class="market-card" data-focus="${sym}">
+      <div class="sym">${sym}USDT</div>
+      <div class="price">${price(q.last)}</div>
+      <div class="chg ${cls(q.change)}">${pct(q.change)}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderSectors(){
+  const ranked=SECTORS.map(s=>({...s,...sectorStats(s)}))
+    .sort((a,b)=>(b.score??-1)-(a.score??-1));
+  $("sectorCount").textContent=`${SECTORS.length} 類`;
+  $("sectorGrid").innerHTML=ranked.map(s=>{
+    const active=selectedSector===s.name ? "border-color:#6b87ad;" : "";
+    const color=s.avg==null?"var(--muted)":s.avg>=0?"var(--green)":"var(--red)";
+    return `<div class="sector-card" data-sector="${esc(s.name)}" style="${active}">
+      <div class="sector-top">
+        <span class="sector-name">${esc(s.name)}</span>
+        <span class="score" style="color:${color}">${s.score==null?"—":Math.round(s.score)}</span>
+      </div>
+      <div class="sector-meta"><span>${s.symbols.length?s.symbols.join(" · "):"動態新幣池"}</span><span class="${cls(s.avg)}">${pct(s.avg)}</span></div>
+      <div class="bar" style="color:${color}"><i style="width:${s.score??0}%"></i></div>
+    </div>`;
+  }).join("");
+}
+
+function currentWatch(){
+  if(!selectedSector) return WATCH;
+  const sec=SECTORS.find(s=>s.name===selectedSector);
+  return sec?.symbols?.length ? sec.symbols : WATCH;
+}
+
+function renderWatch(){
+  $("watchTitle").textContent=selectedSector || "自選 / 主要觀察";
+  $("watchlist").innerHTML=currentWatch().map(sym=>{
+    const q=getQ(sym);
+    return `<div class="coin-row" data-focus="${sym}">
+      <div class="coin-symbol">${sym}</div>
+      <div class="coin-price">${price(q.last)}</div>
+      <div class="coin-change ${cls(q.change)}">${pct(q.change)}</div>
+      <div class="coin-add" data-add="${sym}" title="帶入倉位計算">＋</div>
+    </div>`;
+  }).join("");
+}
+
+function renderFocus(){
+  const q=getQ(focus);
+  const sec=sectorOf(focus);
+  const stats=sec?sectorStats(sec):{avg:null,score:null};
+  $("focusSymbol").textContent=focus;
+  $("focusPrice").textContent=price(q.last);
+  $("focusChange").textContent=pct(q.change);
+  $("focusChange").className=`coin-change ${cls(q.change)}`;
+  $("focusSector").textContent=sec?.name || "—";
+  $("focusScore").textContent=stats.score==null?"—":`${Math.round(stats.score)} / 100`;
+  $("focusHigh").textContent=price(q.high);
+  $("focusLow").textContent=price(q.low);
+  $("focusTags").innerHTML=(TAGS[focus]||[sec?.name].filter(Boolean)).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+
+  if(!Number.isFinite(Number(q.change)) || !Number.isFinite(Number(stats.avg))){
+    $("relationText").textContent="等待行情資料…"; return;
+  }
+  const diff=Number(q.change)-Number(stats.avg);
+  const state=Math.abs(diff)<0.5?"與板塊同步":diff>0?"強於板塊":"弱於板塊";
+  const hint=diff<-1?"有落後板塊的情況；避免只因板塊強就直接追價。":
+             diff>1?"個幣明顯強於板塊；留意是否已提前反映題材。":
+             "個幣與板塊目前沒有明顯背離。";
+  $("relationText").innerHTML=`24H：<b class="${cls(q.change)}">${pct(q.change)}</b>　板塊：<b class="${cls(stats.avg)}">${pct(stats.avg)}</b><br>${state}（${diff>=0?"+":""}${diff.toFixed(2)}%）｜${hint}`;
+}
+
+function renderAll(){
+  renderMarket(); renderSectors(); renderWatch(); renderFocus();
+}
+
+function useQuote(sym){
+  const q=getQ(sym);
+  if(!Number.isFinite(Number(q.last))) return;
+  form.elements.symbol.value=sym;
+  form.elements.entry.value=String(q.last);
+  calculate();
+  form.elements.sl.focus();
+}
+
+async function decodeWs(data){
+  if(typeof data==="string") return data;
+  const ab=data instanceof Blob?await data.arrayBuffer():data;
+  if("DecompressionStream" in window){
+    try{
+      const ds=new DecompressionStream("gzip");
+      const stream=new Blob([ab]).stream().pipeThrough(ds);
+      return await new Response(stream).text();
+    }catch{}
+  }
+  return new TextDecoder().decode(ab);
+}
+
+function setWsStatus(state,text){
+  $("wsDot").className=`status-dot ${state}`;
+  $("wsText").textContent=text;
+}
+
+function connect(){
+  clearTimeout(reconnectTimer);
+  if(ws && (ws.readyState===WebSocket.OPEN || ws.readyState===WebSocket.CONNECTING)) ws.close();
+  setWsStatus("","連線中");
+  ws=new WebSocket(WS_URL);
+  ws.binaryType="arraybuffer";
+
+  ws.onopen=()=>{
+    setWsStatus("on","BingX 已連線");
+    ALL.forEach((sym,i)=>{
+      setTimeout(()=>{
+        if(ws?.readyState===WebSocket.OPEN){
+          ws.send(JSON.stringify({id:uuid(),reqType:"sub",dataType:`${symbolKey(sym)}@ticker`}));
+        }
+      },i*20);
     });
-}
+  };
 
-function decimalPlaces(rawValue) {
-    const raw = String(rawValue ?? "").trim();
-    if (!raw) return 0;
-
-    if (/e/i.test(raw)) {
-        const value = Number(raw);
-        if (!Number.isFinite(value)) return 0;
-        const normalized = value.toFixed(12).replace(/0+$/, "").replace(/\.$/, "");
-        const dot = normalized.indexOf(".");
-        return dot === -1 ? 0 : normalized.length - dot - 1;
+  ws.onmessage=async ev=>{
+    try{
+      const raw=(await decodeWs(ev.data)).trim();
+      if(raw==="Ping"){ws.send("Pong");return}
+      if(raw==="Pong" || !raw.startsWith("{")) return;
+      const msg=JSON.parse(raw);
+      if(!msg?.data || !String(msg.dataType||"").endsWith("@ticker")) return;
+      const d=msg.data;
+      const sym=String(d.s||"").replace("-USDT","");
+      if(!sym) return;
+      quotes.set(sym,{
+        last:Number(d.c),
+        high:Number(d.h),
+        low:Number(d.l),
+        volume:Number(d.v),
+        change:Number(d.P),
+        time:Date.now()
+      });
+      $("lastUpdate").textContent=new Date().toLocaleTimeString("zh-TW",{hour12:false});
+      renderAll();
+    }catch(err){
+      console.debug("WS decode:",err);
     }
+  };
 
-    const dot = raw.indexOf(".");
-    return dot === -1 ? 0 : raw.length - dot - 1;
+  ws.onerror=()=>setWsStatus("off","連線錯誤");
+  ws.onclose=()=>{
+    setWsStatus("off","已斷線 · 自動重連");
+    reconnectTimer=setTimeout(connect,3000);
+  };
 }
 
-function priceByEntry(value, digits) {
-    if (!Number.isFinite(value)) return "—";
-    return value.toLocaleString("en-US", {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits
-    });
+function readRecords(){
+  try{
+    const p=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+    return Array.isArray(p)?p:[];
+  }catch{return []}
+}
+function saveRecords(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records))}
+function decimalPlaces(raw){
+  const s=String(raw??"").trim();
+  if(!s)return 0;
+  if(/e/i.test(s)){
+    const v=Number(s); if(!Number.isFinite(v))return 0;
+    const n=v.toFixed(12).replace(/0+$/,"").replace(/\.$/,"");
+    return n.includes(".")?n.split(".")[1].length:0;
+  }
+  return s.includes(".")?s.split(".")[1].length:0;
+}
+function priceByEntry(v,d){
+  return Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 }
 
-function uid() {
-    return globalThis.crypto?.randomUUID?.() ||
-        Date.now().toString(36) + Math.random().toString(36).slice(2);
+function calculate(){
+  $("calcError").textContent="";
+  lastCalculation=null;
+  $("marginPctResult").textContent="—";
+  $("saveBtn").disabled=true;
+
+  const symbol=form.elements.symbol.value.trim().toUpperCase();
+  const side=form.elements.side.value;
+  const entryRaw=form.elements.entry.value.trim();
+  const slRaw=form.elements.sl.value.trim();
+  const entry=Number(entryRaw), sl=Number(slRaw);
+  const leverage=Number(form.elements.leverage.value);
+  if(!symbol || !(entry>0) || !(sl>0) || !(leverage>0)) return;
+
+  if(side==="long" && sl>=entry){$("calcError").textContent="LONG 的止損價必須低於進場價。";return}
+  if(side==="short" && sl<=entry){$("calcError").textContent="SHORT 的止損價必須高於進場價。";return}
+
+  const maxLoss=BALANCE*RISK_PCT/100;
+  const stopDistance=Math.abs(entry-sl);
+  const quantity=maxLoss/stopDistance;
+  const notional=quantity*entry;
+  const margin=notional/leverage;
+  const marginPct=margin/BALANCE*100;
+
+  if(![quantity,notional,margin,marginPct].every(Number.isFinite)) return;
+  $("marginPctResult").textContent=`${num(marginPct,2)}%`;
+  $("maxLossResult").textContent=`${num(maxLoss,2)} U`;
+
+  if(marginPct>100){
+    $("calcError").textContent=`此止損距離在 ${leverage}X 下需要約 ${num(marginPct,2)}% 總資金作為保證金，超過可用資金。`;
+    return;
+  }
+  $("saveBtn").disabled=false;
+  lastCalculation={
+    id:uuid(),createdAt:new Date().toISOString(),symbol,side,
+    balance:BALANCE,riskPct:RISK_PCT,leverage,entry,sl,
+    entryDecimals:decimalPlaces(entryRaw),maxLoss,quantity,notional,margin,marginPct
+  };
 }
 
-function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[char]);
+function renderRecords(){
+  $("recordCount").textContent=`${records.length} 筆`;
+  if(!records.length){$("recordList").innerHTML='<div class="empty">目前沒有下單紀錄。</div>';return}
+  $("recordList").innerHTML=records.slice().reverse().map(r=>`
+    <article class="record-card">
+      <div class="record-top">
+        <div><b>${esc(r.symbol)}</b> <span class="${r.side==="long"?"positive":"negative"}" style="font-size:10px">${r.side.toUpperCase()} · ${r.leverage}X</span></div>
+        <button class="delete-btn" data-delete="${esc(r.id)}">刪除</button>
+      </div>
+      <div class="record-grid">
+        <div class="mini"><span>進場價</span><strong>${priceByEntry(r.entry,r.entryDecimals??4)}</strong></div>
+        <div class="mini"><span>止損價</span><strong>${priceByEntry(r.sl,r.entryDecimals??4)}</strong></div>
+        <div class="mini"><span>保證金</span><strong>${num(r.margin,4)} U</strong></div>
+        <div class="mini"><span>最大虧損</span><strong>${num(r.maxLoss,4)} U</strong></div>
+      </div>
+    </article>`).join("");
 }
 
-function positive(value) {
-    const n = Number(value);
-    return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-function setText(id, text) {
-    $(id).textContent = text;
-}
-
-function clearResults() {
-    lastCalculation = null;
-    setText("marginPctResult", "—");
-    $("saveBtn").disabled = true;
-}
-
-function calculate() {
-    $("error").textContent = "";
-    clearResults();
-
-    const symbol = form.elements.symbol.value.trim().toUpperCase();
-    const side = form.elements.side.value;
-
-    const entryRaw = form.elements.entry.value.trim();
-    const slRaw = form.elements.sl.value.trim();
-
-    const entry = positive(entryRaw);
-    const sl = positive(slRaw);
-    const entryDecimals = decimalPlaces(entryRaw);
-
-    if (!symbol || !entry || !sl) return;
-
-    if (side === "long" && sl >= entry) {
-        $("error").textContent = "LONG 的止損價必須低於進場價。";
-        return;
-    }
-
-    if (side === "short" && sl <= entry) {
-        $("error").textContent = "SHORT 的止損價必須高於進場價。";
-        return;
-    }
-
-    const maxLoss = BALANCE * RISK_PCT / 100;
-    const stopDistance = Math.abs(entry - sl);
-    const stopPct = stopDistance / entry * 100;
-
-    const quantity = maxLoss / stopDistance;
-    const notional = quantity * entry;
-    const margin = notional / LEVERAGE;
-    const marginPct = margin / BALANCE * 100;
-
-    if (![maxLoss, stopDistance, stopPct, quantity, notional, margin, marginPct].every(Number.isFinite)) {
-        $("error").textContent = "計算超出數值範圍。";
-        return;
-    }
-
-
-    setText("marginPctResult", `${num(marginPct, 2)}%`);
-
-    if (marginPct > 100) {
-        $("error").textContent =
-            `此止損距離在 50X 下需要約 ${num(marginPct, 2)}% 總資金作為保證金，超過可用資金。`;
-        $("saveBtn").disabled = true;
-    } else {
-        $("saveBtn").disabled = false;
-    }
-
-    lastCalculation = {
-        id: uid(),
-        createdAt: new Date().toISOString(),
-        symbol,
-        side,
-        balance: BALANCE,
-        leverage: LEVERAGE,
-        riskPct: RISK_PCT,
-        entry,
-        entryDecimals,
-        sl,
-        stopPct,
-        maxLoss,
-        quantity,
-        notional,
-        margin,
-        marginPct
-    };
-}
-
-function renderRecords() {
-    $("recordCount").textContent = `${records.length} 筆`;
-
-    if (!records.length) {
-        $("recordList").innerHTML =
-            '<div class="empty">目前沒有下單紀錄。</div>';
-        return;
-    }
-
-    $("recordList").innerHTML = records
-        .slice()
-        .reverse()
-        .map(record => `
-            <article class="record-card">
-                <div class="record-top">
-                    <div>
-                        <div class="symbol">${escapeHtml(record.symbol)}</div>
-                        <div class="meta">
-                            <span class="${record.side === "long" ? "positive" : "negative"}">
-                                ${record.side.toUpperCase()}
-                            </span>
-                        </div>
-                    </div>
-                    <button class="delete-btn" type="button"
-                            data-delete="${escapeHtml(record.id)}">刪除</button>
-                </div>
-
-                <div class="record-grid">
-                    <div class="mini"><span>進場價</span><strong>${priceByEntry(record.entry, record.entryDecimals ?? 8)}</strong></div>
-                    <div class="mini"><span>止損價</span><strong>${priceByEntry(record.sl, record.entryDecimals ?? 8)}</strong></div>
-                    <div class="mini"><span>保證金</span><strong>${num(record.margin, 4)} U</strong></div>
-                    <div class="mini"><span>最大虧損</span><strong>${num(record.maxLoss, 4)} U</strong></div>
-                </div>
-            </article>
-        `).join("");
-}
-
-function toggleCalculator(force) {
-    const panel = $("calculator");
-    const shouldOpen = force === undefined ? panel.hidden : Boolean(force);
-
-    panel.hidden = !shouldOpen;
-    $("calcToggle").setAttribute("aria-expanded", String(shouldOpen));
-
-    if (shouldOpen) {
-        calculate();
-        panel.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-}
-
-form.addEventListener("input", calculate);
-form.addEventListener("change", calculate);
-
-$("calcToggle").addEventListener("click", () => toggleCalculator());
-$("calcClose").addEventListener("click", () => toggleCalculator(false));
-
-function saveCurrentRecord() {
-    calculate();
-    if (!lastCalculation) return;
-
-    records.push(lastCalculation);
-    saveRecords();
-    renderRecords();
-
-    form.elements.symbol.value = "";
-    form.elements.entry.value = "";
-    form.elements.sl.value = "";
-    clearResults();
-}
-
-$("saveBtn").addEventListener("click", saveCurrentRecord);
-
-$("recordList").addEventListener("click", event => {
-    const button = event.target.closest("[data-delete]");
-    if (!button) return;
-
-    records = records.filter(record => record.id !== button.dataset.delete);
-    saveRecords();
-    renderRecords();
+document.addEventListener("click",e=>{
+  const add=e.target.closest("[data-add]");
+  if(add){e.stopPropagation();useQuote(add.dataset.add);return}
+  const f=e.target.closest("[data-focus]");
+  if(f){focus=f.dataset.focus;renderFocus();return}
+  const s=e.target.closest("[data-sector]");
+  if(s){selectedSector=selectedSector===s.dataset.sector?null:s.dataset.sector;renderSectors();renderWatch()}
 });
-
-$("clearBtn").addEventListener("click", () => {
-    if (!records.length) return;
-    if (!confirm("確定清空全部下單紀錄？")) return;
-
-    records = [];
-    saveRecords();
-    renderRecords();
+form.addEventListener("input",calculate);
+form.addEventListener("change",calculate);
+$("saveBtn").addEventListener("click",()=>{
+  calculate(); if(!lastCalculation)return;
+  records.push(lastCalculation);saveRecords();renderRecords();
 });
+$("recordList").addEventListener("click",e=>{
+  const b=e.target.closest("[data-delete]"); if(!b)return;
+  records=records.filter(r=>r.id!==b.dataset.delete);saveRecords();renderRecords();
+});
+$("clearBtn").addEventListener("click",()=>{
+  if(!records.length || !confirm("確定清空全部下單紀錄？")) return;
+  records=[];saveRecords();renderRecords();
+});
+$("reconnectBtn").addEventListener("click",connect);
 
+renderAll();
 renderRecords();
 calculate();
+connect();
 </script>
 </body>
 </html>
